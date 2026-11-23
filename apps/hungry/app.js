@@ -85,7 +85,7 @@
 
   // sugerencia de ajuste para la siguiente comida (si te pasaste o te quedaste corto)
   // alimentos que no se sugieren como «ajuste» de una comida (botanas, dulces, embutidos, bebidas)
-  const NO_SUG = new Set(['papas-fritas', 'galleta-salada', 'galleta-maria', 'barra-granola', 'palomitas', 'granola', 'cereal-hojuelas', 'tostada', 'mayonesa', 'aceite-coco', 'aceituna', 'coco-rallado', 'mantequilla', 'crema-leche', 'queso-crema', 'queso-parmesano', 'chicharron', 'manteca-cerdo', 'pan-dulce', 'tostada-maiz', 'cajeta', 'leche-condensada', 'crema-agria', 'quesadilla-queso', 'enchiladas-queso', 'taco-res', 'burrito-frijol-res', 'tamal-cerdo', 'tamal-elote', 'arroz-rojo', 'harina-trigo', 'masa-maiz', 'harina-garbanzo', 'chocolate-mesa', 'piloncillo']);
+  const NO_SUG = new Set(['papas-fritas', 'galleta-salada', 'galleta-maria', 'barra-granola', 'palomitas', 'granola', 'cereal-hojuelas', 'tostada', 'mayonesa', 'aceite-coco', 'aceituna', 'coco-rallado', 'mantequilla', 'crema-leche', 'queso-crema', 'queso-parmesano', 'chicharron', 'manteca-cerdo', 'pan-dulce', 'tostada-maiz', 'cajeta', 'leche-condensada', 'crema-agria', 'quesadilla-queso', 'enchiladas-queso', 'taco-res', 'burrito-frijol-res', 'tamal-cerdo', 'tamal-elote', 'arroz-rojo', 'harina-trigo', 'masa-maiz', 'harina-garbanzo', 'chocolate-mesa', 'piloncillo', 'papas-francesa-cong']);
   function equivalente(k, exceso) {
     const gr = exceso ? ['Cereales', 'Grasas'] : ['Cereales', 'Grasas', 'Frutas', 'Lácteos'];
     const enAl = new Set(alacena().filter(disponible).map(x => x.alimento_id));
