@@ -23,7 +23,8 @@
   const perfil = () => HDB.get('comida/perfil/datos') || {};
   const dia = () => { const d = HDB.get('comida/estado/dia'); return d && d.fecha === hoyK() ? d : { id: 'dia', fecha: hoyK(), gym: false }; };
   const alergias = () => perfil().alergias || [];
-  const bloqueado = a => a && (gustos()[a.id] === 'no' || (a.al || []).some(x => alergias().includes(x)));
+  // 'lactosa' = tolera la leche deslactosada pero no los lácteos normales; 'lacteos' = ningún lácteo
+  const bloqueado = a => a && (gustos()[a.id] === 'no' || (a.al || []).some(x => alergias().includes(x)) || (alergias().includes('lactosa') && (a.al || []).includes('lacteos') && !(a.al || []).includes('leche')));
   Object.assign(HG, { plan, alacena, faltantes, registro, gustos, categorias, perfil, dia, alergias, bloqueado });
   const PASILLOS = ['Frutas y verduras', 'Carnes y pescados', 'Lácteos y huevo', 'Refrigerados', 'Panadería y tortillas', 'Abarrotes', 'Otros'];
   const UNIDADES = { pza: 1, g: 100, kg: 0.5, l: 0.5, ml: 100, latas: 1, paquete: 1 };

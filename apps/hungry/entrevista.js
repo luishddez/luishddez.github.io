@@ -25,7 +25,7 @@
       { id: 'costo', t: '¿Qué es lo que más te ha costado?', tipo: 'multi', op: ['Hambre', 'Falta de tiempo', 'Antojos', 'Eventos sociales', 'Aburrimiento', 'Constancia', 'No saber qué comer', 'Comer fuera'] }
     ] },
     { id: 'salud', t: 'Salud', e: '🩺', q: [
-      { id: 'alergias', t: 'Alergias o intolerancias (nunca te propongo estos alimentos)', tipo: 'multi', op: ['Ninguna', 'Gluten', 'Lácteos / lactosa', 'Huevo', 'Mariscos', 'Pescado', 'Frutos secos', 'Cacahuate', 'Soya'], req: 1 },
+      { id: 'alergias', t: 'Alergias o intolerancias (nunca te propongo estos alimentos)', tipo: 'multi', op: ['Ninguna', 'Gluten', 'Lactosa (tolero la leche deslactosada)', 'Todos los lácteos', 'Huevo', 'Mariscos', 'Pescado', 'Frutos secos', 'Cacahuate', 'Soya'], req: 1 },
       { id: 'condiciones', t: '¿Tienes alguna condición de salud?', tipo: 'unica', op: ['No', 'Sí (la explico)'] },
       { id: 'medicamentos', t: '¿Tomas medicamentos?', tipo: 'unica', op: ['No', 'Sí (los explico)'] },
       { id: 'estudios', t: 'Estudios recientes que quieras compartir (glucosa, colesterol, tiroides, vitamina D, etc.)', tipo: 'texto' },
@@ -100,7 +100,7 @@
     HDB.set('comida/entrevista/' + sec, { id: sec, r: memo[sec] || {}, ts: Date.now() });
     sucio = false; derivar();
   }
-  const MAP = { alergias: { 'Gluten': 'gluten', 'Lácteos / lactosa': 'lacteos', 'Huevo': 'huevo', 'Mariscos': 'mariscos', 'Pescado': 'pescado', 'Frutos secos': 'frutos_secos', 'Cacahuate': 'cacahuate', 'Soya': 'soya' } };
+  const MAP = { alergias: { 'Gluten': 'gluten', 'Lácteos / lactosa': 'lactosa', 'Lactosa (tolero la leche deslactosada)': 'lactosa', 'Todos los lácteos': 'lacteos', 'Huevo': 'huevo', 'Mariscos': 'mariscos', 'Pescado': 'pescado', 'Frutos secos': 'frutos_secos', 'Cacahuate': 'cacahuate', 'Soya': 'soya' } };
   function derivar() {   // lo que la calculadora de Hungry necesita, tomado de la entrevista
     const g = (s, id) => { const x = resp(s, id); return x ? x.v : undefined; }, p = { ...HG.perfil() };
     const sx = g('tu', 'sexo'); if (sx) p.sexo = sx === 'Hombre' ? 'h' : 'm';
