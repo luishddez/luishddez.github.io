@@ -84,11 +84,13 @@
   const proxima = () => planHoy().find(p => !regHoy().some(r => r.momento === p.id));
 
   // sugerencia de ajuste para la siguiente comida (si te pasaste o te quedaste corto)
+  // alimentos que no se sugieren como «ajuste» de una comida (botanas, dulces, embutidos, bebidas)
+  const NO_SUG = new Set(['papas-fritas', 'galleta-salada', 'galleta-maria', 'barra-granola', 'palomitas', 'granola', 'cereal-hojuelas', 'tostada', 'mayonesa', 'aceite-coco', 'aceituna', 'coco-rallado', 'mantequilla', 'crema-leche', 'queso-crema', 'queso-parmesano']);
   function equivalente(k, exceso) {
     const gr = exceso ? ['Cereales', 'Grasas'] : ['Cereales', 'Grasas', 'Frutas', 'Lácteos'];
     const enAl = new Set(alacena().filter(disponible).map(x => x.alimento_id));
     let mejor = null;
-    A.filter(a => gr.includes(a.g) && !bloqueado(a) && a.por >= 10).forEach(a => {
+    A.filter(a => gr.includes(a.g) && !bloqueado(a) && a.por >= 10 && !NO_SUG.has(a.id)).forEach(a => {
       const pk = a.k * a.por / 100; if (pk < 40) return;
       for (let n = 1; n <= 3; n++) { const err = Math.abs(n * pk - k) + (enAl.has(a.id) ? 0 : 30) + (a.g === 'Grasas' ? 20 : 0); if (!mejor || err < mejor.err) mejor = { a, n, kc: n * pk, err }; }
     });
@@ -240,7 +242,7 @@
   HG.acc.alta = () => {
     abrir(`<h2>Agregar a la alacena</h2><input id="bq" placeholder="Busca un alimento…" data-i="bq"><div id="bres" style="margin-top:8px"></div><div class="row" style="margin-top:10px"><button data-a="altalibre">Escribirlo yo (no está en la lista)</button><button data-a="cerrar">Cancelar</button></div>`, () => listaAlta(''));
   };
-  function listaAlta(q) { q = q.toLowerCase(); const l = A.filter(a => !q || a.n.toLowerCase().includes(q)).slice(0, 30); $('#bres').innerHTML = l.map(a => `<div class="it" data-a="altaelige" data-id="${a.id}"><div class="em">${a.e}</div><div class="sp"><b>${esc(a.n)}</b></div><span class="mut">${a.k} kcal/100 g</span></div>`).join('') || '<div class="mut">Sin resultados</div>'; }
+  function listaAlta(q) { q = q.toLowerCase(); const l = A.filter(a => !q || a.n.toLowerCase().includes(q)).sort((a, b) => a.g.localeCompare(b.g) || a.n.localeCompare(b.n)).slice(0, 70); $('#bres').innerHTML = l.map(a => `<div class="it" data-a="altaelige" data-id="${a.id}"><div class="em">${a.e}</div><div class="sp"><b>${esc(a.n)}</b></div><span class="mut">${a.k} kcal/100 g</span></div>`).join('') || '<div class="mut">Sin resultados</div>'; }
   HG.listaAlta = listaAlta;
   HG.acc.altaelige = b => { const a = AM[b.dataset.id]; formX = { nuevo: true, id: a.id, alimento_id: a.id, nombre: a.n.replace(/ \(.*\)/, ''), emoji: a.e, modo: 'exacto', cantidad: 0, unidad: a.u, minimo: 0, nivel: 'tengo', categoria: '', pasillo: a.p, donde: '' }; abrir(formAlacena(formX)); };
   HG.acc.altalibre = () => { formX = { nuevo: true, id: '', alimento_id: null, nombre: '', emoji: '🛒', modo: 'aprox', cantidad: 0, unidad: 'pza', minimo: 0, nivel: 'tengo', categoria: '', pasillo: 'Otros', donde: '' }; abrir(formAlacena(formX)); };
@@ -310,7 +312,7 @@
   HG.acc.otro = b => {
     otroM = b.dataset.m || ''; abrir(`<h2>Registrar un alimento</h2><input id="bq" placeholder="Busca (ej. huevo, arroz…)" data-i="bq2"><div id="bres" style="margin-top:8px"></div><div class="row" style="margin-top:10px"><button data-a="manual">Escribir calorías a mano</button><button data-a="cerrar">Cancelar</button></div>`, () => listaOtro(''));
   };
-  function listaOtro(q) { q = q.toLowerCase(); const l = A.filter(a => !q || a.n.toLowerCase().includes(q)).slice(0, 30); $('#bres').innerHTML = l.map(a => `<div class="it" data-a="otroelige" data-id="${a.id}"><div class="em">${a.e}</div><div class="sp"><b>${esc(a.n)}</b><div class="nota">${a.k} kcal · ${a.pr} g prot por 100 g</div></div></div>`).join('') || '<div class="mut">Sin resultados</div>'; }
+  function listaOtro(q) { q = q.toLowerCase(); const l = A.filter(a => !q || a.n.toLowerCase().includes(q)).sort((a, b) => a.g.localeCompare(b.g) || a.n.localeCompare(b.n)).slice(0, 70); $('#bres').innerHTML = l.map(a => `<div class="it" data-a="otroelige" data-id="${a.id}"><div class="em">${a.e}</div><div class="sp"><b>${esc(a.n)}</b><div class="nota">${a.k} kcal · ${a.pr} g prot por 100 g</div></div></div>`).join('') || '<div class="mut">Sin resultados</div>'; }
   HG.listaOtro = listaOtro;
   HG.acc.otroelige = b => {
     const a = AM[b.dataset.id];
