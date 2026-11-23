@@ -857,9 +857,9 @@ async function desdeSheet() {
 // Si el calendario de la cuenta está vacío o lleva más de 3 horas sin latido, se intenta el Sheet publicado; si tampoco hay, se usa lo último guardado.
 async function desdeSupabase() {
   const g = window.TABLERO.gids;
-  // La comida vive en Hungry: Mi día solo la muestra. Si Hungry aún no tiene régimen, se usa el plan anterior mientras tanto.
+  // La comida vive en Hungry: Mi día solo la muestra (régimen, por comprar y lo comido). No lee el plan ni la lista anteriores.
   const [tarD, planH, diaD, falD, regD] = await Promise.all([SB.coleccion('tareas'), SB.coleccion('comida/regimen').catch(() => []), SB.coleccion('dia').catch(() => []), SB.coleccion('comida/faltantes').catch(() => []), SB.coleccion('comida/registro').catch(() => [])]);
-  const planD = planH.length ? planH : await SB.coleccion('comida/plan').catch(() => []), comD = [];
+  const planD = planH, comD = [];
   const ord = (a, b) => (a.orden || 0) - (b.orden || 0);
   const tar = tarD.sort(ord).map(t => ({ ...t, minutos: String(t.minutos ?? ''), prioridad: String(t.prioridad ?? ''), esencial: t.esencial ? 'sí' : 'no' }));
   const plan = planD.sort(ord).map(p => ({ ...p, kcal: String(p.kcal ?? ''), proteina_g: String(p.proteina_g ?? ''), minutos: String(p.minutos ?? '') }));
