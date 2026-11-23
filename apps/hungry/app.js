@@ -26,7 +26,7 @@
   // 'lactosa' = tolera la leche deslactosada pero no los lácteos normales; 'lacteos' = ningún lácteo
   const bloqueado = a => a && (gustos()[a.id] === 'no' || (a.al || []).some(x => alergias().includes(x)) || (alergias().includes('lactosa') && (a.al || []).includes('lacteos') && !(a.al || []).includes('leche')));
   Object.assign(HG, { plan, alacena, faltantes, registro, gustos, categorias, perfil, dia, alergias, bloqueado });
-  const PASILLOS = ['Frutas y verduras', 'Carnes y pescados', 'Lácteos y huevo', 'Refrigerados', 'Panadería y tortillas', 'Abarrotes', 'Otros'];
+  const PASILLOS = ['Frutas y verduras', 'Carnes y pescados', 'Lácteos y huevo', 'Refrigerados', 'Congelados', 'Panadería y tortillas', 'Abarrotes', 'Comida preparada', 'Otros'];
   const UNIDADES = { pza: 1, g: 100, kg: 0.5, l: 0.5, ml: 100, latas: 1, paquete: 1 };
   HG.PASILLOS = PASILLOS; HG.UNIDADES = UNIDADES;
 
@@ -85,7 +85,7 @@
 
   // sugerencia de ajuste para la siguiente comida (si te pasaste o te quedaste corto)
   // alimentos que no se sugieren como «ajuste» de una comida (botanas, dulces, embutidos, bebidas)
-  const NO_SUG = new Set(['papas-fritas', 'galleta-salada', 'galleta-maria', 'barra-granola', 'palomitas', 'granola', 'cereal-hojuelas', 'tostada', 'mayonesa', 'aceite-coco', 'aceituna', 'coco-rallado', 'mantequilla', 'crema-leche', 'queso-crema', 'queso-parmesano']);
+  const NO_SUG = new Set(['papas-fritas', 'galleta-salada', 'galleta-maria', 'barra-granola', 'palomitas', 'granola', 'cereal-hojuelas', 'tostada', 'mayonesa', 'aceite-coco', 'aceituna', 'coco-rallado', 'mantequilla', 'crema-leche', 'queso-crema', 'queso-parmesano', 'chicharron', 'manteca-cerdo', 'pan-dulce', 'tostada-maiz', 'cajeta', 'leche-condensada', 'crema-agria', 'quesadilla-queso', 'enchiladas-queso', 'taco-res', 'burrito-frijol-res', 'tamal-cerdo', 'tamal-elote', 'arroz-rojo', 'harina-trigo', 'masa-maiz', 'harina-garbanzo', 'chocolate-mesa', 'piloncillo']);
   function equivalente(k, exceso) {
     const gr = exceso ? ['Cereales', 'Grasas'] : ['Cereales', 'Grasas', 'Frutas', 'Lácteos'];
     const enAl = new Set(alacena().filter(disponible).map(x => x.alimento_id));
@@ -258,7 +258,7 @@
   HG.vistas.compras = function () {
     const modo = HG.sub.cmodo || 'pasillo', F = faltantes().filter(f => f.estado === 'falta'), cats = categorias();
     let h = `<div class="row"><div class="sp"><h1>Compras</h1><div class="mut">${faltantes().filter(f => f.estado === 'falta').length} por comprar</div></div>${pill()}</div><div class="seg">${[['pasillo', 'Por pasillo'], ['cat', 'Por categoría'], ['tienda', 'Por tienda']].map(([v, t]) => `<button data-a="cmodo" data-v="${v}" class="${modo === v ? 'on' : ''}">${t}</button>`).join('')}</div>`;
-    const clave = f => modo === 'pasillo' ? (f.pasillo || 'Otros') : modo === 'cat' ? ((cats.find(c => c.id === f.categoria) || {}).nombre || 'Sin categoría') : (f.donde || 'Sin tienda definida');
+    const clave = f => modo === 'pasillo' ? (PASILLOS.includes(f.pasillo) ? f.pasillo : 'Otros') : modo === 'cat' ? ((cats.find(c => c.id === f.categoria) || {}).nombre || 'Sin categoría') : (f.donde || 'Sin tienda definida');
     const g = {}; F.forEach(f => (g[clave(f)] = g[clave(f)] || []).push(f));
     const orden = modo === 'pasillo' ? PASILLOS : Object.keys(g).sort();
     if (!F.length) h += `<div class="card mut">Nada por comprar. Cuando algo baje de su mínimo en la alacena aparece aquí solo (y también en Mi día).</div>`;
