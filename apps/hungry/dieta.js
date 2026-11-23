@@ -163,6 +163,7 @@
     act.forEach(x => HDB.set('comida/regimen_respaldo/' + x.id, x));
     act.forEach(x => HDB.del('comida/regimen/' + x.id));
     nuevo.forEach(x => HDB.set('comida/regimen/' + x.id, { ...x, origen: 'Hungry ' + hoyK() }));
+    nuevo.forEach(x => HDB.del('comida/plan_propuesto/' + x.id));   // ya es el régimen activo: no se deja una copia igual
     toast('Régimen activo. Mi día lo verá en menos de 1 minuto.'); HG.render();
   };
   HG.acc.volverreg = () => {
