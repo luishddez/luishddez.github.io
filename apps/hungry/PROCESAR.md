@@ -1,3 +1,5 @@
+> Repositorio único: luishddez/luishddez.github.io (carpeta del código: apps/hungry; se publica en luishddez.github.io/hungry/).
+
 # Cómo Claude procesa la entrevista de Hungry (modo manual)
 
 Proyecto Supabase `tkuiwssnwljjxgcixhtr`, tabla `docs (user_id, path, data jsonb)`.
@@ -15,7 +17,7 @@ Una ronda 2+ debe leerse junto con la ronda anterior (`comida/solicitudes/r1`, `
 - **Falta información o hay dudas** → responder con estado `preguntas` (máximo ~8 preguntas, claras, con opciones cuando se pueda; siempre se pueden contestar abiertas).
 - **Hay suficiente** → responder con estado `propuesta` y escribir el régimen en `comida/plan_propuesto/*`.
 - Las alergias son prohibición absoluta; lo que Luis descartó en gustos (`no`) no se propone.
-- Catálogo de alimentos: `hungry/alimentos.js` (ids y valores por 100 g, USDA SR Legacy). Los platillos base están en `hungry/platillos.js`.
+- Catálogo de alimentos: `apps/hungry/alimentos.js` (ids y valores por 100 g, USDA SR Legacy). Los platillos base están en `apps/hungry/platillos.js`.
 
 ## 3. Escribir la respuesta (solo en estas rutas; Luis lo autorizó el 2026-11-23)
 `comida/respuestas/<mismo id que la solicitud>` (r1, r2…), con `user_id` de la solicitud:
