@@ -1,0 +1,50 @@
+name: Revisar y publicar
+
+# En cualquier rama dev/** o pull request: solo se REVISA (nada se publica).
+# En main: se revisa y, si todo está bien, se arma y publica el sitio completo.
+on:
+  push:
+    branches: [main, 'dev/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Revisar que ninguna app tenga errores de sintaxis
+        run: bash scripts/revisar.sh
+
+  publicar:
+    needs: revisar
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.dep.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Armar el sitio (cada app en su dirección)
+        run: bash scripts/armar.sh
+        env:
+          COMMIT: ${{ github.sha }}
+          VISTA_PREVIA: ${{ vars.VISTA_PREVIA }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: dep
+        uses: actions/deploy-pages@v4
