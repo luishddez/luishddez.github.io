@@ -168,15 +168,21 @@
     return `<span class="estado ${m[0]}">${m[1]}</span>`;
   }
   HG.pill = pill;
+  function heroChips(P, R, sig) {
+    const hechas = P.filter(p => R.some(r => r.momento === p.id)).length, d = new Date(), ahora = d.getHours() * 60 + d.getMinutes();
+    let nxt = '<span>🎉 Día completo</span>';
+    if (sig) { const df = toMin(sig.hora || '') - ahora; nxt = `<span>⏰ ${esc(sig.comida)} · ${esc(sig.hora || '')}${df > 0 ? ' (en ' + (df >= 60 ? Math.floor(df / 60) + ' h ' : '') + (df % 60) + ' min)' : ' · ya toca'}</span>`; }
+    return `<div class="hch"><span>🍽️ ${hechas} de ${P.length} comidas</span>${nxt}</div>`;
+  }
   HG.vistas.hoy = function () {
     const P = planHoy(), R = regHoy(), S = suma(R), meta = metaKcal(), mp = metaProt(), aj = ajuste(), sig = proxima();
     const M = HG.metas ? HG.metas(perfil()) : null, pct = meta ? Math.min(100, S.k / meta * 100) : 0, fal = faltantes().filter(f => f.estado === 'falta');
-    const sobra = r0(meta - S.k), over = meta && S.k > meta * 1.05, hr = new Date().getHours(), saludo = hr < 12 ? 'Buenos días' : hr < 19 ? 'Buenas tardes' : 'Buenas noches';
+    const sobra = r0(meta - S.k), over = meta && S.k > meta * 1.05, hr = new Date().getHours(), saludo = hr < 12 ? '☀️ Buenos días' : hr < 19 ? '🌤️ Buenas tardes' : '🌙 Buenas noches';
     const mb = (n, v, t, cls) => `<div class="mb"><div class="row"><span class="sp">${n}</span><b>${r0(v)}</b><span class="mut">${t ? ' / ' + r0(t) : ''} g</span></div><div class="bar ${cls || ''}"><i style="width:${t ? Math.min(100, v / t * 100) : 0}%"></i></div></div>`;
     let h = `<div class="row"><div class="sp"><div class="mut">${new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^./, c => c.toUpperCase())}</div><h1>${saludo}</h1></div>${pill()}</div>`;
     if (!plan().length) h += `<div class="vacio"><img src="icon.svg" alt="Hungry" width="96" height="96" style="border-radius:22px;box-shadow:var(--sh)"><div style="height:10px"></div><b>Bienvenido a Hungry</b><p>Armo tu régimen desde cero: te pregunto por tu cuerpo, tu objetivo, tu salud y tus gustos, y te propongo comidas con calorías y porciones. Son unos 5 minutos.</p><button class="pri" data-a="empezar">Empezar</button>${HDB.hijos('comida/plan').length ? '<div style="margin-top:10px"><button class="sm ghost" data-a="importar">Ya tenía un plan en Mi día: importarlo</button></div>' : ''}</div>`;
     else {
-      h += `<div class="hero"><div class="ring ${over ? 'over' : ''}" style="--p:${pct}"><div><b>${r0(S.k)}</b><span>de ${r0(meta)} kcal</span></div></div><div class="hs"><div class="hl">${over ? `Te pasaste <b>${-sobra} kcal</b>` : sobra > 0 ? `Te quedan <b>${sobra} kcal</b>` : '¡Meta cumplida!'}</div>${mb('Proteína', S.pr, mp)}${mb('Carbs', S.c, M && M.carb, 'sec')}${mb('Grasa', S.gr, M && M.grasa, 'sec')}</div></div>`;
+      h += `<div class="hero"><div class="ring ${over ? 'over' : ''}" style="--p:${pct}"><div><b>${r0(S.k)}</b><span>de ${r0(meta)} kcal</span></div></div><div class="hs"><div class="hl">${over ? `Te pasaste <b>${-sobra} kcal</b>` : sobra > 0 ? `Te quedan <b>${sobra} kcal</b>` : '¡Meta cumplida!'}</div>${mb('Proteína', S.pr, mp, 'mp')}${mb('Carbs', S.c, M && M.carb, 'mc')}${mb('Grasa', S.gr, M && M.grasa, 'mg')}</div>${heroChips(P, R, sig)}</div>`;
       h += `<label class="sw"><input type="checkbox" data-i="gym" ${dia().gym ? 'checked' : ''}><span class="knob"></span> Hoy entreno <span class="mut">(suma tu licuado previo)</span></label>`;
       h += aguaCard(true);
       if (aj) h += aj.ok ? `<div class="aviso ok"><span class="ai">👌</span><span>${esc(aj.t)}</span></div>` : `<details class="aviso"><summary>💡 ${esc(aj.t.split('. ')[0].replace(/ kcal bajo tu plan.*/, ' kcal bajo tu plan').replace(/ kcal sobre tu plan.*/, ' kcal sobre tu plan'))} <span class="mut">· ver qué hacer</span></summary><div style="margin-top:6px">${esc(aj.t)}</div></details>`;

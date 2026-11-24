@@ -119,6 +119,18 @@ input[type=checkbox],input[type=radio]{min-height:0;width:22px;height:22px;accen
 @media(prefers-color-scheme:dark){.opt input:checked+span{color:#10200f}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media(max-width:360px){.hero{flex-direction:column;text-align:center}}
+
+/* Hoy: parte superior más viva */
+.hero{flex-wrap:wrap;background:radial-gradient(120% 140% at 0% 0%,#3f9468 0%,#256a47 45%,#17402c 100%);border:0;color:#f2fbf4;box-shadow:0 10px 28px rgba(23,64,44,.35)}
+.hero .ring{width:124px;height:124px;background:conic-gradient(#b8f2c4,#e6f7a8 calc(var(--p)*1%),rgba(255,255,255,.18) 0);box-shadow:0 0 22px rgba(184,242,196,.25)}
+.hero .ring::before{inset:10px;background:#143a28}
+.hero .ring.over{background:conic-gradient(#ffd27a,#ff9f5a calc(var(--p)*1%),rgba(255,255,255,.18) 0)}
+.hero .ring b{color:#fff;font-size:30px}.hero .ring span{color:#bfe5c9}
+.hero .hl{color:#f2fbf4;font-size:15px}.hero .hl b{color:#fff;font-size:20px}
+.hero .mb{color:#e3f4e8;font-size:12px}.hero .mb .row span.mut,.hero .mb .mut{color:#bfe5c9}
+.hero .bar{background:rgba(255,255,255,.18)}.hero .bar.mp i{background:#9be7a8}.hero .bar.mc i{background:#f4c76b;opacity:1}.hero .bar.mg i{background:#8cc3f0;opacity:1}
+.hero .hch{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}.hero .hch span{background:rgba(255,255,255,.14);border-radius:99px;padding:6px 12px;font-size:13px;color:#f2fbf4}
+h1{letter-spacing:-.4px}
 </style>
 </head>
 <body>
