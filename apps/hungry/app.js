@@ -86,10 +86,39 @@
   const horaIn = id => `<label class="mut" style="display:inline-flex;gap:6px;align-items:center">🕐 ¿A qué hora? <input type="time" data-i="hr" data-m="${id}" value="${horaSel(id)}" style="width:auto"></label>`;
   const conHora = id => { const h = horaSel(id), [a, b] = h.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return { hora: h, ts: d.getTime() }; };
   const macrosOp = o => (o.i || []).reduce((q, [id, g]) => { const n = nut(id, g); return { k: q.k + n.k, pr: q.pr + n.pr, c: q.c + n.c, gr: q.gr + n.gr }; }, { k: 0, pr: 0, c: 0, gr: 0 });
+  // gramos -> medida casera («220 g» => «1 ⅓ tazas»), usando la porción típica del alimento
+  const FRAC = [[0, ''], [.25, '¼'], [1 / 3, '⅓'], [.5, '½'], [2 / 3, '⅔'], [.75, '¾'], [1, '']];
+  function medida(id, g) {
+    const a = AM[id]; if (!a || !a.pl || !a.por) return '';
+    const m = a.pl.match(/^\s*(\d+\/\d+|\d+(?:\.\d+)?)\s+([^(]+?)\s*(?:\(|$)/); if (!m) return '';
+    const q = m[1].includes('/') ? m[1].split('/')[0] / m[1].split('/')[1] : Number(m[1]); let unit = m[2].trim();
+    if (/^(g|ml|porci)/i.test(unit)) return '';
+    let n = q * g / a.por; if (n < .2) return '';
+    let w = Math.floor(n + 1e-9), fr = n - w;
+    if (n >= 5) { w = Math.round(n); fr = 0; }
+    const best = FRAC.reduce((x, y) => Math.abs(y[0] - fr) < Math.abs(x[0] - fr) ? y : x);
+    if (best[0] === 1) { w += 1; best[1] = ''; }
+    const txt = (w ? w : '') + (w && best[1] ? ' ' : '') + (n >= 5 ? '' : best[1]);
+    const mas = w > 1 || (w === 1 && best[1]);
+    if (mas) unit = unit.split(' ').map((x, i, A) => (A.slice(0, i).includes('de') || x === 'de') ? x : (/ón$/.test(x) ? x.slice(0, -2) + 'ones' : /[aeiouáéíóú]$/.test(x) ? x + 's' : /s$/.test(x) ? x : x + 'es')).join(' ');
+    return (txt || '¼') + ' ' + unit;
+  }
+  HG.medida = medida;
+  const barraMacros = m => { const p = m.pr * 4, c = m.c * 4, g = m.gr * 9, t = p + c + g || 1; return `<div class="mbar"><i style="width:${p / t * 100}%;background:var(--ac)"></i><i style="width:${c / t * 100}%;background:#e0b25a"></i><i style="width:${g / t * 100}%;background:#6fa8dc"></i></div><div class="mleg"><span><i style="background:var(--ac)"></i>Proteína ${r0(m.pr)} g</span><span><i style="background:#e0b25a"></i>Carbs ${r0(m.c)} g</span><span><i style="background:#6fa8dc"></i>Grasa ${r0(m.gr)} g</span></div>`; };
   const opcionesHTML = p => {
     const L = p.opciones || []; if (!L.length) return `<p>${esc(p.que_lleva)}</p>`;
-    return '<div class="mut" style="margin:6px 0">Toca la opción que comiste:</div>' + L.map((o, j) => { const m = macrosOp(o); return `<div class="opc"><div class="row"><b class="sp">${['A', 'B', 'C', 'D'][j] || j + 1}. ${esc(o.n)}</b><span class="mut">${r0(m.k)} kcal · ${r0(m.pr)} g prot</span></div><div class="nota">${(o.i || []).map(([id, g]) => esc((AM[id] ? AM[id].n.split(' (')[0] : id) + ' ' + g + ' g')).join(' · ')}</div><button class="pri sm" style="width:100%;margin-top:6px" data-a="comiop" data-id="${esc(p.id)}" data-o="${j}">✓ Comí esta</button></div>`; }).join('');
+    const sel = HG.sub.sel && HG.sub.sel[p.id], S = suma(regHoy()), meta = metaKcal(), mp = metaProt();
+    return '<div class="mut" style="margin:6px 0">Elige lo que comiste:</div>' + L.map((o, j) => {
+      const m = macrosOp(o), on = sel === j, em = (o.i || []).slice(0, 5).map(([id]) => AM[id] ? AM[id].e : '').join('');
+      let h = `<div class="opc ${on ? 'sel' : ''}" data-a="elige" data-id="${esc(p.id)}" data-o="${j}"><div class="row"><span class="oem">${em}</span><span class="sp"><b>${['A', 'B', 'C', 'D'][j] || j + 1}. ${esc(o.n)}</b></span><span class="okc"><b>${r0(m.k)}</b> kcal<br><span class="mut">${r0(m.pr)} g prot</span></span></div>`;
+      if (on) {
+        h += barraMacros(m) + '<div class="ing">' + (o.i || []).map(([id, g]) => { const a = AM[id], md = medida(id, g); return `<div class="ig"><span class="ie">${a ? a.e : '•'}</span><span class="sp">${esc(a ? a.n.split(' (')[0] : id)}</span><span class="iq">${md ? '<b>' + esc(md) + '</b><span class="mut"> · ' + g + ' g</span>' : '<b>' + g + ' g</b>'}</span></div>`; }).join('') + '</div>';
+        h += `<div class="mut" style="margin-top:8px">Con esto llevarías <b>${r0(S.k + m.k)}</b>${meta ? ' de ' + r0(meta) : ''} kcal y <b>${r0(S.pr + m.pr)}</b>${mp ? ' de ' + r0(mp) : ''} g de proteína.</div><div style="margin-top:8px">${horaIn(p.id)}</div><button class="pri" style="width:100%;margin-top:8px" data-a="comiop" data-id="${esc(p.id)}" data-o="${j}">✓ Comí esta</button>`;
+      } else h += `<div class="mut" style="margin-top:4px">Toca para ver porciones</div>`;
+      return h + '</div>';
+    }).join('');
   };
+  HG.acc.elige = (b, e) => { if (e && e.target.closest('input,label,button[data-a=comiop]')) return; const id = b.dataset.id, o = Number(b.dataset.o); HG.sub.sel = HG.sub.sel || {}; HG.sub.sel[id] = HG.sub.sel[id] === o ? null : o; HG.render(); };
   const proxima = () => planHoy().find(p => !regHoy().some(r => r.momento === p.id));
 
   // sugerencia de ajuste para la siguiente comida (si te pasaste o te quedaste corto)
@@ -188,7 +217,7 @@
     const p = plan().find(x => x.id === b.dataset.id), o = p && (p.opciones || [])[Number(b.dataset.o)]; if (!o) return;
     const m = macrosOp(o), hh = conHora(p.id);
     guardarRegistro({ ...hh, id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida + ': ' + o.n, kcal: r0(m.k), prot: r0(m.pr), carb: r0(m.c), grasa: r0(m.gr), aprox: false, origen: 'plan', items: (o.i || []).map(([id, g]) => ({ nombre: AM[id] ? AM[id].n : id, gramos: g })) });
-    if (HG.sub.hr) delete HG.sub.hr[p.id]; toast('Anotado: ' + o.n + ' · ' + hh.hora); HG.render();
+    if (HG.sub.sel) delete HG.sub.sel[p.id]; if (HG.sub.hr) delete HG.sub.hr[p.id]; toast('Anotado: ' + o.n + ' · ' + hh.hora); HG.render();
   };
   HG.acc.omiti = b => {
     const p = plan().find(x => x.id === b.dataset.id); if (!p) return;
