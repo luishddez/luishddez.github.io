@@ -109,12 +109,15 @@
     const hechas = planHoy().filter(p => regHoy().some(r => r.momento === p.id));
     const extras = regHoy().filter(r => r.momento === 'extra');
     if (!hechas.length && !extras.length) return null;
-    const real = suma(regHoy()).k, esperado = hechas.reduce((n, p) => n + (Number(p.kcal) || 0), 0), D = r0(real - esperado);
-    if (Math.abs(D) < 80) return { ok: true, t: '👌 Vas al ritmo de tu plan.' };
-    const sig = proxima();
-    if (!sig) return { ok: false, t: D > 0 ? `Cerraste el día con +${D} kcal sobre tu plan. No hace falta compensar: mañana sigue tu plan normal.` : `Cerraste el día con ${D} kcal por debajo de tu plan. Mañana sigue tu plan; no lo compenses de golpe.` };
+    const S = suma(regHoy()), real = S.k, esperado = hechas.reduce((n, p) => n + (Number(p.kcal) || 0), 0), D = r0(real - esperado);
+    const prEsp = hechas.reduce((n, p) => n + (Number(p.proteina_g) || 0), 0), dP = r0(S.pr - prEsp), sig = proxima();
+    // proteína: lo único que conviene recuperar el mismo día, con algo ligero
+    const faltaP = (!sig && metaProt() ? metaProt() - S.pr : -dP);
+    const notaP = faltaP >= 20 ? ` Te faltan ≈${r0(faltaP)} g de proteína${sig ? ` (en «${sig.comida}» elige la opción con más proteína o suma un yogurt griego)` : ': cierra con algo ligero (yogurt griego, 2 huevos o un licuado de proteína)'}.` : '';
+    if (Math.abs(D) < 80) return notaP ? { ok: false, t: '💡 Vas al ritmo en calorías.' + notaP } : { ok: true, t: '👌 Vas al ritmo de tu plan.' };
+    if (!sig) return { ok: false, t: (D > 0 ? `Cerraste el día con +${D} kcal sobre tu plan. No hace falta compensar: mañana sigue tu plan normal.` : `Cerraste el día con ${D} kcal por debajo de tu plan. Mañana sigue tu plan; no lo compenses de golpe.`) + notaP };
     const tope = Math.min(Math.abs(D), Math.round((Number(sig.kcal) || 600) * 0.5)), eq = equivalente(tope, D > 0);
-    return { ok: false, t: D > 0 ? `Llevas +${D} kcal sobre tu plan. En «${sig.comida}» quita ≈ ${tope} kcal${eq ? ': ' + eq : ''}.` : `Llevas ${D} kcal bajo tu plan. En «${sig.comida}» agrega ≈ ${tope} kcal${eq ? ': ' + eq : ''}.` };
+    return { ok: false, t: (D > 0 ? `Llevas +${D} kcal sobre tu plan. En «${sig.comida}» quita ≈ ${tope} kcal${eq ? ': ' + eq : ''}.` : `Llevas ${D} kcal bajo tu plan. En «${sig.comida}» agrega ≈ ${tope} kcal${eq ? ': ' + eq : ''}. Solo si tienes hambre.`) + notaP };
   }
 
   // ---------- platillos con lo que hay en la alacena ----------
