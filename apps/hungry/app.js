@@ -85,6 +85,11 @@
   const horaSel = id => (HG.sub.hr && HG.sub.hr[id]) || ahoraHM();
   const horaIn = id => `<label class="mut" style="display:inline-flex;gap:6px;align-items:center">🕐 ¿A qué hora? <input type="time" data-i="hr" data-m="${id}" value="${horaSel(id)}" style="width:auto"></label>`;
   const conHora = id => { const h = horaSel(id), [a, b] = h.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return { hora: h, ts: d.getTime() }; };
+  const macrosOp = o => (o.i || []).reduce((q, [id, g]) => { const n = nut(id, g); return { k: q.k + n.k, pr: q.pr + n.pr, c: q.c + n.c, gr: q.gr + n.gr }; }, { k: 0, pr: 0, c: 0, gr: 0 });
+  const opcionesHTML = p => {
+    const L = p.opciones || []; if (!L.length) return `<p>${esc(p.que_lleva)}</p>`;
+    return '<div class="mut" style="margin:6px 0">Toca la opción que comiste:</div>' + L.map((o, j) => { const m = macrosOp(o); return `<div class="opc"><div class="row"><b class="sp">${['A', 'B', 'C', 'D'][j] || j + 1}. ${esc(o.n)}</b><span class="mut">${r0(m.k)} kcal · ${r0(m.pr)} g prot</span></div><div class="nota">${(o.i || []).map(([id, g]) => esc((AM[id] ? AM[id].n.split(' (')[0] : id) + ' ' + g + ' g')).join(' · ')}</div><button class="pri sm" style="width:100%;margin-top:6px" data-a="comiop" data-id="${esc(p.id)}" data-o="${j}">✓ Comí esta</button></div>`; }).join('');
+  };
   const proxima = () => planHoy().find(p => !regHoy().some(r => r.momento === p.id));
 
   // sugerencia de ajuste para la siguiente comida (si te pasaste o te quedaste corto)
@@ -142,14 +147,14 @@
       h += `<div class="hero"><div class="ring ${over ? 'over' : ''}" style="--p:${pct}"><div><b>${r0(S.k)}</b><span>de ${r0(meta)} kcal</span></div></div><div class="hs"><div class="hl">${over ? `Te pasaste <b>${-sobra} kcal</b>` : sobra > 0 ? `Te quedan <b>${sobra} kcal</b>` : '¡Meta cumplida!'}</div>${mb('Proteína', S.pr, mp)}${mb('Carbs', S.c, M && M.carb, 'sec')}${mb('Grasa', S.gr, M && M.grasa, 'sec')}</div></div>`;
       h += `<label class="sw"><input type="checkbox" data-i="gym" ${dia().gym ? 'checked' : ''}><span class="knob"></span> Hoy entreno <span class="mut">(suma tu licuado previo)</span></label>`;
       if (aj) h += `<div class="aviso ${aj.ok ? 'ok' : ''}"><span class="ai">${aj.ok ? '👌' : '💡'}</span><span>${esc(aj.t)}</span></div>`;
-      if (sig) h += `<div class="next"><div class="row"><span class="tag">${sig.hora && sig.hora < ahoraHM() ? 'Pendiente' : 'Sigue'} · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2><p>${esc(sig.que_lleva)}</p><div class="acts2"><button class="pri" data-a="comi" data-id="${esc(sig.id)}">✓ Ya comí esto</button><button data-a="foto" data-m="${esc(sig.id)}">📷 Foto</button><button data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button></div><div style="margin-top:10px">${horaIn(sig.id)}</div><div style="margin-top:8px"><button class="sm" style="width:100%" data-a="omiti" data-id="${esc(sig.id)}">✗ No la comí / no se cumplió</button></div></div>`;
+      if (sig) h += `<div class="next"><div class="row"><span class="tag">${sig.hora && sig.hora < ahoraHM() ? 'Pendiente' : 'Sigue'} · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2>${sig.nota ? `<div class="nota">${esc(sig.nota)}</div>` : ''}${opcionesHTML(sig)}<div class="acts2"><button class="${(sig.opciones || []).length ? '' : 'pri'}" data-a="comi" data-id="${esc(sig.id)}">${(sig.opciones || []).length ? '✓ Plan' : '✓ Ya comí esto'}</button><button data-a="foto" data-m="${esc(sig.id)}">📷 Foto</button><button data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button></div><div style="margin-top:10px">${horaIn(sig.id)}</div><div style="margin-top:8px"><button class="sm" style="width:100%" data-a="omiti" data-id="${esc(sig.id)}">✗ No la comí / no se cumplió</button></div></div>`;
       else h += `<div class="aviso ok"><span class="ai">🎉</span><span>Completaste todas las comidas de hoy.</span></div>`;
       const resto = P.filter(p => !sig || p.id !== sig.id);
       if (resto.length) {
         h += `<h2>El resto de tu día</h2><div class="card lista">`;
         resto.forEach(p => {
           const reg = R.filter(r => r.momento === p.id), hecho = reg.length, kr = suma(reg).k, omit = hecho && reg.every(r => r.omitida);
-          h += `<details class="dl ${hecho ? 'hecho' : ''} ${omit ? 'omit' : ''}"><summary><span class="dot">${omit ? '✗' : hecho ? '✓' : ''}</span><span class="sp"><b>${esc(p.comida)}</b><span class="mut"> · ${esc(p.hora || '')}${p.dias === 'gym' ? ' · gym' : ''}</span></span><span class="mut">${omit ? 'no se cumplió' : hecho ? r0(kr) + ' kcal' + (reg.some(r => r.aprox) ? ' ~' : '') : esc(p.kcal) + ' kcal'}</span></summary><div class="dd"><div class="nota">${esc(p.que_lleva)}</div><div class="row" style="margin-top:8px">${hecho ? `<button class="sm ghost" data-a="deshacer" data-id="${esc(p.id)}">Deshacer</button>` : `<div style="width:100%;margin-bottom:6px">${horaIn(p.id)}</div><button class="pri sm" data-a="comi" data-id="${esc(p.id)}">✓ Ya comí esto</button><button class="sm" data-a="foto" data-m="${esc(p.id)}">📷</button><button class="sm" data-a="otro" data-m="${esc(p.id)}">Otra cosa</button><button class="sm ghost" data-a="omiti" data-id="${esc(p.id)}">✗ No se cumplió</button>`}</div></div></details>`;
+          h += `<details class="dl ${hecho ? 'hecho' : ''} ${omit ? 'omit' : ''}"><summary><span class="dot">${omit ? '✗' : hecho ? '✓' : ''}</span><span class="sp"><b>${esc(p.comida)}</b><span class="mut"> · ${esc(p.hora || '')}${p.dias === 'gym' ? ' · gym' : ''}</span></span><span class="mut">${omit ? 'no se cumplió' : hecho ? r0(kr) + ' kcal' + (reg.some(r => r.aprox) ? ' ~' : '') : esc(p.kcal) + ' kcal'}</span></summary><div class="dd">${opcionesHTML(p)}<div class="row" style="margin-top:8px">${hecho ? `<button class="sm ghost" data-a="deshacer" data-id="${esc(p.id)}">Deshacer</button>` : `<div style="width:100%;margin-bottom:6px">${horaIn(p.id)}</div><button class="pri sm" data-a="comi" data-id="${esc(p.id)}">✓ Ya comí esto</button><button class="sm" data-a="foto" data-m="${esc(p.id)}">📷</button><button class="sm" data-a="otro" data-m="${esc(p.id)}">Otra cosa</button><button class="sm ghost" data-a="omiti" data-id="${esc(p.id)}">✗ No se cumplió</button>`}</div></div></details>`;
         });
         h += '</div>';
       }
@@ -176,6 +181,12 @@
     const hh = conHora(p.id).hora; if (HG.sub.hr) delete HG.sub.hr[p.id]; toast('Anotado: ' + p.comida + ' · ' + hh); HG.render();
   };
   // «No se cumplió»: queda registrada la ausencia (0 kcal) para ver cuántas comidas del plan se saltan
+  HG.acc.comiop = b => {
+    const p = plan().find(x => x.id === b.dataset.id), o = p && (p.opciones || [])[Number(b.dataset.o)]; if (!o) return;
+    const m = macrosOp(o), hh = conHora(p.id);
+    guardarRegistro({ ...hh, id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida + ': ' + o.n, kcal: r0(m.k), prot: r0(m.pr), carb: r0(m.c), grasa: r0(m.gr), aprox: false, origen: 'plan', items: (o.i || []).map(([id, g]) => ({ nombre: AM[id] ? AM[id].n : id, gramos: g })) });
+    if (HG.sub.hr) delete HG.sub.hr[p.id]; toast('Anotado: ' + o.n + ' · ' + hh.hora); HG.render();
+  };
   HG.acc.omiti = b => {
     const p = plan().find(x => x.id === b.dataset.id); if (!p) return;
     guardarRegistro({ ...conHora(p.id), id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida, kcal: 0, prot: 0, carb: 0, grasa: 0, aprox: false, omitida: true, origen: 'omitida', items: [] });
