@@ -95,6 +95,7 @@ input[type=checkbox],input[type=radio]{min-height:0;width:22px;height:22px;accen
 .dl summary::-webkit-details-marker{display:none}.dl+.dl{border-top:1px solid var(--br)}
 .dot{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--br);display:grid;place-items:center;font-size:14px;color:#fff}
 .dl.hecho .dot{background:var(--ok);border-color:var(--ok)}.dl.hecho b{color:var(--mut);text-decoration:line-through;text-decoration-color:var(--br)}
+.dl.omit .dot{background:var(--warn);border-color:var(--warn)}
 .dd{padding:0 0 12px 34px}
 .vacio{text-align:center;padding:28px 16px;background:var(--card);border:1px dashed var(--br);border-radius:20px;margin:14px 0}
 .vacio .big{font-size:56px}.vacio p{color:var(--mut);margin:4px 0 14px}
@@ -128,7 +129,7 @@ input[type=checkbox],input[type=radio]{min-height:0;width:22px;height:22px;accen
 <script src="app.js"></script>
 <script src="dieta.js"></script>
 <script src="entrevista.js"></script>
-<script src="../shared/feedback.js" data-app="hungry" data-key="mi-dia.auth.v1" data-version="2026-11-23"></script>
+<script src="../shared/feedback.js" data-app="hungry" data-key="mi-dia.auth.v1" data-version="2026-11-24"></script>
 <script>window.FB_CTX=function(){try{return{pestana:HG.tab,seccion:HG.sub,estado_sync:HDB.estado(),pendientes_sync:HDB.pendientes(),regimen_activo:HG.plan().length,alacena:HG.alacena().length}}catch(e){return null}};</script>
 <script>HG.iniciar();</script>
 </body>
