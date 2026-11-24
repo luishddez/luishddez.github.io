@@ -81,6 +81,10 @@
   const metaProt = () => { const s = planHoy().reduce((n, p) => n + (Number(p.proteina_g) || 0), 0); return s || perfil().meta_prot || 0; };
   Object.assign(HG, { planHoy, metaKcal, metaProt });
   const tipoDe = p => ({ desayuno: 'd', comida: 'c', previa: 'p', cena: 'n' }[p.id] || 'c');
+  const ahoraHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const horaSel = id => (HG.sub.hr && HG.sub.hr[id]) || ahoraHM();
+  const horaIn = id => `<label class="mut" style="display:inline-flex;gap:6px;align-items:center">🕐 ¿A qué hora? <input type="time" data-i="hr" data-m="${id}" value="${horaSel(id)}" style="width:auto"></label>`;
+  const conHora = id => { const h = horaSel(id), [a, b] = h.split(':').map(Number), d = new Date(); d.setHours(a, b, 0, 0); return { hora: h, ts: d.getTime() }; };
   const proxima = () => planHoy().find(p => !regHoy().some(r => r.momento === p.id));
 
   // sugerencia de ajuste para la siguiente comida (si te pasaste o te quedaste corto)
@@ -138,14 +142,14 @@
       h += `<div class="hero"><div class="ring ${over ? 'over' : ''}" style="--p:${pct}"><div><b>${r0(S.k)}</b><span>de ${r0(meta)} kcal</span></div></div><div class="hs"><div class="hl">${over ? `Te pasaste <b>${-sobra} kcal</b>` : sobra > 0 ? `Te quedan <b>${sobra} kcal</b>` : '¡Meta cumplida!'}</div>${mb('Proteína', S.pr, mp)}${mb('Carbs', S.c, M && M.carb, 'sec')}${mb('Grasa', S.gr, M && M.grasa, 'sec')}</div></div>`;
       h += `<label class="sw"><input type="checkbox" data-i="gym" ${dia().gym ? 'checked' : ''}><span class="knob"></span> Hoy entreno <span class="mut">(suma tu licuado previo)</span></label>`;
       if (aj) h += `<div class="aviso ${aj.ok ? 'ok' : ''}"><span class="ai">${aj.ok ? '👌' : '💡'}</span><span>${esc(aj.t)}</span></div>`;
-      if (sig) h += `<div class="next"><div class="row"><span class="tag">Sigue · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2><p>${esc(sig.que_lleva)}</p><div class="acts2"><button class="pri" data-a="comi" data-id="${esc(sig.id)}">✓ Ya comí esto</button><button data-a="foto" data-m="${esc(sig.id)}">📷 Foto</button><button data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button></div><div style="margin-top:8px"><button class="sm ghost" data-a="omiti" data-id="${esc(sig.id)}">✗ No se cumplió esta comida</button></div></div>`;
+      if (sig) h += `<div class="next"><div class="row"><span class="tag">${sig.hora && sig.hora < ahoraHM() ? 'Pendiente' : 'Sigue'} · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2><p>${esc(sig.que_lleva)}</p><div class="acts2"><button class="pri" data-a="comi" data-id="${esc(sig.id)}">✓ Ya comí esto</button><button data-a="foto" data-m="${esc(sig.id)}">📷 Foto</button><button data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button></div><div style="margin-top:10px">${horaIn(sig.id)}</div><div style="margin-top:8px"><button class="sm" style="width:100%" data-a="omiti" data-id="${esc(sig.id)}">✗ No la comí / no se cumplió</button></div></div>`;
       else h += `<div class="aviso ok"><span class="ai">🎉</span><span>Completaste todas las comidas de hoy.</span></div>`;
       const resto = P.filter(p => !sig || p.id !== sig.id);
       if (resto.length) {
         h += `<h2>El resto de tu día</h2><div class="card lista">`;
         resto.forEach(p => {
           const reg = R.filter(r => r.momento === p.id), hecho = reg.length, kr = suma(reg).k, omit = hecho && reg.every(r => r.omitida);
-          h += `<details class="dl ${hecho ? 'hecho' : ''} ${omit ? 'omit' : ''}"><summary><span class="dot">${omit ? '✗' : hecho ? '✓' : ''}</span><span class="sp"><b>${esc(p.comida)}</b><span class="mut"> · ${esc(p.hora || '')}${p.dias === 'gym' ? ' · gym' : ''}</span></span><span class="mut">${omit ? 'no se cumplió' : hecho ? r0(kr) + ' kcal' + (reg.some(r => r.aprox) ? ' ~' : '') : esc(p.kcal) + ' kcal'}</span></summary><div class="dd"><div class="nota">${esc(p.que_lleva)}</div><div class="row" style="margin-top:8px">${hecho ? `<button class="sm ghost" data-a="deshacer" data-id="${esc(p.id)}">Deshacer</button>` : `<button class="pri sm" data-a="comi" data-id="${esc(p.id)}">✓ Ya comí esto</button><button class="sm" data-a="foto" data-m="${esc(p.id)}">📷</button><button class="sm" data-a="otro" data-m="${esc(p.id)}">Otra cosa</button><button class="sm ghost" data-a="omiti" data-id="${esc(p.id)}">✗ No se cumplió</button>`}</div></div></details>`;
+          h += `<details class="dl ${hecho ? 'hecho' : ''} ${omit ? 'omit' : ''}"><summary><span class="dot">${omit ? '✗' : hecho ? '✓' : ''}</span><span class="sp"><b>${esc(p.comida)}</b><span class="mut"> · ${esc(p.hora || '')}${p.dias === 'gym' ? ' · gym' : ''}</span></span><span class="mut">${omit ? 'no se cumplió' : hecho ? r0(kr) + ' kcal' + (reg.some(r => r.aprox) ? ' ~' : '') : esc(p.kcal) + ' kcal'}</span></summary><div class="dd"><div class="nota">${esc(p.que_lleva)}</div><div class="row" style="margin-top:8px">${hecho ? `<button class="sm ghost" data-a="deshacer" data-id="${esc(p.id)}">Deshacer</button>` : `<div style="width:100%;margin-bottom:6px">${horaIn(p.id)}</div><button class="pri sm" data-a="comi" data-id="${esc(p.id)}">✓ Ya comí esto</button><button class="sm" data-a="foto" data-m="${esc(p.id)}">📷</button><button class="sm" data-a="otro" data-m="${esc(p.id)}">Otra cosa</button><button class="sm ghost" data-a="omiti" data-id="${esc(p.id)}">✗ No se cumplió</button>`}</div></div></details>`;
         });
         h += '</div>';
       }
@@ -168,13 +172,13 @@
   HG.acc.tab = b => { HG.tab = b.dataset.t; HG.render(); };
   HG.acc.comi = b => {
     const p = plan().find(x => x.id === b.dataset.id); if (!p) return;
-    guardarRegistro({ id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida, kcal: Number(p.kcal) || 0, prot: Number(p.proteina_g) || 0, aprox: true, origen: 'plan', items: [{ nombre: p.que_lleva }] });
-    toast('Anotado: ' + p.comida); HG.render();
+    guardarRegistro({ ...conHora(p.id), id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida, kcal: Number(p.kcal) || 0, prot: Number(p.proteina_g) || 0, aprox: true, origen: 'plan', items: [{ nombre: p.que_lleva }] });
+    const hh = conHora(p.id).hora; if (HG.sub.hr) delete HG.sub.hr[p.id]; toast('Anotado: ' + p.comida + ' · ' + hh); HG.render();
   };
   // «No se cumplió»: queda registrada la ausencia (0 kcal) para ver cuántas comidas del plan se saltan
   HG.acc.omiti = b => {
     const p = plan().find(x => x.id === b.dataset.id); if (!p) return;
-    guardarRegistro({ id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida, kcal: 0, prot: 0, carb: 0, grasa: 0, aprox: false, omitida: true, origen: 'omitida', items: [] });
+    guardarRegistro({ ...conHora(p.id), id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida, kcal: 0, prot: 0, carb: 0, grasa: 0, aprox: false, omitida: true, origen: 'omitida', items: [] });
     toast('Anotado: no se cumplió ' + p.comida); HG.render();
   };
   HG.acc.deshacer = b => { regHoy().filter(r => r.momento === b.dataset.id).forEach(r => HDB.del('comida/registro/' + r.id)); HG.render(); };
@@ -427,7 +431,7 @@
     if (i === 'bq') listaAlta(e.target.value); else if (i === 'bq2') listaOtro(e.target.value); else if (i === 'og') HG.macrosOtro($('#modal [data-a=ogok]').dataset.id);
     else if (i === 'alq') { HG.sub.alq = e.target.value; const pos = e.target.selectionStart; const ae = e.target; $('#app').innerHTML = HG.vistas.alacena(); const n = $('[data-i=alq]'); n.focus(); n.setSelectionRange(pos, pos); }
   });
-  document.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.i === 'gym') { HDB.set('comida/estado/dia', { id: 'dia', fecha: hoyK(), gym: e.target.checked }); HG.render(); } });
+  document.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.i === 'hr') { (HG.sub.hr = HG.sub.hr || {})[e.target.dataset.m] = e.target.value; return; } if (e.target.dataset && e.target.dataset.i === 'gym') { HDB.set('comida/estado/dia', { id: 'dia', fecha: hoyK(), gym: e.target.checked }); HG.render(); } });
   window.addEventListener('hdb', () => HG.render());
   HG.iniciar = async function () {
     HG.render();
