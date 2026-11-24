@@ -138,14 +138,14 @@
       h += `<div class="hero"><div class="ring ${over ? 'over' : ''}" style="--p:${pct}"><div><b>${r0(S.k)}</b><span>de ${r0(meta)} kcal</span></div></div><div class="hs"><div class="hl">${over ? `Te pasaste <b>${-sobra} kcal</b>` : sobra > 0 ? `Te quedan <b>${sobra} kcal</b>` : '¡Meta cumplida!'}</div>${mb('Proteína', S.pr, mp)}${mb('Carbs', S.c, M && M.carb, 'sec')}${mb('Grasa', S.gr, M && M.grasa, 'sec')}</div></div>`;
       h += `<label class="sw"><input type="checkbox" data-i="gym" ${dia().gym ? 'checked' : ''}><span class="knob"></span> Hoy entreno <span class="mut">(suma tu licuado previo)</span></label>`;
       if (aj) h += `<div class="aviso ${aj.ok ? 'ok' : ''}"><span class="ai">${aj.ok ? '👌' : '💡'}</span><span>${esc(aj.t)}</span></div>`;
-      if (sig) h += `<div class="next"><div class="row"><span class="tag">Sigue · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2><p>${esc(sig.que_lleva)}</p><div class="acts2"><button class="pri" data-a="comi" data-id="${esc(sig.id)}">✓ Ya comí esto</button><button data-a="foto" data-m="${esc(sig.id)}">📷 Foto</button><button data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button></div></div>`;
+      if (sig) h += `<div class="next"><div class="row"><span class="tag">Sigue · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2><p>${esc(sig.que_lleva)}</p><div class="acts2"><button class="pri" data-a="comi" data-id="${esc(sig.id)}">✓ Ya comí esto</button><button data-a="foto" data-m="${esc(sig.id)}">📷 Foto</button><button data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button></div><div style="margin-top:8px"><button class="sm ghost" data-a="omiti" data-id="${esc(sig.id)}">✗ No se cumplió esta comida</button></div></div>`;
       else h += `<div class="aviso ok"><span class="ai">🎉</span><span>Completaste todas las comidas de hoy.</span></div>`;
       const resto = P.filter(p => !sig || p.id !== sig.id);
       if (resto.length) {
         h += `<h2>El resto de tu día</h2><div class="card lista">`;
         resto.forEach(p => {
-          const reg = R.filter(r => r.momento === p.id), hecho = reg.length, kr = suma(reg).k;
-          h += `<details class="dl ${hecho ? 'hecho' : ''}"><summary><span class="dot">${hecho ? '✓' : ''}</span><span class="sp"><b>${esc(p.comida)}</b><span class="mut"> · ${esc(p.hora || '')}${p.dias === 'gym' ? ' · gym' : ''}</span></span><span class="mut">${hecho ? r0(kr) + ' kcal' + (reg.some(r => r.aprox) ? ' ~' : '') : esc(p.kcal) + ' kcal'}</span></summary><div class="dd"><div class="nota">${esc(p.que_lleva)}</div><div class="row" style="margin-top:8px">${hecho ? `<button class="sm ghost" data-a="deshacer" data-id="${esc(p.id)}">Deshacer</button>` : `<button class="pri sm" data-a="comi" data-id="${esc(p.id)}">✓ Ya comí esto</button><button class="sm" data-a="foto" data-m="${esc(p.id)}">📷</button><button class="sm" data-a="otro" data-m="${esc(p.id)}">Otra cosa</button>`}</div></div></details>`;
+          const reg = R.filter(r => r.momento === p.id), hecho = reg.length, kr = suma(reg).k, omit = hecho && reg.every(r => r.omitida);
+          h += `<details class="dl ${hecho ? 'hecho' : ''} ${omit ? 'omit' : ''}"><summary><span class="dot">${omit ? '✗' : hecho ? '✓' : ''}</span><span class="sp"><b>${esc(p.comida)}</b><span class="mut"> · ${esc(p.hora || '')}${p.dias === 'gym' ? ' · gym' : ''}</span></span><span class="mut">${omit ? 'no se cumplió' : hecho ? r0(kr) + ' kcal' + (reg.some(r => r.aprox) ? ' ~' : '') : esc(p.kcal) + ' kcal'}</span></summary><div class="dd"><div class="nota">${esc(p.que_lleva)}</div><div class="row" style="margin-top:8px">${hecho ? `<button class="sm ghost" data-a="deshacer" data-id="${esc(p.id)}">Deshacer</button>` : `<button class="pri sm" data-a="comi" data-id="${esc(p.id)}">✓ Ya comí esto</button><button class="sm" data-a="foto" data-m="${esc(p.id)}">📷</button><button class="sm" data-a="otro" data-m="${esc(p.id)}">Otra cosa</button><button class="sm ghost" data-a="omiti" data-id="${esc(p.id)}">✗ No se cumplió</button>`}</div></div></details>`;
         });
         h += '</div>';
       }
@@ -170,6 +170,12 @@
     const p = plan().find(x => x.id === b.dataset.id); if (!p) return;
     guardarRegistro({ id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida, kcal: Number(p.kcal) || 0, prot: Number(p.proteina_g) || 0, aprox: true, origen: 'plan', items: [{ nombre: p.que_lleva }] });
     toast('Anotado: ' + p.comida); HG.render();
+  };
+  // «No se cumplió»: queda registrada la ausencia (0 kcal) para ver cuántas comidas del plan se saltan
+  HG.acc.omiti = b => {
+    const p = plan().find(x => x.id === b.dataset.id); if (!p) return;
+    guardarRegistro({ id: hoyK() + '-plan-' + p.id, momento: p.id, nombre: p.comida, kcal: 0, prot: 0, carb: 0, grasa: 0, aprox: false, omitida: true, origen: 'omitida', items: [] });
+    toast('Anotado: no se cumplió ' + p.comida); HG.render();
   };
   HG.acc.deshacer = b => { regHoy().filter(r => r.momento === b.dataset.id).forEach(r => HDB.del('comida/registro/' + r.id)); HG.render(); };
   HG.acc.cocine = b => {
@@ -281,24 +287,54 @@
   HG.momentosOpts = momentosOpts;
   HG.vistas.registro = function () {
     const modo = HG.sub.rmodo || 'hoy';
-    let h = `<div class="row"><h1 class="sp">Registro</h1>${pill()}</div><div class="seg"><button data-a="rmodo" data-v="hoy" class="${modo === 'hoy' ? 'on' : ''}">Hoy</button><button data-a="rmodo" data-v="semana" class="${modo === 'semana' ? 'on' : ''}">Resumen semanal</button></div>`;
+    let h = `<div class="row"><h1 class="sp">Registro</h1>${pill()}</div><div class="seg"><button data-a="rmodo" data-v="hoy" class="${modo === 'hoy' ? 'on' : ''}">Hoy</button><button data-a="rmodo" data-v="semana" class="${modo === 'semana' ? 'on' : ''}">Resumen semanal</button><button data-a="rmodo" data-v="peso" class="${modo === 'peso' ? 'on' : ''}">⚖️ Peso</button></div>`;
     if (modo === 'semana') return h + resumenSemana();
+    if (modo === 'peso') return h + vistaPeso();
     h += `<div class="acts"><button data-a="foto" data-m=""><b>📷</b>Foto</button><button data-a="otro" data-m=""><b>🔎</b>Buscar</button><button data-a="sicomi"><b>✓</b>Sí comí</button></div>`;
     const pend = HG.fotosPend || [];
     if (pend.length) h += `<h3>Fotos por confirmar</h3>${pend.map(f => `<div class="card"><div class="row"><img src="${f.mini}" width="56" height="56" style="border-radius:10px;object-fit:cover"><div class="sp"><b>${f.res ? 'Análisis listo' : 'Esperando análisis'}</b><div class="nota">${f.err ? esc(f.err) : f.res ? (f.res.items || []).length + ' alimentos detectados' : 'Se analiza cuando haya internet'}</div></div></div><div class="row" style="margin-top:6px">${f.res ? `<button class="pri sm" data-a="fconf" data-id="${f.id}">Revisar y guardar</button>` : `<button class="sm" data-a="fanal" data-id="${f.id}">Analizar ahora</button>`}<button class="sm bad" data-a="fdesc" data-id="${f.id}">Descartar</button></div></div>`).join('')}`;
     const R = regHoy(); h += `<h3>Lo que llevas hoy</h3>`;
     if (!R.length) h += `<div class="card mut">Todavía no registras nada hoy.</div>`;
-    R.forEach(r => { h += `<div class="card"><div class="row"><b class="sp">${esc(r.nombre)}</b><span class="mut">${esc(r.hora)}</span></div><div class="macros"><span><b>${r0(r.kcal)}</b> kcal</span><span>P <b>${r0(r.prot)}</b></span><span>C <b>${r0(r.carb)}</b></span><span>G <b>${r0(r.grasa)}</b></span>${r.aprox ? '<span class="chip w">aprox.</span>' : ''}${r.origen === 'foto' ? '<span class="chip">foto</span>' : ''}</div><div style="margin-top:6px"><button class="sm ghost bad" data-a="rdel" data-id="${esc(r.id)}">Quitar</button></div></div>`; });
+    R.forEach(r => { if (r.omitida) { h += `<div class="card"><div class="row"><b class="sp">${esc(r.nombre)}</b><span class="chip w">no se cumplió</span></div><div style="margin-top:6px"><button class="sm ghost" data-a="rdel" data-id="${esc(r.id)}">Deshacer</button></div></div>`; return; } h += `<div class="card"><div class="row"><b class="sp">${esc(r.nombre)}</b><span class="mut">${esc(r.hora)}</span></div><div class="macros"><span><b>${r0(r.kcal)}</b> kcal</span><span>P <b>${r0(r.prot)}</b></span><span>C <b>${r0(r.carb)}</b></span><span>G <b>${r0(r.grasa)}</b></span>${r.aprox ? '<span class="chip w">aprox.</span>' : ''}${r.origen === 'foto' ? '<span class="chip">foto</span>' : ''}</div><div style="margin-top:6px"><button class="sm ghost bad" data-a="rdel" data-id="${esc(r.id)}">Quitar</button></div></div>`; });
     return h;
   };
   HG.acc.rmodo = b => { HG.sub.rmodo = b.dataset.v; HG.render(); };
+
+  // ---------- Peso: tú lo capturas, aquí ves el progreso ----------
+  const pesos = () => HDB.hijos('comida/peso').filter(x => x && x.fecha && Number(x.kg) > 0).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const fCorta = f => new Date(f + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  function graficaPeso(L) {
+    if (L.length < 2) return '<div class="nota">Con 2 registros ya se dibuja la tendencia.</div>';
+    const W = 320, H = 130, p = 22, ks = L.map(x => Number(x.kg)), mn = Math.min(...ks) - 0.5, mx = Math.max(...ks) + 0.5;
+    const t0 = new Date(L[0].fecha + 'T12:00:00').getTime(), t1 = new Date(L[L.length - 1].fecha + 'T12:00:00').getTime(), dt = Math.max(1, t1 - t0);
+    const X = x => p + (new Date(x.fecha + 'T12:00:00').getTime() - t0) / dt * (W - 2 * p), Y = x => H - p - (Number(x.kg) - mn) / (mx - mn) * (H - 2 * p);
+    const pts = L.map(x => X(x).toFixed(1) + ',' + Y(x).toFixed(1)).join(' ');
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Gráfica de peso"><polyline points="${pts}" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round"/>${L.map(x => `<circle cx="${X(x).toFixed(1)}" cy="${Y(x).toFixed(1)}" r="3.5" fill="var(--ac)"/>`).join('')}<text x="${p}" y="12" font-size="11" fill="var(--mut)">${r1(mx - 0.5)} kg</text><text x="${p}" y="${H - 4}" font-size="11" fill="var(--mut)">${r1(mn + 0.5)} kg</text><text x="${W - p}" y="${H - 4}" font-size="11" text-anchor="end" fill="var(--mut)">${esc(fCorta(L[L.length - 1].fecha))}</text><text x="${p + 40}" y="${H - 4}" font-size="11" fill="var(--mut)">${esc(fCorta(L[0].fecha))}</text></svg>`;
+  }
+  function vistaPeso() {
+    const L = pesos(), u = L[L.length - 1], pr = L[0];
+    let h = `<div class="card"><label>Peso de hoy (kg)</label><div class="row"><input class="sp" id="pk" type="number" step="0.1" inputmode="decimal" placeholder="Ej. 59.4"><button class="pri" data-a="pesoadd">Guardar</button></div><div class="nota" style="margin-top:6px">Lo ideal: en ayunas, después de ir al baño, 3 veces por semana. Un solo día dice poco; importa la tendencia.</div></div>`;
+    if (!L.length) return h + `<div class="card mut">Todavía no hay registros. Captura el primero cuando te pesues.</div>`;
+    const dif = r1(u.kg - pr.kg), s7 = L.filter(x => (new Date(u.fecha) - new Date(x.fecha)) / 864e5 < 7), a7 = L.filter(x => { const d = (new Date(u.fecha) - new Date(x.fecha)) / 864e5; return d >= 7 && d < 14; });
+    const m = a => a.length ? a.reduce((n, x) => n + Number(x.kg), 0) / a.length : null, m7 = m(s7), p7 = m(a7);
+    h += `<div class="card"><div class="macros"><span>Último <b>${r1(u.kg)}</b> kg</span><span>Desde el inicio <b>${dif > 0 ? '+' : ''}${dif}</b> kg</span>${m7 != null && p7 != null ? `<span>Semana vs anterior <b>${r1(m7 - p7) > 0 ? '+' : ''}${r1(m7 - p7)}</b> kg</span>` : ''}</div><div style="margin-top:8px">${graficaPeso(L)}</div>${p7 == null ? '<div class="nota">El cambio semanal aparece cuando hay registros de dos semanas.</div>' : ''}</div><h3>Registros</h3><div class="card">`;
+    h += L.slice().reverse().slice(0, 30).map(x => `<div class="it"><div class="sp"><b>${r1(x.kg)} kg</b><div class="nota">${esc(fCorta(x.fecha))}</div></div><button class="sm ghost bad" data-a="pesodel" data-id="${esc(x.id)}">Quitar</button></div>`).join('') + '</div>';
+    return h;
+  }
+  HG.acc.pesoadd = () => {
+    const kg = Number($('#pk').value); if (!(kg >= 20 && kg <= 300)) { toast('Escribe un peso entre 20 y 300 kg'); return; }
+    const f = hoyK(); HDB.set('comida/peso/' + f, { id: f, fecha: f, kg: r1(kg), ts: Date.now() });
+    if (document.activeElement) document.activeElement.blur(); toast('Guardado: ' + r1(kg) + ' kg'); HG.render();
+  };
+  HG.acc.pesodel = b => { HDB.del('comida/peso/' + b.dataset.id); HG.render(); };
   HG.acc.rdel = b => { HDB.del('comida/registro/' + b.dataset.id); HG.render(); };
   function resumenSemana() {
     const dias = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); dias.push(fechaK(d)); }
     const meta = metaKcal() || 1, R = registro(), filas = dias.map(f => { const l = R.filter(r => r.fecha === f), s = suma(l); return { f, s, n: l.length }; });
     const con = filas.filter(x => x.n > 0), prom = con.length ? con.reduce((n, x) => n + x.s.k, 0) / con.length : 0, promP = con.length ? con.reduce((n, x) => n + x.s.pr, 0) / con.length : 0;
     const cumple = filas.filter(x => x.n > 0 && Math.abs(x.s.k - meta) <= meta * 0.15).length;
-    let h = `<div class="card"><div class="macros"><span>Promedio <b>${r0(prom)}</b> kcal</span><span>Proteína <b>${r0(promP)}</b> g</span></div><div style="margin-top:6px"><b>${cumple}</b> de ${con.length || 0} días registrados dentro de ±15% de tu meta (${r0(meta)} kcal)</div></div>`;
+    const omit = R.filter(r => r.omitida && dias.includes(r.fecha)).length;
+    let h = `<div class="card"><div class="macros"><span>Promedio <b>${r0(prom)}</b> kcal</span><span>Proteína <b>${r0(promP)}</b> g</span><span>Comidas que no se cumplieron <b>${omit}</b></span></div><div style="margin-top:6px"><b>${cumple}</b> de ${con.length || 0} días registrados dentro de ±15% de tu meta (${r0(meta)} kcal)</div></div>`;
     filas.forEach(x => { const p = Math.min(130, x.s.k / meta * 100), dd = new Date(x.f + 'T12:00:00'); h += `<div class="it"><div style="width:42px" class="mut">${dd.toLocaleDateString('es-MX', { weekday: 'short' })}</div><div class="sp"><div class="bar ${x.s.k > meta * 1.15 ? 'over' : ''}"><i style="width:${Math.min(100, p)}%"></i></div></div><div style="width:92px;text-align:right">${x.n ? r0(x.s.k) + ' kcal' : '<span class="mut">sin registro</span>'}</div></div>`; });
     return h + `<div class="nota" style="margin-top:8px">Los días con comidas marcadas «aprox.» son estimaciones; mientras más foto o alimento exacto, más confiable el resumen.</div>`;
   }
