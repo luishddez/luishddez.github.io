@@ -178,6 +178,7 @@
     else {
       h += `<div class="hero"><div class="ring ${over ? 'over' : ''}" style="--p:${pct}"><div><b>${r0(S.k)}</b><span>de ${r0(meta)} kcal</span></div></div><div class="hs"><div class="hl">${over ? `Te pasaste <b>${-sobra} kcal</b>` : sobra > 0 ? `Te quedan <b>${sobra} kcal</b>` : '¡Meta cumplida!'}</div>${mb('Proteína', S.pr, mp)}${mb('Carbs', S.c, M && M.carb, 'sec')}${mb('Grasa', S.gr, M && M.grasa, 'sec')}</div></div>`;
       h += `<label class="sw"><input type="checkbox" data-i="gym" ${dia().gym ? 'checked' : ''}><span class="knob"></span> Hoy entreno <span class="mut">(suma tu licuado previo)</span></label>`;
+      h += aguaCard(true);
       if (aj) h += aj.ok ? `<div class="aviso ok"><span class="ai">👌</span><span>${esc(aj.t)}</span></div>` : `<details class="aviso"><summary>💡 ${esc(aj.t.split('. ')[0].replace(/ kcal bajo tu plan.*/, ' kcal bajo tu plan').replace(/ kcal sobre tu plan.*/, ' kcal sobre tu plan'))} <span class="mut">· ver qué hacer</span></summary><div style="margin-top:6px">${esc(aj.t)}</div></details>`;
       if (sig) h += `<div class="next"><div class="row"><span class="tag">${sig.hora && sig.hora < ahoraHM() ? 'Pendiente' : 'Sigue'} · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2>${opcionesHTML(sig)}${(sig.opciones || []).length ? '' : `<div style="margin:8px 0">${horaIn(sig.id)}</div><button class="pri" style="width:100%;margin-bottom:8px" data-a="comi" data-id="${esc(sig.id)}">✓ Ya comí esto</button>`}<div class="row" style="gap:6px;margin-top:10px">${(sig.opciones || []).length ? `<button class="sm" data-a="comi" data-id="${esc(sig.id)}">✓ Plan</button>` : ''}<button class="sm" data-a="foto" data-m="${esc(sig.id)}">📷</button><button class="sm" data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button><span class="sp"></span><button class="sm ghost" data-a="omiti" data-id="${esc(sig.id)}">✗ No la comí</button></div>${sig.nota ? `<div class="nota" style="margin-top:10px;font-size:12px">ℹ️ ${esc(sig.nota)}</div>` : ''}</div>`;
       else h += `<div class="aviso ok"><span class="ai">🎉</span><span>Completaste todas las comidas de hoy.</span></div>`;
@@ -335,9 +336,7 @@
   HG.momentosOpts = momentosOpts;
   HG.vistas.registro = function () {
     const modo = HG.sub.rmodo || 'hoy';
-    let h = `<div class="row"><h1 class="sp">Registro</h1>${pill()}</div><div class="seg"><button data-a="rmodo" data-v="hoy" class="${modo === 'hoy' ? 'on' : ''}">Hoy</button><button data-a="rmodo" data-v="semana" class="${modo === 'semana' ? 'on' : ''}">Resumen semanal</button><button data-a="rmodo" data-v="peso" class="${modo === 'peso' ? 'on' : ''}">⚖️ Peso</button></div>`;
-    if (modo === 'semana') return h + resumenSemana();
-    if (modo === 'peso') return h + vistaPeso();
+    let h = `<div class="row"><h1 class="sp">Registro</h1>${pill()}</div>`;
     h += `<div class="acts"><button data-a="foto" data-m=""><b>📷</b>Foto</button><button data-a="otro" data-m=""><b>🔎</b>Buscar</button><button data-a="sicomi"><b>✓</b>Sí comí</button></div>`;
     const pend = HG.fotosPend || [];
     if (pend.length) h += `<h3>Fotos por confirmar</h3>${pend.map(f => `<div class="card"><div class="row"><img src="${f.mini}" width="56" height="56" style="border-radius:10px;object-fit:cover"><div class="sp"><b>${f.res ? 'Análisis listo' : 'Esperando análisis'}</b><div class="nota">${f.err ? esc(f.err) : f.res ? (f.res.items || []).length + ' alimentos detectados' : 'Se analiza cuando haya internet'}</div></div></div><div class="row" style="margin-top:6px">${f.res ? `<button class="pri sm" data-a="fconf" data-id="${f.id}">Revisar y guardar</button>` : `<button class="sm" data-a="fanal" data-id="${f.id}">Analizar ahora</button>`}<button class="sm bad" data-a="fdesc" data-id="${f.id}">Descartar</button></div></div>`).join('')}`;
@@ -374,6 +373,31 @@
     const f = hoyK(); HDB.set('comida/peso/' + f, { id: f, fecha: f, kg: r1(kg), ts: Date.now() });
     if (document.activeElement) document.activeElement.blur(); toast('Guardado: ' + r1(kg) + ' kg'); HG.render();
   };
+  // ---------- agua ----------
+  const aguaDoc = f => HDB.get('comida/agua/' + (f || hoyK())) || { id: f || hoyK(), fecha: f || hoyK(), ml: 0, log: [] };
+  const kgActual = () => { const L = pesos(); return L.length ? Number(L[L.length - 1].kg) : Number(perfil().peso) || 0; };
+  const aguaMeta = gym => { const kg = kgActual(); return Math.round(((kg ? kg * 35 : 2500) + (gym ? 500 : 0)) / 50) * 50; };
+  const litros = ml => (ml / 1000).toFixed(2).replace(/\.?0+$/, '');
+  const aguaRitmo = () => { const d = new Date(), m = d.getHours() * 60 + d.getMinutes(); return Math.round(aguaMeta(dia().gym) * Math.max(0, Math.min(1, (m - 480) / 780)) / 50) * 50; };
+  function aguaCard(compacto) {
+    const meta = aguaMeta(dia().gym), ml = Number(aguaDoc().ml) || 0, pct = Math.min(100, ml / meta * 100), rit = aguaRitmo(), falta = rit - ml;
+    if (compacto) return `<div class="card agua c"><div class="row"><span class="sp"><b>💧 ${litros(ml)}</b> <span class="mut">de ${litros(meta)} L</span></span><button class="sm" data-a="agua" data-ml="250">+250</button><button class="sm" data-a="agua" data-ml="500">+500</button></div><div class="bar agua" style="margin-top:6px"><i style="width:${pct}%"></i></div></div>`;
+    return `<div class="card agua"><div class="row"><b class="sp">💧 Agua de hoy</b><span class="mut">meta ${litros(meta)} L</span></div><div class="agbig"><b>${litros(ml)}</b> <span class="mut">de ${litros(meta)} L</span></div><div class="bar agua"><i style="width:${pct}%"></i></div><div class="${falta > 250 ? '' : 'mut'}" style="margin:8px 0">${ml >= meta ? '🎉 Meta cumplida' : falta > 250 ? '⏰ A esta hora deberías ir en <b>' + litros(rit) + ' L</b>: toma ≈' + (Math.ceil(falta / 50) * 50) + ' ml ahora' : 'Vas al ritmo. A esta hora toca ir en ' + litros(rit) + ' L'}</div><div class="row" style="gap:6px"><button class="pri sm" data-a="agua" data-ml="250">+ Vaso 250</button><button class="sm" data-a="agua" data-ml="500">+ Botella 500</button><button class="sm" data-a="agua" data-ml="750">+ 750</button><span class="sp"></span><button class="sm ghost" data-a="aguaundo">Deshacer</button></div><div class="nota" style="margin-top:8px">Meta: 35 ml por kg de peso${kgActual() ? ' (${r0(kgActual())} kg)' : ''}, +500 ml si entrenas. Te aviso aunque la app esté cerrada si vas atrasado.</div></div>`;
+  }
+  HG.acc.agua = b => { const ml = Number(b.dataset.ml) || 250, d = JSON.parse(JSON.stringify(aguaDoc())); d.log = (d.log || []).concat([{ ts: Date.now(), ml }]); d.ml = (Number(d.ml) || 0) + ml; HDB.set('comida/agua/' + d.id, d); toast('💧 +' + ml + ' ml'); HG.render(); };
+  HG.acc.aguaundo = () => { const d = JSON.parse(JSON.stringify(aguaDoc())), u = (d.log || []).pop(); if (!u) return; d.ml = Math.max(0, (Number(d.ml) || 0) - u.ml); HDB.set('comida/agua/' + d.id, d); HG.render(); };
+  function aguaSemana() {
+    const meta = aguaMeta(false); let n = 0, tot = 0;
+    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const a = HDB.get('comida/agua/' + fechaK(d)); if (a && a.ml) { tot += a.ml; if (a.ml >= meta * 0.9) n++; } }
+    return `<div class="card"><div class="macros"><span>💧 Días con la meta <b>${n}</b> de 7</span><span>Promedio <b>${litros(tot / 7)}</b> L/día</span></div></div>`;
+  }
+  HG.vistas.progreso = function () {
+    const modo = HG.sub.pmodo || 'resumen';
+    let h = `<div class="row"><h1 class="sp">Progreso</h1>${pill()}</div><div class="seg"><button data-a="pmodo" data-v="resumen" class="${modo === 'resumen' ? 'on' : ''}">Resumen</button><button data-a="pmodo" data-v="peso" class="${modo === 'peso' ? 'on' : ''}">⚖️ Peso</button></div>`;
+    if (modo === 'peso') return h + vistaPeso();
+    return h + aguaCard(false) + '<h3>Esta semana</h3>' + aguaSemana() + resumenSemana();
+  };
+  HG.acc.pmodo = b => { HG.sub.pmodo = b.dataset.v; HG.render(); };
   HG.acc.pesodel = b => { HDB.del('comida/peso/' + b.dataset.id); HG.render(); };
   HG.acc.rdel = b => { HDB.del('comida/registro/' + b.dataset.id); HG.render(); };
   function resumenSemana() {
@@ -456,7 +480,7 @@
   };
 
   // ---------- shell ----------
-  const TABS = [['hoy', '🍽️', 'Hoy'], ['alacena', '🥫', 'Alacena'], ['compras', '🛒', 'Compras'], ['registro', '📓', 'Registro'], ['dieta', '🥗', 'Dieta']];
+  const TABS = [['hoy', '🍽️', 'Hoy'], ['alacena', '🥫', 'Alacena'], ['compras', '🛒', 'Compras'], ['registro', '📓', 'Registro'], ['progreso', '📈', 'Progreso'], ['dieta', '🥗', 'Dieta']];
   function login() {
     return `<div class="row" style="margin:8px 0"><img src="icon.svg" alt="" width="44" height="44" style="border-radius:11px"><h1 style="margin:0">Hungry</h1></div><div class="card"><b>Entra a tu cuenta</b><div class="nota" style="margin:4px 0 8px">El mismo correo y contraseña de Temple y Mi día.</div><input id="l-e" type="email" autocomplete="username" placeholder="Correo"><div style="height:8px"></div><input id="l-p" type="password" autocomplete="current-password" placeholder="Contraseña"><div id="l-m" class="nota" style="min-height:20px;color:var(--warn)"></div><button class="pri" data-a="login" style="width:100%">Entrar</button></div>`;
   }
