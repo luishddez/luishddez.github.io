@@ -108,13 +108,13 @@
   const opcionesHTML = p => {
     const L = p.opciones || []; if (!L.length) return `<p>${esc(p.que_lleva)}</p>`;
     const sel = HG.sub.sel && HG.sub.sel[p.id], S = suma(regHoy()), meta = metaKcal(), mp = metaProt();
-    return '<div class="mut" style="margin:6px 0">Elige lo que comiste:</div>' + L.map((o, j) => {
+    return '<div class="mut" style="margin:8px 0 2px">Toca la que comiste</div>' + L.map((o, j) => {
       const m = macrosOp(o), on = sel === j, em = (o.i || []).slice(0, 5).map(([id]) => AM[id] ? AM[id].e : '').join('');
-      let h = `<div class="opc ${on ? 'sel' : ''}" data-a="elige" data-id="${esc(p.id)}" data-o="${j}"><div class="row"><span class="oem">${em}</span><span class="sp"><b>${['A', 'B', 'C', 'D'][j] || j + 1}. ${esc(o.n)}</b></span><span class="okc"><b>${r0(m.k)}</b> kcal<br><span class="mut">${r0(m.pr)} g prot</span></span></div>`;
+      let h = `<div class="opc ${on ? 'sel' : ''}" data-a="elige" data-id="${esc(p.id)}" data-o="${j}"><div class="row"><span class="sp"><b>${['A', 'B', 'C', 'D'][j] || j + 1}. ${esc(o.n)}</b><div class="oem">${em} <span class="mut">· ${r0(m.pr)} g prot</span></div></span><span class="okc"><b>${r0(m.k)}</b> kcal</span></div>`;
       if (on) {
         h += barraMacros(m) + '<div class="ing">' + (o.i || []).map(([id, g]) => { const a = AM[id], md = medida(id, g); return `<div class="ig"><span class="ie">${a ? a.e : '•'}</span><span class="sp">${esc(a ? a.n.split(' (')[0] : id)}</span><span class="iq">${md ? '<b>' + esc(md) + '</b><span class="mut"> · ' + g + ' g</span>' : '<b>' + g + ' g</b>'}</span></div>`; }).join('') + '</div>';
         h += `<div class="mut" style="margin-top:8px">Con esto llevarías <b>${r0(S.k + m.k)}</b>${meta ? ' de ' + r0(meta) : ''} kcal y <b>${r0(S.pr + m.pr)}</b>${mp ? ' de ' + r0(mp) : ''} g de proteína.</div><div style="margin-top:8px">${horaIn(p.id)}</div><button class="pri" style="width:100%;margin-top:8px" data-a="comiop" data-id="${esc(p.id)}" data-o="${j}">✓ Comí esta</button>`;
-      } else h += `<div class="mut" style="margin-top:4px">Toca para ver porciones</div>`;
+      }
       return h + '</div>';
     }).join('');
   };
@@ -178,8 +178,8 @@
     else {
       h += `<div class="hero"><div class="ring ${over ? 'over' : ''}" style="--p:${pct}"><div><b>${r0(S.k)}</b><span>de ${r0(meta)} kcal</span></div></div><div class="hs"><div class="hl">${over ? `Te pasaste <b>${-sobra} kcal</b>` : sobra > 0 ? `Te quedan <b>${sobra} kcal</b>` : '¡Meta cumplida!'}</div>${mb('Proteína', S.pr, mp)}${mb('Carbs', S.c, M && M.carb, 'sec')}${mb('Grasa', S.gr, M && M.grasa, 'sec')}</div></div>`;
       h += `<label class="sw"><input type="checkbox" data-i="gym" ${dia().gym ? 'checked' : ''}><span class="knob"></span> Hoy entreno <span class="mut">(suma tu licuado previo)</span></label>`;
-      if (aj) h += `<div class="aviso ${aj.ok ? 'ok' : ''}"><span class="ai">${aj.ok ? '👌' : '💡'}</span><span>${esc(aj.t)}</span></div>`;
-      if (sig) h += `<div class="next"><div class="row"><span class="tag">${sig.hora && sig.hora < ahoraHM() ? 'Pendiente' : 'Sigue'} · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2>${sig.nota ? `<div class="nota">${esc(sig.nota)}</div>` : ''}${opcionesHTML(sig)}<div class="acts2"><button class="${(sig.opciones || []).length ? '' : 'pri'}" data-a="comi" data-id="${esc(sig.id)}">${(sig.opciones || []).length ? '✓ Plan' : '✓ Ya comí esto'}</button><button data-a="foto" data-m="${esc(sig.id)}">📷 Foto</button><button data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button></div><div style="margin-top:10px">${horaIn(sig.id)}</div><div style="margin-top:8px"><button class="sm" style="width:100%" data-a="omiti" data-id="${esc(sig.id)}">✗ No la comí / no se cumplió</button></div></div>`;
+      if (aj) h += aj.ok ? `<div class="aviso ok"><span class="ai">👌</span><span>${esc(aj.t)}</span></div>` : `<details class="aviso"><summary>💡 ${esc(aj.t.split('. ')[0].replace(/ kcal bajo tu plan.*/, ' kcal bajo tu plan').replace(/ kcal sobre tu plan.*/, ' kcal sobre tu plan'))} <span class="mut">· ver qué hacer</span></summary><div style="margin-top:6px">${esc(aj.t)}</div></details>`;
+      if (sig) h += `<div class="next"><div class="row"><span class="tag">${sig.hora && sig.hora < ahoraHM() ? 'Pendiente' : 'Sigue'} · ${esc(sig.hora || '')}</span><span class="sp"></span><span class="mut">${esc(sig.kcal)} kcal${sig.proteina_g ? ' · ' + esc(sig.proteina_g) + ' g prot' : ''}</span></div><h2>${esc(sig.comida)}</h2>${opcionesHTML(sig)}${(sig.opciones || []).length ? '' : `<div style="margin:8px 0">${horaIn(sig.id)}</div><button class="pri" style="width:100%;margin-bottom:8px" data-a="comi" data-id="${esc(sig.id)}">✓ Ya comí esto</button>`}<div class="row" style="gap:6px;margin-top:10px">${(sig.opciones || []).length ? `<button class="sm" data-a="comi" data-id="${esc(sig.id)}">✓ Plan</button>` : ''}<button class="sm" data-a="foto" data-m="${esc(sig.id)}">📷</button><button class="sm" data-a="otro" data-m="${esc(sig.id)}">Otra cosa</button><span class="sp"></span><button class="sm ghost" data-a="omiti" data-id="${esc(sig.id)}">✗ No la comí</button></div>${sig.nota ? `<div class="nota" style="margin-top:10px;font-size:12px">ℹ️ ${esc(sig.nota)}</div>` : ''}</div>`;
       else h += `<div class="aviso ok"><span class="ai">🎉</span><span>Completaste todas las comidas de hoy.</span></div>`;
       const resto = P.filter(p => !sig || p.id !== sig.id);
       if (resto.length) {
@@ -195,8 +195,9 @@
     h += fal.length ? `<div class="card">${fal.slice(0, 5).map(f => `<div class="it" style="padding:7px 0"><span class="em" style="font-size:20px;width:26px">${esc(f.emoji || '•')}</span><span class="sp">${esc(f.articulo)}</span><span class="mut">${esc(f.cantidad_texto || '')}</span></div>`).join('')}${fal.length > 5 ? `<div class="mut" style="padding-top:6px">y ${fal.length - 5} más…</div>` : ''}<button class="sm" style="margin-top:8px" data-a="tab" data-t="compras">Abrir lista completa</button></div>` : `<div class="card mut">Nada urgente: tu alacena está al día ✨</div>`;
     if (sig) {
       const sg = sugerencias(tipoDe(sig), Number(sig.kcal)).slice(0, 3);
-      h += `<h2>👩‍🍳 Ideas para «${esc(sig.comida)}»</h2><div class="nota" style="margin:-4px 0 6px">Con lo que hay en tu alacena y lo que no descartaste.</div>`;
+      h += `<details class="ideas"><summary><b>👩‍🍳 Ideas para «${esc(sig.comida)}»</b> <span class="mut">· con lo que hay en tu alacena</span></summary>`;
       sg.forEach(s => { h += `<div class="card sug"><div class="row"><b class="sp">${esc(s.p.n)}</b></div><div class="macros" style="margin:4px 0"><span><b>${r0(s.m.k)}</b> kcal</span><span>P <b>${r0(s.m.pr)}</b></span><span>C <b>${r0(s.m.c)}</b></span><span>G <b>${r0(s.m.gr)}</b></span></div><div class="nota">${s.p.i.map(([id, g]) => esc(AM[id].n.split(' (')[0]) + ' ' + g + ' g').join(' · ')}</div><div style="margin-top:6px">${s.falta.length ? `<span class="chip w">Te falta: ${esc(s.falta.join(', '))}</span>` : `<span class="chip">✓ Tienes todo</span>`}</div><div class="row" style="margin-top:8px"><button class="sm pri" data-a="cocine" data-p="${esc(s.p.id)}" data-m="${esc(sig.id)}">Lo comí</button>${s.falta.length ? `<button class="sm" data-a="faltaplato" data-p="${esc(s.p.id)}">Pasar lo que falta a compras</button>` : ''}</div></div>`; });
+      h += '</details>';
     }
     return h;
   };
