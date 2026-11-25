@@ -16,6 +16,20 @@ Fase 3 (diseño) aprobada por Luis el 2026-11-25. Esta fase solo prepara los dat
 5. Gym: leer de Temple (solo lectura), con la regla de arriba.
 6. Las 2 conexiones punteadas del mapa (Mi día con Almacén, Mi día con Diseñador): confirmar o descartar antes de sembrar.
 
+## Respuestas de Luis (2026-11-25)
+- 1 y 2: **Sí**, crear `proyectos/*` y sembrar una vez, **con lista previa** que él aprueba antes de escribir.
+- 4: **Sí**, marca `trabajo` por proyecto.
+- 5: **Toca gym si me faltan sesiones** (sin días fijos).
+- 3: sin pregunta aparte (campo aditivo, no toca las 14 tareas).
+- 6: conexiones punteadas: **descartadas** ("Sí, descártalas"). Criterio de conexión: una cosa alimenta o depende de la otra; compartir la base de datos no cuenta, porque casi todas las apps la comparten.
+
+## Reglas para armar la lista de siembra (propuestas el 2026-11-25)
+- No se siembran: las 5 áreas (son filtros, no proyectos), las personas, los logros y lo intimo de Amor. La lista con nombres se le muestra a Luis en la conversación y no se guarda en este repositorio, que es público.
+- Estado inicial según el tipo de sus notas: proyecto = activo, idea = idea semilla, investigación cerrada o terminada = hecho; lo que el Tablero dice en pausa, bloqueado o cerrado manda sobre eso.
+- `siguiente_paso` y `porque` quedan vacíos salvo donde sus notas ya lo dicen; `potencia` e `importancia` quedan sin calificar.
+- `ultima_vez` viene de la "última actividad" de SC Nodos o de la fecha del Tablero.
+- Duplicados entre Tablero y SC Nodos se unen en un solo proyecto, y Luis lo ve en la lista.
+
 ## Queda para después (no se pide hoy)
 - Copia de solo lectura en el Sheet para el Segundo Cerebro: se decide en el checkpoint 5.2.
 - Puntos y niveles: checkpoint 5.3.
