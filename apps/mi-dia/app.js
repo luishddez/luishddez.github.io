@@ -315,6 +315,7 @@ function vistaHoy() {
   const carga = dia.pendTotal.reduce((s, t) => s + t.min, 0);
   const comidaPend = dia.items.some(i => i.id === 'comida') && !est.hechos.comida && m >= toMin('12:30') && m <= toMin('18:00');
   let h = tarjetaDia(dia, m, `quedan ${dur(quedan)} · ⭐ ${essHechas}/${ess.length} · 🎯 ${dia.pendTotal.length} · ⏱ ${dur(carga)}${comidaPend ? ' · <b class="falta">🍽️ falta comer</b>' : ''}`);
+  h += proyBarra(real, m);   // barra de avance del día (proyectos.js)
 
   // frase: dos líneas; al tocarla se abre con su autor
   const f = fraseDelDia();
@@ -340,6 +341,7 @@ function vistaHoy() {
   else h += heroAhora(ahora, futuros, m, esencialListo);
 
   if (esencialListo) h += `<div class="libre-ok">✅ <b>Esencial hecho.</b> Lo demás es opcional, sin culpa.</div>`;
+  h += proyPaso(m);   // siguiente paso de proyectos o de trabajo (proyectos.js)
 
   // siguiente: solo una fila; todo lo demás, plegado en un único lugar
   if (futuros.length) h += `<h3>Siguiente</h3>` + fila(futuros[0], esencialListo);

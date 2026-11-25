@@ -120,8 +120,48 @@ function proyPostRender() {
   m.addEventListener('scroll', () => { proyPos.x = m.scrollLeft; proyPos.y = m.scrollTop; }, { passive: true });
 }
 
+// ---------- Inicio v2: barra de avance del día y un siguiente paso (checkpoint 5.1) ----------
+// En 5.1 "Listo" y "Ahora no" se guardan solo hoy y solo en este aparato (est se reinicia cada día). Guardarlos en tu cuenta viene en 5.2.
+function proyCola(m) {
+  const d = new Date(), dow = d.getDay();
+  const trab = dow >= 1 && dow <= 5 && m >= 9 * 60 && m < 18 * 60 && modoActual() === 'trabajo';
+  const hechos = est.proyHechos || {}, no = est.proyNoAhora || [];
+  const base = proyLista().filter(p => p.estado === 'activo' && String(p.siguiente_paso || '').trim() && !hechos[p.id] && !!p.trabajo === trab)
+    .sort((a, b) => (Number(b.importancia) || 0) - (Number(a.importancia) || 0) || (proyDias(b) ?? 0) - (proyDias(a) ?? 0) || String(a.nombre).localeCompare(String(b.nombre)));
+  const cola = base.filter(p => !no.includes(p.id)).concat(no.map(id => base.find(p => p.id === id)).filter(Boolean));
+  return { trab, cola, hechos: Object.keys(hechos).length };
+}
+
+// Barra del día: un segmento por actividad (la rutina y los pasos de proyecto), un solo color neutro; atrasarse no cambia el color
+function proyBarra(real, m) {
+  const rutina = real.filter(i => i.tipo !== 'cal' && i.fin > i.ini), c = proyCola(m);
+  const hr = rutina.filter(i => est.hechos[i.id]).length, N = rutina.length + c.hechos + (c.cola.length ? 1 : 0), D = hr + c.hechos;
+  if (!N) return '';
+  const seg = N <= 24 ? `<div class="pbarra" role="img" aria-label="${D} de ${N} actividades del día">${Array.from({ length: N }, (_, k) => `<i class="${k < D ? 'on' : ''}"></i>`).join('')}</div>` : `<div class="bar"><i style="width:${Math.round(D / N * 100)}%"></i></div>`;
+  return `<div class="pbl">${seg}<div class="dc-r"><span><b>${D} de ${N}</b> actividades de hoy</span><span>${Math.round(D / N * 100)}%</span></div></div>`;
+}
+
+function proyPaso(m) {
+  const c = proyCola(m), p = c.cola[0];
+  if (!p) {
+    if (c.trab) return `<div class="card" style="margin:0 0 8px"><b>💼 Horario de trabajo</b><div class="nota" style="margin-top:6px">No tienes pasos de trabajo anotados. Cuando puedas escribirlos en la tarjeta de cada proyecto, aquí saldrá primero lo de MegaGen.</div></div>`;
+    return `<div class="card" style="margin:0 0 8px"><b>🎯 Pasos de proyectos</b><div class="nota" style="margin-top:6px">${c.hechos ? 'Hiciste los pasos de hoy. Lo demás es tiempo tuyo.' : 'Ningún proyecto activo tiene un siguiente paso anotado.'}</div></div>`;
+  }
+  const d = proyDias(p), sig = c.cola[1];
+  const porque = p.porque ? esc(p.porque) : c.trab ? 'Es horario de trabajo: primero lo de MegaGen.' : d !== null && d >= 3 ? `Lleva ${d} días sin tocarse.` : 'Es el que sigue en tu cola de hoy.';
+  const final = sig ? `Después sigue: ${esc(sig.siguiente_paso)} (${esc(sig.nombre)}).` : 'No hay más pasos anotados hoy. Lo demás es tiempo tuyo.';
+  return `<section class="hero paso"><div class="cab"><div class="ico k-tar" aria-hidden="true">${c.trab ? '💼' : '🎯'}</div><div><div class="etq">SIGUIENTE PASO · ${c.trab ? 'TRABAJO' : 'PROYECTOS'}</div><h2>${esc(p.siguiente_paso)}</h2></div></div>
+  <div class="hora">${esc(p.nombre)} · ${esc(p.area)}</div>
+  <div class="pk2">Por qué ahora</div><div class="pv">${porque}</div>
+  <div class="pk2">Al terminar</div><div class="pv">${final}</div>
+  <div class="acc"><button class="pri" data-a="pasoListo" data-v="${esc(p.id)}">✓ Listo</button>${sig ? `<button data-a="pasoLuego" data-v="${esc(p.id)}">Ahora no</button>` : ''}</div>
+  <div class="nota" style="margin-top:8px;font-size:12.5px">“Listo” suma a tu barra. “Ahora no” lo manda al final de la cola de hoy y te muestra el siguiente, sin culpa. En esta prueba se guarda solo hoy, en este aparato.</div></section>`;
+}
+
 function proyAccion(a, v) {
   switch (a) {
+    case 'pasoListo': est.proyHechos = est.proyHechos || {}; est.proyHechos[v] = Date.now(); celebrar('¡Listo! Ese paso ya cuenta.', false); return true;
+    case 'pasoLuego': est.proyNoAhora = (est.proyNoAhora || []).filter(x => x !== v).concat(v); toast('Sin culpa: lo mandé al final de la cola de hoy'); return true;
     case 'proySel': proySel = proySel === v ? null : v; return true;
     case 'proyCerrar': proySel = null; return true;
     case 'proyArea': proyArea = PROY_AREAS.concat('todas').includes(v) ? v : 'todas'; proySel = null; return true;

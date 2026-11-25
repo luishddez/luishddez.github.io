@@ -160,6 +160,13 @@ input[type=time]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 .pn .nm{font-size:12px;font-weight:700;fill:var(--ink)}
 .pn .sub{font-size:10.5px;fill:var(--mute)}
 .pn:focus-visible rect{stroke:var(--now);stroke-width:3;stroke-opacity:1}
+/* Inicio v2: barra del día (un color neutro, nunca rojo) y siguiente paso con contexto */
+.pbl{margin:0 0 10px}
+.pbarra{display:flex;gap:3px;height:9px}
+.pbarra i{flex:1;border-radius:5px;background:var(--line)}
+.pbarra i.on{background:var(--now)}
+.hero.paso .pk2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:10px 0 2px}
+.hero.paso .pv{font-size:14.5px;line-height:1.35}
 .pmapa.cc{height:min(36vh,340px)}   /* con una tarjeta abierta el mapa se achica para que ambos quepan en la pantalla */
 .pcard{margin-top:10px;background:var(--card);border-radius:18px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--line);font-size:14.5px;line-height:1.35}
 .pcard .pg{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
