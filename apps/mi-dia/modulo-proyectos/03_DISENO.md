@@ -59,3 +59,23 @@ Navegación: dos pestañas abajo, **Inicio** y **Proyectos**. La tarjeta y la re
 
 ### Estética (se aplica al final, después de cerrar la estructura)
 Luis eligió: fondo oscuro con un solo acento, anillos de progreso con número grande (barra de avance del día y avance por proyecto), mosaicos con degradado suave solo en lo importante, y atmósfera de fondo (degradado o imagen difuminada, sin fotos en cada tarjeta). Las referencias son diseños de otras personas: solo inspiración, no se copian ni se guardan aquí.
+
+## Cambio nuevo del 2026-11-25: Tablero para acomodar (propuesta, Luis aún no la aprueba)
+
+Pedido de Luis: poder arrastrar cosas en horarios o prioridades, como un dashboard que se manipula un poco, para cuando está confundido y no sabe qué va antes y qué después: ver las variables y acomodarlas.
+
+### Idea
+Una tercera pestaña, **Tablero** (Inicio, Proyectos, Tablero). Lo que se acomoda ahí manda sobre lo que muestra Inicio: el "siguiente paso" es el primero de la cola que Luis ordenó. Así hay una sola fuente de orden y no dos que compiten.
+
+### Tres vistas dentro del Tablero (Luis elige cuáles quiere)
+1. **Día (horarios)**: línea de horas de hoy. El bloque de trabajo de 9:00 a 18:00 aparece como una franja fija y no se arrastra. Comida, gym y los pasos de proyectos son bloques que se arrastran a otra hora. Los huecos libres se ven como huecos.
+2. **Prioridad (columnas)**: Ahora, Siguiente, Luego, Soltar. Se arrastran tareas y proyectos entre columnas y dentro de cada una. "Soltar" lleva a archivar con aviso y Recuperar, nunca borra.
+3. **Variables (cuadrícula)**: ejes importancia y potencia, de 1 a 5. Arrastrar un proyecto a una celda le pone esos valores. Las pone Luis al soltar; nada se calcula ni se inventa.
+
+### Reglas
+- Un toque largo para arrastrar en iPhone, para no chocar con el desplazamiento. Cada elemento tiene además botones "Subir" y "Bajar" por si arrastrar falla o es incómodo.
+- "Deshacer" visible después de cada movimiento. Sin culpa si se acomoda mal.
+- Mover algo cambia datos que ya existen: `orden`, `hora`, `fecha`, `prioridad` y `bloque` en tareas; `potencia`, `importancia` y el orden en proyectos. Por ahora no hace falta un campo nuevo en tareas (se verifica al construir).
+- Mismas reglas de siempre: Supabase manda, gana el cambio más reciente, funciona sin internet y se sincroniza al volver.
+- Escribir en Supabase desde la app (lo que ya hace con tareas) no cambia; escribir `proyectos/*` desde Claude sigue necesitando la autorización de la Fase 4.
+- Entra en el checkpoint 5.3 (después de que Inicio y el mapa funcionen con datos reales). La vista Día es la candidata a salir primero.
