@@ -40,3 +40,22 @@ Navegación: dos pestañas abajo, **Inicio** y **Proyectos**. La tarjeta y la re
 ## Pendiente de decidir en las maquetas
 - Si el aviso de parados es una pestaña propia o un acceso desde Proyectos (propuesta: acceso desde Proyectos).
 - Cómo se ven los puntos y niveles (checkpoint 5.3).
+
+## Cambios del 2026-11-25 tras revisar las maquetas con Luis (mandan sobre lo de arriba)
+
+### Inicio v2
+- **Barra de avance del día**: un segmento por actividad del día (rutina más los pasos de trabajo elegidos), con "n de N" y porcentaje. Un solo color neutro; nunca rojo ni culpa si va atrás. Se marca tocando cada actividad o con "Listo".
+- **Siguiente paso con contexto**: proyecto, qué hacer exactamente, por qué ahora, qué queda al terminar y cuánto tarda.
+- **Botones**: "Listo" (marca el paso y avanza la barra) y "Ahora no" (lo manda al final de la cola de hoy y muestra el siguiente, sin culpa). Sustituye a "Otro paso", que no se entendía. Con una explicación corta debajo.
+- En horario de trabajo la cola solo trae pasos de trabajo; después de las 18:00, pasos de proyectos.
+- **Pendiente de datos**: hoy nada marca qué es "trabajo". Propuesta: marca `trabajo` por proyecto que sus tareas heredan, con cambio manual por tarea. Luis aún no responde.
+
+### Proyectos v2 (reemplaza las pantallas 2 y 3 de arriba en lo visual)
+- Es un **mapa de conexiones**, no una lista. Cada proyecto es una pastilla; el área va escrita ("Yo · activo"), **sin colores por área**.
+- Pastilla blanca = activo o bloqueado; pastilla gris = idea semilla. Las ideas semilla están ocultas al arrancar, con un botón para mostrarlas.
+- Al tocar un proyecto se resaltan sus líneas (único color de acento), el resto se atenúa y abajo se lee con qué se conecta y por qué.
+- Línea sólida = conexión que ya existe en las notas de Luis. Línea punteada = propuesta de Claude, Luis confirma o descarta. Propuestas abiertas: Mi día con Almacén de implantes (misma base de datos) y Mi día con el Diseñador de estética.
+- Con muchos elementos habrá que acomodar los nodos solos y apoyarse en el filtro por área (se resuelve al construir).
+
+### Estética (se aplica al final, después de cerrar la estructura)
+Luis eligió: fondo oscuro con un solo acento, anillos de progreso con número grande (barra de avance del día y avance por proyecto), mosaicos con degradado suave solo en lo importante, y atmósfera de fondo (degradado o imagen difuminada, sin fotos en cada tarjeta). Las referencias son diseños de otras personas: solo inspiración, no se copian ni se guardan aquí.
