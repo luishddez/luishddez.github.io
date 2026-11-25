@@ -1,6 +1,8 @@
-/* Mi día · capa Proyectos (checkpoint 5.1, solo lectura).
+/* Mi día · capa Proyectos (checkpoint 5.1 ver, 5.2a editar).
    Se carga ANTES de app.js: aquí solo se declaran funciones, que app.js llama después. Usa las variables de app.js (datos, esc, dur...) cuando ya existen.
-   Los datos vienen de Supabase (proyectos/<id>) y se guardan en 'tablero-datos'. En 5.1 no se escribe nada en tu cuenta. */
+   Los datos vienen de Supabase (proyectos/<id>) y se guardan en 'tablero-datos'.
+   5.2a: los cambios se guardan en tu cuenta. Cada guardado REEMPLAZA el documento completo del proyecto y gana el más reciente según data.actualizado.
+   Sin internet, el cambio queda en una cola (clave propia en localStorage, no en est, que se reinicia cada día) y se manda solo al volver la conexión. */
 let proySel = null;                 // id del proyecto abierto (en variable, no en el DOM, para sobrevivir a cada pintado)
 let proyArea = 'todas';             // 'todas' | 'Yo' | 'Profesional' | 'Conocimiento'
 let proyIdeas = false;              // las ideas semilla están ocultas al arrancar
@@ -8,8 +10,52 @@ const proyPos = { x: 0, y: 0, listo: false };   // dónde quedó el mapa al arra
 const PROY_AREAS = ['Yo', 'Profesional', 'Conocimiento'];
 const proyCache = { clave: '', pos: null };
 
-const proyLista = () => Array.isArray(datos.proyectos) ? datos.proyectos.filter(p => p && p.id && p.nombre) : [];
+// ---------- Cola de cambios por enviar ----------
+const PROY_PEND = 'tablero-proy-pend';
+let proyPendMem = null;
+const proyPend = () => { if (!proyPendMem) { const v = safe.get(PROY_PEND, []); proyPendMem = Array.isArray(v) ? v.filter(x => x && x.id && x.data) : []; } return proyPendMem; };
+const proySetPend = l => { proyPendMem = l; safe.set(PROY_PEND, l); };
+// Lo que se ve = lo guardado en la cuenta + tus cambios que todavía no se mandan (así se ven al instante, con o sin internet)
+let proyMemo = { base: null, firma: '', v: [] };
+function proyLista() {
+  const base = Array.isArray(datos.proyectos) ? datos.proyectos : [], pend = proyPend(), firma = pend.map(x => x.id + ':' + x.data.actualizado).join('|');
+  if (proyMemo.base === base && proyMemo.firma === firma) return proyMemo.v;
+  const m = new Map(); base.forEach(p => { if (p && p.id) m.set(p.id, p); }); pend.forEach(x => m.set(x.id, x.data));
+  proyMemo = { base, firma, v: Array.from(m.values()).filter(p => p && p.id && p.nombre) };
+  return proyMemo.v;
+}
 const proyPorId = id => proyLista().find(p => p.id === id);
+const proyPendiente = id => proyPend().some(x => x.id === id);
+// Pone el cambio en la cola (se ve ya) y lo manda en cuanto se pueda
+function proyGuardaDoc(doc) {
+  doc.actualizado = Date.now();
+  proySetPend(proyPend().filter(x => x.id !== doc.id).concat([{ id: doc.id, data: doc }]));
+  proyEnviar();
+}
+const proyConectado = () => !!(window.SB && SB.activo() && SB.conSesion()) && navigator.onLine !== false;
+let proyEnviando = false;
+// Manda la cola. Nunca lanza errores. Si lo mismo se cambió en otro aparato más recientemente, gana ese y se avisa.
+async function proyEnviar() {
+  if (proyEnviando || !proyPend().length || !proyConectado()) return;
+  proyEnviando = true;
+  try {
+    const srv = await SB.coleccion('proyectos'), porId = new Map(srv.filter(p => p && p.id).map(p => [p.id, p])), perdidos = []; let fallo = false;
+    const quita = (id, ts) => proySetPend(proyPend().filter(x => !(x.id === id && x.data.actualizado === ts)));   // solo si no lo volviste a editar mientras se mandaba
+    for (const it of proyPend().slice()) {
+      const s = porId.get(it.id);
+      if (s && Number(s.actualizado || 0) > Number(it.data.actualizado || 0)) { perdidos.push(it.data.nombre); quita(it.id, it.data.actualizado); continue; }
+      try { await SB.guardar('proyectos/' + it.id, it.data); porId.set(it.id, it.data); quita(it.id, it.data.actualizado); } catch (e) { fallo = true; break; }
+    }
+    datos.proyectos = Array.from(porId.values()); safe.set('tablero-datos', datos);
+    if (perdidos.length) toast(`“${perdidos[0]}”${perdidos.length > 1 ? ` y ${perdidos.length - 1} más` : ''}: se había cambiado antes en otro aparato y quedó esa versión (la más reciente)`);
+    if (!fallo && proyPend().length) setTimeout(proyEnviar, 300);   // lo que se editó mientras se mandaba
+  } catch (e) { /* sin conexión o sin sesión: queda en la cola */ }
+  proyEnviando = false;
+  proyRenderSeguro();
+}
+// Un pintado que no ocurre mientras escribes en el formulario (sincronizar en segundo plano no debe borrar lo que escribes)
+const proyEscribiendo = () => { const a = document.activeElement; return !!(a && a.closest && a.closest('.pform') && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)); };
+function proyRenderSeguro() { if (!proyEscribiendo()) render(); }
 const proyNombre = p => String(p.nombre);
 const proyCorto = p => { const n = proyNombre(p); return n.length > 21 ? n.slice(0, 20) + '…' : n; };
 const proyAncho = p => Math.round(proyCorto(p).length * 6.6 + 28);
