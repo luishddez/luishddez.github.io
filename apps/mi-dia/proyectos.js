@@ -80,7 +80,7 @@ function vistaProyectos() {
 
   const chips = ['todas'].concat(PROY_AREAS).map(a => `<button class="pfil${proyArea === a ? ' on' : ''}" data-a="proyArea" data-v="${a}">${a === 'todas' ? 'Todas' : a}</button>`).join('');
   const ideasBtn = ideasOcultas || proyIdeas ? `<button class="pfil" data-a="proyIdeas">${proyIdeas ? 'Ocultar ideas' : `Mostrar ideas (${ideasOcultas})`}</button>` : '';
-  let h = `<div class="pbar">${chips}${ideasBtn}</div><div class="nota" style="margin:2px 2px 6px">${vis.length} a la vista${cerrados ? ` · ${cerrados} hechos o archivados guardados` : ''}. Toca uno para ver sus conexiones.</div>`;
+  let h = `<div class="pbar">${chips}${ideasBtn}</div><div class="nota" style="margin:2px 2px 6px">${vis.length} a la vista${cerrados ? ` · ${cerrados} hechos o archivados guardados` : ''}. ${proySel ? '' : 'Toca uno para ver sus conexiones.'}</div>`;
 
   if (!vis.length) return h + `<div class="card"><b>Nada para mostrar con este filtro.</b></div>`;
   const lineas = aristas.map(([a, b]) => `<line class="pe${sel ? (a === sel || b === sel ? ' on' : ' dim') : ''}" x1="${P[a].x.toFixed(1)}" y1="${P[a].y.toFixed(1)}" x2="${P[b].x.toFixed(1)}" y2="${P[b].y.toFixed(1)}"/>`).join('');
@@ -89,8 +89,10 @@ function vistaProyectos() {
     return `<g class="${cl}" data-a="proySel" data-v="${esc(p.id)}" role="button" tabindex="0" aria-label="${esc(p.nombre)}. ${esc(p.area)}, ${esc(p.estado)}"><rect x="${(q.x - w / 2).toFixed(1)}" y="${(q.y - 20).toFixed(1)}" width="${w}" height="40" rx="14"/><text x="${q.x.toFixed(1)}" y="${(q.y - 3).toFixed(1)}" text-anchor="middle" class="nm">${esc(proyCorto(p))}</text><text x="${q.x.toFixed(1)}" y="${(q.y + 12).toFixed(1)}" text-anchor="middle" class="sub">${esc(p.area)} · ${esc(p.estado)}</text></g>`;
   }).join('');
   h += `<div class="pmapa${sel ? ' cc' : ''}" id="pmapa"><svg width="${VB.w}" height="${VB.h}" viewBox="${VB.x.toFixed(0)} ${VB.y.toFixed(0)} ${VB.w} ${VB.h}" role="group" aria-label="Mapa de proyectos y sus conexiones">${lineas}${nodos}</svg></div>`;
-  if (sel) h += proyTarjeta(proyPorId(sel));
-  return h;
+  // Computadora: mapa a la izquierda y tarjeta a la derecha (los dos a la vista). Celular: uno debajo del otro.
+  const activos = todos.filter(p => p.estado === 'activo'), propios = activos.filter(p => !p.trabajo).length;
+  const vacio = `<div class="pvacio card"><b>Elige un proyecto</b><div class="nota" style="margin-top:6px">Aquí verás su tarjeta: siguiente paso, por qué te importa, última vez y con qué se conecta.</div><div class="nota" style="margin-top:10px">Hoy tienes ${activos.length} activos (${propios} sin contar los de trabajo).</div></div>`;
+  return `<div class="pwrap"><div class="pizq">${h}</div><aside class="pder">${sel ? proyTarjeta(proyPorId(sel)) : vacio}</aside></div>`;
 }
 
 function proyTarjeta(p) {
@@ -157,6 +159,12 @@ function proyPaso(m) {
   <div class="acc"><button class="pri" data-a="pasoListo" data-v="${esc(p.id)}">✓ Listo</button>${sig ? `<button data-a="pasoLuego" data-v="${esc(p.id)}">Ahora no</button>` : ''}</div>
   <div class="nota" style="margin-top:8px;font-size:12.5px">“Listo” suma a tu barra. “Ahora no” lo manda al final de la cola de hoy y te muestra el siguiente, sin culpa. En esta prueba se guarda solo hoy, en este aparato.</div></section>`;
 }
+
+// Teclado (computadora): Enter o espacio sobre una pastilla enfocada la abre
+document.addEventListener('keydown', e => {
+  const g = e.target && e.target.closest && e.target.closest('g.pn');
+  if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); accion(g.dataset.a, g.dataset.v, g, e); }
+});
 
 function proyAccion(a, v) {
   switch (a) {

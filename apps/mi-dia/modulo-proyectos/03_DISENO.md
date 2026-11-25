@@ -82,6 +82,12 @@ Una tercera pestaña, **Tablero** (Inicio, Proyectos, Tablero). Lo que se acomod
 - Escribir en Supabase desde la app (lo que ya hace con tareas) no cambia; escribir `proyectos/*` desde Claude sigue necesitando la autorización de la Fase 4.
 - Entra en el checkpoint 5.3 (después de que Inicio y el mapa funcionen con datos reales). La vista Día es la candidata a salir primero.
 
+## Principio de Luis (2026-11-25): computadora primero, celular para consultar y también editar
+- **Computadora** es donde Luis revisa, acomoda y reestructura. Ahí se usa todo el ancho: mapa completo sin arrastrar, tarjeta al lado, mouse con arrastrar y soltar, teclado (Enter abre un proyecto).
+- **Celular** es para tener la información práctica a la mano y también para hacer cambios: una columna, botones grandes, una sola mano. Todo cambio que se pueda hacer arrastrando en la computadora debe tener un camino por toque en el celular (botones Subir y Bajar, "Mover a…").
+- Para cada pantalla nueva se diseñan los dos anchos. Corte: 900 px. Ya aplicado a Proyectos en 5.1 (dos paneles en computadora, columna en celular). Inicio, el Tablero y el Modo caos se diseñan igual al construirse.
+- La edición del 5.2 (siguiente paso, por qué me importa, estado, calificar, archivar) se hace igual de cómoda en celular y en computadora.
+
 ## Propuesta nueva del 2026-11-25: Modo caos (Luis aún no la aprueba)
 
 Pedido de Luis: un modo para cuando no tiene idea de qué hacer y ya se enredó, que lo ayude a reestructurar todo.

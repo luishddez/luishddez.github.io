@@ -168,6 +168,22 @@ input[type=time]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 .hero.paso .pk2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:10px 0 2px}
 .hero.paso .pv{font-size:14.5px;line-height:1.35}
 .pmapa.cc{height:min(36vh,340px)}   /* con una tarjeta abierta el mapa se achica para que ambos quepan en la pantalla */
+.pvacio{display:none}
+.pn:hover rect{stroke-opacity:1}
+/* COMPUTADORA PRIMERO: en pantalla ancha, Proyectos usa todo el ancho: mapa completo (sin arrastrar) a la izquierda y tarjeta a la derecha.
+   En celular se queda en una columna, con el mapa arrastrable con el dedo. */
+@media (min-width:900px){
+ body.ancho{max-width:1360px}
+ body.ancho #vista{padding:0 24px 40px}
+ body.ancho .seg,body.ancho header{margin-left:24px;margin-right:24px}
+ body.ancho header{padding-left:0;padding-right:0}
+ body.ancho .pwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start}
+ body.ancho .pder{position:sticky;top:0}
+ body.ancho .pvacio{display:block}
+ body.ancho .pmapa,body.ancho .pmapa.cc{height:calc(100vh - 250px);min-height:460px;overflow:hidden}
+ body.ancho .pmapa svg{width:100%;height:100%}
+ body.ancho .pcard{margin-top:0}
+}
 .pcard{margin-top:10px;background:var(--card);border-radius:18px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--line);font-size:14.5px;line-height:1.35}
 .pcard .pg{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
 .pcard .ptop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}

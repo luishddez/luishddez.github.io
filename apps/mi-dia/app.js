@@ -594,6 +594,7 @@ function render() {
   if (menuAbierto) { $('#menuIn').innerHTML = vistaMenu(); $('#menu').classList.remove('hide'); }
   else $('#menu').classList.add('hide');
   const vs = vistaSel, man = fechaMas(hoyKey(), 1);
+  document.body.classList.toggle('ancho', vs === 'proy');   // en pantalla ancha, Proyectos usa todo el ancho (computadora primero)
   const antes = $('#vista').scrollTop;
   $('#vista').innerHTML = vs === 'hoy' ? vistaHoy() : vs === 'sem' ? vistaSemana() : vs === 'proy' ? vistaProyectos() : vistaDia(vs === 'man' ? man : vs.slice(2));
   if (vs === 'proy') { $('#vista').scrollTop = antes; proyPostRender(); }   // el mapa no salta al volver a pintarse
