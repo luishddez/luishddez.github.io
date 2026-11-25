@@ -67,7 +67,9 @@ Pedido de Luis: poder arrastrar cosas en horarios o prioridades, como un dashboa
 ### Idea
 Una tercera pestaña, **Tablero** (Inicio, Proyectos, Tablero). Lo que se acomoda ahí manda sobre lo que muestra Inicio: el "siguiente paso" es el primero de la cola que Luis ordenó. Así hay una sola fuente de orden y no dos que compiten.
 
-### Tres vistas dentro del Tablero (Luis elige cuáles quiere)
+### Decisión de Luis (2026-11-25): quiere las vistas **Prioridad** y **Variables**. La vista **Día (horarios)** queda fuera por ahora (la rutina ya sale en Inicio).
+
+### Tres vistas propuestas dentro del Tablero (solo 2 y 3 entran)
 1. **Día (horarios)**: línea de horas de hoy. El bloque de trabajo de 9:00 a 18:00 aparece como una franja fija y no se arrastra. Comida, gym y los pasos de proyectos son bloques que se arrastran a otra hora. Los huecos libres se ven como huecos.
 2. **Prioridad (columnas)**: Ahora, Siguiente, Luego, Soltar. Se arrastran tareas y proyectos entre columnas y dentro de cada una. "Soltar" lleva a archivar con aviso y Recuperar, nunca borra.
 3. **Variables (cuadrícula)**: ejes importancia y potencia, de 1 a 5. Arrastrar un proyecto a una celda le pone esos valores. Las pone Luis al soltar; nada se calcula ni se inventa.
