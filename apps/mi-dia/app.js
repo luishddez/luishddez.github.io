@@ -594,7 +594,7 @@ function render() {
   const vs = vistaSel, man = fechaMas(hoyKey(), 1);
   const antes = $('#vista').scrollTop;
   $('#vista').innerHTML = vs === 'hoy' ? vistaHoy() : vs === 'sem' ? vistaSemana() : vs === 'proy' ? vistaProyectos() : vistaDia(vs === 'man' ? man : vs.slice(2));
-  if (vs === 'proy') $('#vista').scrollTop = antes;   // el mapa no salta al volver a pintarse
+  if (vs === 'proy') { $('#vista').scrollTop = antes; proyPostRender(); }   // el mapa no salta al volver a pintarse
   document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', (b.dataset.v === 'hoy' && vs === 'hoy') || (b.dataset.v === 'man' && (vs === 'man' || vs === 'd:' + man)) || (b.dataset.v === 'sem' && vs === 'sem') || (b.dataset.v === 'proy' && vs === 'proy')));
   guardar();
 }

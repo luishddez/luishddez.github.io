@@ -142,6 +142,31 @@ details{margin-top:6px} summary{cursor:pointer;color:var(--mute);font-size:13px;
 .row{display:flex;gap:8px;flex-wrap:wrap}
 input[type=time]{font:inherit;border:1.5px solid var(--line);border-radius:10px;padding:8px;background:var(--card);color:var(--ink)}
 .hide{display:none!important}
+/* Proyectos: mapa de conexiones. Un solo color de acento (el verde de siempre); sin colores por área, el área va escrita */
+.pbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 6px}
+.pfil{padding:7px 12px;font-size:13.5px;border-radius:999px;background:transparent;box-shadow:none;border:1px solid var(--line);color:var(--ink)}
+.pfil.on{background:var(--now);border-color:var(--now);color:#fff;font-weight:700}
+:root[data-tema="oscuro"] .pfil.on{color:#0c1a12}
+.pmapa{overflow:auto;height:min(62vh,620px);border:1px solid var(--line);border-radius:16px;background:var(--card);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+.pmapa svg{display:block}
+.pe{stroke:var(--line);stroke-width:1.6}
+.pe.on{stroke:var(--now);stroke-width:3}
+.pe.dim{opacity:.35}
+.pn{cursor:pointer}
+.pn rect{fill:var(--card);stroke:var(--mute);stroke-width:1.2;stroke-opacity:.55}
+.pn.idea rect{fill:var(--opt-g1);stroke-dasharray:4 3}
+.pn.sel rect{stroke:var(--now);stroke-width:3;stroke-opacity:1}
+.pn.dim{opacity:.25}
+.pn .nm{font-size:12px;font-weight:700;fill:var(--ink)}
+.pn .sub{font-size:10.5px;fill:var(--mute)}
+.pn:focus-visible rect{stroke:var(--now);stroke-width:3;stroke-opacity:1}
+.pmapa.cc{height:min(36vh,340px)}   /* con una tarjeta abierta el mapa se achica para que ambos quepan en la pantalla */
+.pcard{margin-top:10px;background:var(--card);border-radius:18px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--line);font-size:14.5px;line-height:1.35}
+.pcard .pg{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.pcard .ptop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.pcard .pt{font-size:17px}
+.pcard .pk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:10px 0 2px}
+.pcls2{width:34px;height:34px;padding:0;border-radius:50%;box-shadow:none;background:var(--bg);flex:none}
 .dia-card{display:block;width:100%;text-align:left;padding:2px 0 4px;margin:2px 0 10px;border-radius:0;background:transparent;box-shadow:none}
 .dia-card .dc-strip{margin-top:0;height:16px}
 .dc-go{color:var(--now-t);font-weight:700;font-size:12.5px;white-space:nowrap}
