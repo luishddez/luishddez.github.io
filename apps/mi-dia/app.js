@@ -940,7 +940,7 @@ async function actualizar(manual) {
   try {
     if (window.SB && SB.activo()) {
       if (!SB.conSesion()) { SB.pedirLogin(); const e = new Error('sin sesión'); e.code = 'nosesion'; throw e; }
-      await enviarCompras(); await enviarRegistros();
+      await enviarCompras(); await enviarRegistros(); await proyEnviar();   // primero se manda lo pendiente, luego se lee
       datos = await desdeSupabase(); safe.set('tablero-datos', datos); aplicaComido();
       estadoSync = 'Actualizado de tu cuenta a las ' + new Date().toTimeString().slice(0, 5) + '.';
     } else if (window.TABLERO && window.TABLERO.pub) {
@@ -956,7 +956,7 @@ async function actualizar(manual) {
     if (e && e.code === 'nosesion') { estadoSync = 'Entra a tu cuenta para ver tus datos al día. Mientras tanto, lo último guardado.'; if (window.SB && SB.activo()) SB.pedirLogin(); }
     else estadoSync = 'Sin internet: usando lo último guardado.';
   }
-  render();
+  proyRenderSeguro();   // no borra lo que estás escribiendo en una tarjeta de Proyectos
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });
