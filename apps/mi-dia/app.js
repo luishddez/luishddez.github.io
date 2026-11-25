@@ -315,6 +315,7 @@ function vistaHoy() {
   const carga = dia.pendTotal.reduce((s, t) => s + t.min, 0);
   const comidaPend = dia.items.some(i => i.id === 'comida') && !est.hechos.comida && m >= toMin('12:30') && m <= toMin('18:00');
   let h = tarjetaDia(dia, m, `quedan ${dur(quedan)} · ⭐ ${essHechas}/${ess.length} · 🎯 ${dia.pendTotal.length} · ⏱ ${dur(carga)}${comidaPend ? ' · <b class="falta">🍽️ falta comer</b>' : ''}`);
+  h += proyBarra(real, m);   // barra de avance del día (proyectos.js)
 
   // frase: dos líneas; al tocarla se abre con su autor
   const f = fraseDelDia();
@@ -340,6 +341,7 @@ function vistaHoy() {
   else h += heroAhora(ahora, futuros, m, esencialListo);
 
   if (esencialListo) h += `<div class="libre-ok">✅ <b>Esencial hecho.</b> Lo demás es opcional, sin culpa.</div>`;
+  h += proyPaso(m);   // siguiente paso de proyectos o de trabajo (proyectos.js)
 
   // siguiente: solo una fila; todo lo demás, plegado en un único lugar
   if (futuros.length) h += `<h3>Siguiente</h3>` + fila(futuros[0], esencialListo);
@@ -592,8 +594,11 @@ function render() {
   if (menuAbierto) { $('#menuIn').innerHTML = vistaMenu(); $('#menu').classList.remove('hide'); }
   else $('#menu').classList.add('hide');
   const vs = vistaSel, man = fechaMas(hoyKey(), 1);
-  $('#vista').innerHTML = vs === 'hoy' ? vistaHoy() : vs === 'sem' ? vistaSemana() : vistaDia(vs === 'man' ? man : vs.slice(2));
-  document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', (b.dataset.v === 'hoy' && vs === 'hoy') || (b.dataset.v === 'man' && (vs === 'man' || vs === 'd:' + man)) || (b.dataset.v === 'sem' && vs === 'sem')));
+  document.body.classList.toggle('ancho', vs === 'proy');   // en pantalla ancha, Proyectos usa todo el ancho (computadora primero)
+  const antes = $('#vista').scrollTop;
+  $('#vista').innerHTML = vs === 'hoy' ? vistaHoy() : vs === 'sem' ? vistaSemana() : vs === 'proy' ? vistaProyectos() : vistaDia(vs === 'man' ? man : vs.slice(2));
+  if (vs === 'proy') { $('#vista').scrollTop = antes; proyPostRender(); }   // el mapa no salta al volver a pintarse
+  document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', (b.dataset.v === 'hoy' && vs === 'hoy') || (b.dataset.v === 'man' && (vs === 'man' || vs === 'd:' + man)) || (b.dataset.v === 'sem' && vs === 'sem') || (b.dataset.v === 'proy' && vs === 'proy')));
   guardar();
 }
 
@@ -678,7 +683,7 @@ function accion(a, v, el, ev) {
     case 'sol': tocaSol(); return;
     case 'actualizar': return actualizar(true);
     case 'cerrarMenu': menuAbierto = false; break;
-    default: return;
+    default: if (typeof proyAccion === 'function' && proyAccion(a, v, el, ev)) break; return;   // acciones de Proyectos (proyectos.js)
   }
   render();
 }
@@ -858,7 +863,7 @@ async function desdeSheet() {
 async function desdeSupabase() {
   const g = window.TABLERO.gids;
   // La comida vive en Hungry: Mi día solo la muestra (régimen, por comprar y lo comido). No lee el plan ni la lista anteriores.
-  const [tarD, planH, diaD, falD, regD] = await Promise.all([SB.coleccion('tareas'), SB.coleccion('comida/regimen').catch(() => []), SB.coleccion('dia').catch(() => []), SB.coleccion('comida/faltantes').catch(() => []), SB.coleccion('comida/registro').catch(() => [])]);
+  const [tarD, planH, diaD, falD, regD, proyD] = await Promise.all([SB.coleccion('tareas'), SB.coleccion('comida/regimen').catch(() => []), SB.coleccion('dia').catch(() => []), SB.coleccion('comida/faltantes').catch(() => []), SB.coleccion('comida/registro').catch(() => []), SB.coleccion('proyectos').catch(() => null)]);
   const planD = planH, comD = [];
   const ord = (a, b) => (a.orden || 0) - (b.orden || 0);
   const tar = tarD.sort(ord).map(t => ({ ...t, minutos: String(t.minutos ?? ''), prioridad: String(t.prioridad ?? ''), esencial: t.esencial ? 'sí' : 'no' }));
@@ -873,6 +878,7 @@ async function desdeSupabase() {
   else { try { cal = await csv(g.calendario); } catch (e) { cal = calC.length ? calC : null; } }
   if (cal && cal === calC) { const k = e => normFecha(e.fecha) + ' ' + (e.inicio || ''); cal = calC.slice().sort((a, b) => k(a).localeCompare(k(b))); }
   const d = armar(tar, cal || [], plan, compras, cal ? null : (datos.calendario || []));
+  d.proyectos = proyD || datos.proyectos || [];   // si falla la lectura, se conserva lo último guardado (nunca rompe tareas ni calendario)
   // De Hungry: lo que falta por comprar y lo que llevas comido hoy
   const pend = (est.comprasPend || []).map(f => f.id);
   d.faltantes = falD.filter(f => f && f.articulo && f.estado === 'falta' && !pend.includes(f.id)).sort((a, b) => (a.pasillo || '').localeCompare(b.pasillo || '') || a.articulo.localeCompare(b.articulo)).map(f => ({ id: f.id, articulo: f.articulo, emoji: f.emoji || '', cantidad: f.cantidad_texto || '', pasillo: f.pasillo || '', donde: f.donde || '', raw: f }));
@@ -1017,7 +1023,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) pint
 function revisaDia() { if (est.fecha !== hoyKey()) { guardar(); location.reload(); return true; } return false; }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !revisaDia()) { enviarPendientes(); actualizar(false); } });
 enviarPendientes();
-setInterval(() => { if (revisaDia()) return; if (!menuAbierto && !planAbierto && !document.querySelector('details[open]')) render(); }, 60000);
+setInterval(() => { if (revisaDia()) return; if (!menuAbierto && !planAbierto && vistaSel !== 'proy' && !document.querySelector('details[open]')) render(); }, 60000);
 setInterval(pintaSol, 60000);   // el sol se mueve aunque haya algo abierto
 // Mi día y Hungry se hablan en menos de 1 minuto: con la app a la vista se revisa tu cuenta cada 45 s (sin tocar lo que estés editando)
 setInterval(async () => {
