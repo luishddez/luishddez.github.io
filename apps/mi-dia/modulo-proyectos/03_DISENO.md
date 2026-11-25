@@ -96,6 +96,12 @@ Un botón fijo en Inicio, "Estoy enredado", que abre una guía corta de pocos pa
 4. **Soltar el resto por hoy.** Un toque manda todo lo demás a "Luego". Con Deshacer. Nada se archiva ni se borra aquí.
 5. **Volver a Inicio** con un solo paso y la barra de avance.
 
+### Ajuste tras responder Luis (2026-11-25)
+Luis dijo que se enreda por: demasiadas cosas a la vez, se le acumuló y va atrasado, y no sabe qué importa más. No marcó "no sé qué sigue". Entonces el modo se arma para esos tres:
+- **Demasiadas a la vez:** el paso 3 (elegir UNA cosa de máximo 3) y el paso 4 (soltar el resto por hoy) son el centro.
+- **Atrasado:** un paso nuevo, **"Empezar de cero hoy"**. Junta lo que quedó vencido o sin hacer y lo manda todo a "Luego" con un toque, con Deshacer. Después, si él quiere, lo repasa de a una: Hoy, Luego o Archivar. Atrasarse es un dato, nunca una falta.
+- **No sé qué importa:** un paso nuevo, **"¿Cuál importa más?"**. Le muestra dos proyectos a la vez y él elige uno, unas 4 rondas, y de eso sale un orden. El orden es solo una sugerencia: no se guarda como potencia ni importancia a menos que Luis lo confirme.
+
 ### Segundo nivel opcional: reestructurar a fondo
 Para cuando el enredo es más grande que un día: lleva a la revisión de parados, al Tablero de Prioridad y a la cuadrícula de Variables, en ese orden, con un aviso de "esto toma unos 10 minutos". Sin obligar.
 
