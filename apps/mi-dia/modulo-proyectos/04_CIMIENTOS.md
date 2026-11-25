@@ -30,6 +30,19 @@ Fase 3 (diseño) aprobada por Luis el 2026-11-25. Esta fase solo prepara los dat
 - `ultima_vez` viene de la "última actividad" de SC Nodos o de la fecha del Tablero.
 - Duplicados entre Tablero y SC Nodos se unen en un solo proyecto, y Luis lo ve en la lista.
 
+## Siembra hecha (2026-11-25, con la lista aprobada por Luis)
+- Se crearon **27 documentos** `proyectos/<id>` y **20 conexiones** (guardadas en los dos lados de cada conexión, para que la tarjeta las lea sin calcular). Cada uno lleva `origen: "siembra 2026-11-25"`.
+- Por estado: 16 activos, 5 ideas semilla, 3 en pausa, 1 bloqueado, 1 hecho, 1 archivado. 5 llevan la marca `trabajo`.
+- `siguiente_paso` solo se llenó donde las notas de Luis ya lo decían (6 proyectos). `porque`, `potencia` e `importancia` quedaron vacíos.
+- Verificado después de escribir: tareas (14) y comida (341) intactas. No se creó ninguna tabla ni se tocó otra ruta.
+- **Cómo deshacerlo:** borrar solo las filas de `docs` cuya ruta empiece con `proyectos/` y cuyo `origen` sea "siembra 2026-11-25".
+- Nota para el tope de activos: 16 activos, de los cuales 5 son de trabajo. Si el tope de 5 cuenta solo los que no son de trabajo, hoy son 11, así que la primera revisión de parados será grande. Es lo esperado.
+
+## Buzón de comentarios (pedido de Luis, 2026-11-25)
+- Ya existe en Mi día: el botón 💬 de `shared/feedback.js`, el mismo de Temple y Hungry. Guarda en `feedback/mi-dia/<id>` con datos técnicos automáticos, sin internet se guarda en el teléfono y se manda después, y Luis puede escribirlo y no mandarlo.
+- Las pantallas nuevas (Inicio, Proyectos, Tablero) lo heredan sin cambios. Falta: que el contexto técnico diga en qué pantalla estaba y qué proyecto tenía abierto (se hace en el checkpoint 5.1), y que el botón no tape la barra de pestañas ni el arrastre del Tablero (ajuste de su posición).
+- Claude lee el buzón al abrir una conversación, como con Hungry.
+
 ## Queda para después (no se pide hoy)
 - Copia de solo lectura en el Sheet para el Segundo Cerebro: se decide en el checkpoint 5.2.
 - Puntos y niveles: checkpoint 5.3.
