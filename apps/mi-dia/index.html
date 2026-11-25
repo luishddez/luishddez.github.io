@@ -189,6 +189,17 @@ input[type=time]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 .pcard .ptop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .pcard .pt{font-size:17px}
 .pcard .pk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:10px 0 2px}
+/* Formulario de edición: letra de 16 px (iOS no amplía) y zonas de toque de 44 px, igual de cómodo con mouse que con el dedo */
+.pform .pl{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:12px 0 4px}
+.pform textarea,.pform select{width:100%;font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--card);color:var(--ink);min-height:44px}
+.pform textarea{resize:vertical;min-height:68px}
+.pchk{display:flex;gap:10px;align-items:center;min-height:44px;font-size:15px;margin-top:6px}
+.pchk input{width:22px;height:22px;flex:none}
+.pcal{display:flex;gap:6px;flex-wrap:wrap}
+.pcal button{min-width:44px;min-height:44px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);box-shadow:none}
+.pcal button.on{background:var(--now);border-color:var(--now);color:#fff;font-weight:700}
+:root[data-tema="oscuro"] .pcal button.on{color:#0c1a12}
+.pform .acc button,.pcard .acc button{min-height:44px}
 .pcls2{width:34px;height:34px;padding:0;border-radius:50%;box-shadow:none;background:var(--bg);flex:none}
 .dia-card{display:block;width:100%;text-align:left;padding:2px 0 4px;margin:2px 0 10px;border-radius:0;background:transparent;box-shadow:none}
 .dia-card .dc-strip{margin-top:0;height:16px}
