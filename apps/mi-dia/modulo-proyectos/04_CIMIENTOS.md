@@ -43,6 +43,14 @@ Fase 3 (diseño) aprobada por Luis el 2026-11-25. Esta fase solo prepara los dat
 - Las pantallas nuevas (Inicio, Proyectos, Tablero) lo heredan sin cambios. Falta: que el contexto técnico diga en qué pantalla estaba y qué proyecto tenía abierto (se hace en el checkpoint 5.1), y que el botón no tape la barra de pestañas ni el arrastre del Tablero (ajuste de su posición).
 - Claude lee el buzón al abrir una conversación, como con Hungry.
 
+## Reglas de escritura de proyectos (5.2a, 2026-11-25)
+- Cada guardado desde la app **reemplaza el documento completo** de `proyectos/<id>`. Gana el cambio más reciente según `data.actualizado` (no la columna `updated_at`). Si en otro aparato se guardó algo más reciente, el cambio local se descarta y la app lo avisa con el nombre del proyecto.
+- Un guardado hecho desde una copia vieja puede deshacer otros campos cambiados en otro lado. Es la regla aprobada ("gana lo más reciente").
+- **Todo cambio a `proyectos/*` hecho con SQL debe actualizar `data.actualizado` a la hora actual** (milisegundos). Si no, un cambio viejo que esté pendiente en el celular lo sobrescribe sin avisar.
+- La cola de cambios sin enviar vive en la clave `tablero-proy-pend` del navegador (no en el estado diario) y se manda sola al volver la conexión.
+- "Listo" en el siguiente paso del Inicio guarda: el texto pasa a `ultimo_paso_hecho` (con `ultimo_paso_fecha`), `siguiente_paso` queda vacío y `ultima_vez` es hoy. Esto es una interpretación del diseño, pendiente de confirmar por Luis.
+- Estados editables en 5.2a: activo, en pausa, bloqueado, idea semilla, hecho. "Archivado" llega en 5.2b.
+
 ## Queda para después (no se pide hoy)
 - Copia de solo lectura en el Sheet para el Segundo Cerebro: se decide en el checkpoint 5.2.
 - Puntos y niveles: checkpoint 5.3.

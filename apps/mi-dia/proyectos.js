@@ -216,7 +216,7 @@ function proyBarra(real, m) {
 function proyPaso(m) {
   const c = proyCola(m), p = c.cola[0];
   if (!p) {
-    if (c.trab) return `<div class="card" style="margin:0 0 8px"><b>💼 Horario de trabajo</b><div class="nota" style="margin-top:6px">No tienes pasos de trabajo anotados. Cuando puedas escribirlos en la tarjeta de cada proyecto, aquí saldrá primero lo de MegaGen.</div></div>`;
+    if (c.trab) return `<div class="card" style="margin:0 0 8px"><b>💼 Horario de trabajo</b><div class="nota" style="margin-top:6px">No tienes pasos de trabajo anotados. Escríbelos en Proyectos: elige un proyecto de trabajo, toca Editar y anota su siguiente paso. Aquí saldrá primero lo de MegaGen.</div></div>`;
     return `<div class="card" style="margin:0 0 8px"><b>🎯 Pasos de proyectos</b><div class="nota" style="margin-top:6px">${c.hechos ? 'Hiciste los pasos de hoy. Lo demás es tiempo tuyo.' : 'Ningún proyecto activo tiene un siguiente paso anotado.'}</div></div>`;
   }
   const d = proyDias(p), sig = c.cola[1];
@@ -227,7 +227,7 @@ function proyPaso(m) {
   <div class="pk2">Por qué ahora</div><div class="pv">${porque}</div>
   <div class="pk2">Al terminar</div><div class="pv">${final}</div>
   <div class="acc"><button class="pri" data-a="pasoListo" data-v="${esc(p.id)}">✓ Listo</button>${sig ? `<button data-a="pasoLuego" data-v="${esc(p.id)}">Ahora no</button>` : ''}</div>
-  <div class="nota" style="margin-top:8px;font-size:12.5px">“Listo” suma a tu barra. “Ahora no” lo manda al final de la cola de hoy y te muestra el siguiente, sin culpa. En esta prueba se guarda solo hoy, en este aparato.</div></section>`;
+  <div class="nota" style="margin-top:8px;font-size:12.5px">“Listo” suma a tu barra y se guarda en tu cuenta: el paso queda como hecho y hoy cuenta como la última vez que tocaste el proyecto. “Ahora no” solo cambia la cola de hoy, sin culpa.</div></section>`;
 }
 
 // Teclado (computadora): Enter o espacio sobre una pastilla enfocada la abre
@@ -256,7 +256,13 @@ function proyAccion(a, v) {
       if (proyConectado()) toast('Guardado ✓'); else aviso();
       return true;
     }
-    case 'pasoListo': est.proyHechos = est.proyHechos || {}; est.proyHechos[v] = Date.now(); celebrar('¡Listo! Ese paso ya cuenta.', false); return true;
+    case 'pasoListo': {
+      est.proyHechos = est.proyHechos || {}; est.proyHechos[v] = Date.now();
+      // Se guarda en tu cuenta: el paso queda como "último paso hecho", el siguiente queda vacío y hoy cuenta como la última vez que tocaste el proyecto
+      const p = proyPorId(v);
+      if (p) proyGuardaDoc({ ...p, ultimo_paso_hecho: p.siguiente_paso || '', ultimo_paso_fecha: hoyKey(), siguiente_paso: '', ultima_vez: hoyKey() });
+      celebrar('¡Listo! Ese paso ya cuenta. Anota el siguiente cuando quieras, en Proyectos.', false); return true;
+    }
     case 'pasoLuego': est.proyNoAhora = (est.proyNoAhora || []).filter(x => x !== v).concat(v); toast('Sin culpa: lo mandé al final de la cola de hoy'); return true;
     case 'proySel': if (proyBloquea()) return true; proySel = proySel === v ? null : v; return true;
     case 'proyCerrar': if (proyBloquea()) return true; proySel = null; return true;
