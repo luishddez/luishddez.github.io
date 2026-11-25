@@ -81,3 +81,26 @@ Una tercera pestaña, **Tablero** (Inicio, Proyectos, Tablero). Lo que se acomod
 - Mismas reglas de siempre: Supabase manda, gana el cambio más reciente, funciona sin internet y se sincroniza al volver.
 - Escribir en Supabase desde la app (lo que ya hace con tareas) no cambia; escribir `proyectos/*` desde Claude sigue necesitando la autorización de la Fase 4.
 - Entra en el checkpoint 5.3 (después de que Inicio y el mapa funcionen con datos reales). La vista Día es la candidata a salir primero.
+
+## Propuesta nueva del 2026-11-25: Modo caos (Luis aún no la aprueba)
+
+Pedido de Luis: un modo para cuando no tiene idea de qué hacer y ya se enredó, que lo ayude a reestructurar todo.
+
+### Idea
+Un botón fijo en Inicio, "Estoy enredado", que abre una guía corta de pocos pasos, de una pantalla cada uno. Reutiliza datos que ya existen (rutina, tareas, proyectos sembrados, columnas del Tablero); no pide campos nuevos.
+
+### Pasos propuestos (a ajustar según lo que responda Luis)
+1. **Todo está guardado.** Un mensaje corto: no se pierde nada, nada se borra, sin culpa.
+2. **Solo lo fijo de hoy.** Se esconde todo lo demás y se ven solo las cosas con hora: trabajo 9 a 6 si es entre semana, comida, gym si toca.
+3. **Elegir UNA cosa.** Máximo 3 candidatos (primero los de trabajo en horario de trabajo; luego lo que esté en "Ahora" del Tablero; luego lo más importante según sus propias calificaciones). Lo que elija se vuelve el siguiente paso de Inicio.
+4. **Soltar el resto por hoy.** Un toque manda todo lo demás a "Luego". Con Deshacer. Nada se archiva ni se borra aquí.
+5. **Volver a Inicio** con un solo paso y la barra de avance.
+
+### Segundo nivel opcional: reestructurar a fondo
+Para cuando el enredo es más grande que un día: lleva a la revisión de parados, al Tablero de Prioridad y a la cuadrícula de Variables, en ese orden, con un aviso de "esto toma unos 10 minutos". Sin obligar.
+
+### Reglas
+- Nunca castiga ni cuenta "veces que te enredaste". Sin rachas.
+- Todo lo que mueve se puede deshacer.
+- Funciona sin internet, igual que el resto.
+- Entra en el checkpoint 5.3, junto al Tablero, porque usa sus columnas.
