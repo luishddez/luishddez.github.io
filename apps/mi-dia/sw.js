@@ -1,5 +1,5 @@
-const V = 'tablero-v7';
-const FILES = ['./', 'index.html', 'app.js', 'proyectos.js', 'config.js', 'supabase.js', 'manifest.json', 'icon.svg', 'icon-192.png'];
+const V = 'tablero-v8';
+const FILES = ['./', 'index.html', 'app.js', 'proyectos.js', 'inicio.js', 'config.js', 'supabase.js', 'manifest.json', 'icon.svg', 'icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== V).map(x => caches.delete(x))))); self.clients.claim(); });
 // Siempre intenta la red primero (para que una versión nueva se vea sola); sin internet usa lo guardado.
