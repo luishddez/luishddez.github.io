@@ -116,3 +116,64 @@ Para cuando el enredo es más grande que un día: lleva a la revisión de parado
 - Todo lo que mueve se puede deshacer.
 - Funciona sin internet, igual que el resto.
 - Entra en el checkpoint 5.3, junto al Tablero, porque usa sus columnas.
+
+## CAMBIO DE DIRECCION del 2026-11-25 (Luis): Inicio tipo tablero en computadora (manda sobre lo anterior)
+
+Lo que dijo Luis, revisando el 5.2a ya publicado:
+1. Las **pestañas** sirven en el celular, pero en la computadora son poco prácticas e inconvenientes.
+2. El **mapa de ramificaciones** de proyectos le gusta tal cual, porque lo ayuda cuando está perdido, pero **no es como visualizaba la entrega de las tareas**.
+3. Lo que visualizaba: una **pantalla de inicio con 3 secciones divididas** (trabajo, proyectos y una tercera por definir) y, **de izquierda a derecha, de lo más prioritario a lo menos prioritario**.
+
+Consecuencias para el diseño (borrador, pendiente de aprobación de Luis):
+- **Computadora:** el Inicio es un tablero de una sola pantalla, sin pestañas para lo principal. Tres franjas (secciones) con tarjetas ordenadas de izquierda a derecha por prioridad. El mapa de conexiones pasa a ser un panel que se abre al lado o encima, no una pestaña aparte. La tarjeta de proyecto y su edición se abren en un panel lateral.
+- **Celular:** se conservan las pestañas o una sola columna; las tres secciones se apilan y la prioridad se lee de arriba hacia abajo. Todo lo que se haga arrastrando en la computadora tiene botones Subir/Bajar y "Mover a…" en el celular.
+- El **Tablero para acomodar** (columnas de prioridad y arrastrar) deja de ser una pestaña futura del 5.3 y **se vuelve el Inicio mismo**. La cuadrícula de Variables (importancia por potencia) queda como ayuda aparte.
+- Se adelanta antes del 5.2b, porque cambia dónde viven las demás funciones (archivar, tareas ligadas, Modo caos).
+- Definir con Luis: cuál es la tercera sección y qué es cada tarjeta (siguiente paso de proyecto, tarea suelta o ambas).
+
+### Respuestas de Luis (2026-11-25)
+- Secciones: **Trabajo**, **Proyectos** y **Personal y rutina**. Además, **Ideas por elegir** como una bandeja aparte (ideas semilla y lo que aún no decide). Si Luis quería solo 3, las ideas van dentro de Personal; se confirma con la maqueta.
+- Tarjetas: Luis no contestó esa pregunta; se asume lo recomendado: **el siguiente paso de cada proyecto y las tareas sueltas, cada una con su proyecto**. Pendiente de confirmar con la maqueta.
+- Orden: de izquierda a derecha, de lo más prioritario a lo menos. La prioridad la acomoda Luis (arrastrar en compu, Subir/Bajar en celular); nunca se inventa.
+- Pasa antes: maqueta para compu y celular, aprobación de Luis y luego se programa.
+
+### Ajuste de Luis tras ver la primera maqueta (2026-11-25)
+- Prefiere el tablero en **vertical**: las secciones son **columnas lado a lado** (Trabajo, Proyectos, Personal y rutina) y la prioridad se lee **de arriba hacia abajo** dentro de cada columna (arriba = lo más prioritario). Reemplaza el "de izquierda a derecha" de arriba.
+- Dijo "y así" para el resto: se conservan la barra de avance, el botón del Mapa, el botón "Estoy enredado", la bandeja de ideas por elegir y los datos reales de la maqueta.
+- Celular: las mismas secciones apiladas una sobre otra, cada una con su lista de arriba hacia abajo; Subir y Bajar en lugar de arrastrar.
+
+## DISENO APROBADO del Inicio v3 (Luis: "APRUEBO diseño", 2026-11-25). La maqueta interactiva NO se guardó como archivo; esto es la especificación.
+
+Luis dijo "Excelente, me agrada" a la versión vertical y pidió que fuera más atractiva pensando en UX/UI y en su **TDAH**. Aprobó la v3.
+
+### Pantalla (computadora, 900 px o más; sin pestañas para lo principal)
+1. **Barra superior:** fecha, botón "Mapa" (abre el mapa de conexiones como panel, no como pestaña) y botón "Estoy enredado" (Modo caos).
+2. **Bloque de enfoque** (el único punto grande): anillo de avance del día con número grande ("3 de 8"), la etiqueta "EMPIEZA AQUÍ · AHORA", el siguiente paso en texto grande, su proyecto, y botones grandes **✓ Listo** (acento verde) y **Ahora no**. Si no quedan pasos: "DESCANSA · Todo lo de hoy, hecho. Lo demás es tiempo tuyo, sin culpa."
+3. **Tres columnas** más una angosta: **Trabajo** (azul), **Proyectos** (violeta), **Personal y rutina** (verde) y **Ideas por elegir** (gris). Prioridad **de arriba hacia abajo** (arriba = más prioritario).
+4. **Tarjetas:** título del paso o tarea, proyecto debajo, asa de arrastrar. **Máximo 3 visibles por columna** y "+ N más". La **primera de cada columna** se resalta con un tinte suave de su color (en la versión real puede ser un degradado suave). Las de trabajo sin paso escrito van con borde punteado: "Escribe el siguiente paso".
+5. **Modo enfoque** (botón abajo): atenúa todo menos el bloque de enfoque.
+6. **Mensajes de logro:** "Listo. Eso ya cuenta." y "Sin culpa: lo mandé al final." Nunca rojo, nunca culpa, nunca rachas.
+
+### Estilo (solo Mi día; el ecosistema se unifica después, como proyecto aparte)
+Fondo oscuro `#12161b`, paneles `#1b2129`, bordes `#2a3440`, texto `#eef2f6`, texto apagado `#9aa7b4`. Acentos: Trabajo `#6ea8fe`, Proyectos `#b79cff`, Personal y avance `#5fd3b0`. Un color = un solo significado y **siempre con nombre e icono** (el color nunca es lo único que informa). Anillo con número grande. Dos pesos de letra. Zonas de toque de 44 px o más. Definir todo como variables reutilizables (tokens) para la unificación futura.
+
+### Principios TDAH aplicados
+Un solo foco a la vez · poco a la vez (máximo 3 por columna) · avanzar se siente bien (anillo y mensaje) · sin castigo ni urgencia roja · colores estables · botones grandes · modo enfoque para cuando se satura.
+
+### Celular
+Las mismas secciones apiladas, cada una con su lista de arriba hacia abajo; el bloque de enfoque va arriba. En lugar de arrastrar: botones **Subir / Bajar** y "Mover a…". Las pestañas pueden quedarse en celular.
+
+### De dónde salen los datos
+- **Trabajo:** el siguiente paso de los proyectos con marca `trabajo` (activos).
+- **Proyectos:** el siguiente paso de los proyectos activos sin marca `trabajo`.
+- **Personal y rutina:** los elementos de la rutina de hoy que ya calcula Mi día (comida, gym según Temple, cena, cierre) y tareas personales.
+- **Ideas por elegir:** proyectos en estado "idea semilla".
+- **Bloque de enfoque:** en horario de trabajo (lunes a viernes 9:00 a 18:00) sale primero el de Trabajo; fuera de ese horario, el de Proyectos.
+
+### Plan de construcción (pasos chicos, rama dev/mi-dia, sin publicar hasta preguntar)
+- **i1** Armazón: en pantalla ancha, el Inicio nuevo (bloque de enfoque + columnas) en lugar de las pestañas; el mapa y la tarjeta de proyecto abren como panel lateral. Solo lectura con los datos de arriba.
+- **i2** Orden de prioridad guardado: campo numérico `orden` en `proyectos/*` (ya existe `orden` en `tareas/*`); para Personal y rutina falta decidir dónde se guarda el orden. Mover con Subir/Bajar y "Mover a…" (celular y compu).
+- **i3** Arrastrar y soltar con el mouse (compu) y Deshacer visible; mismas reglas de cola sin internet y "gana el más reciente".
+- **i4** Modo enfoque, Listo y Ahora no conectados al bloque nuevo, celular apilado, estilo oscuro con tokens.
+- Después: 5.2b (archivar y recuperar, proyecto nuevo, tareas ligadas), 5.2c (gym desde Temple) y el Modo caos, que ya vive en este Inicio.
+- Pendiente de decidir al construir: dónde se guarda el orden de Personal y rutina; si el total del anillo cuenta pasos de proyecto además de la rutina.
