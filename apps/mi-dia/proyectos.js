@@ -205,9 +205,13 @@ function proyCola(m) {
 }
 
 // Barra del día: un segmento por actividad (la rutina y los pasos de proyecto), un solo color neutro; atrasarse no cambia el color
-function proyBarra(real, m) {
+function proyAvance(real, m) {   // cuántas actividades lleva el día: la rutina y los pasos de proyecto
   const rutina = real.filter(i => i.tipo !== 'cal' && i.fin > i.ini), c = proyCola(m);
-  const hr = rutina.filter(i => est.hechos[i.id]).length, N = rutina.length + c.hechos + (c.cola.length ? 1 : 0), D = hr + c.hechos;
+  const hr = rutina.filter(i => est.hechos[i.id]).length;
+  return { D: hr + c.hechos, N: rutina.length + c.hechos + (c.cola.length ? 1 : 0) };
+}
+function proyBarra(real, m) {
+  const { D, N } = proyAvance(real, m);
   if (!N) return '';
   const seg = N <= 24 ? `<div class="pbarra" role="img" aria-label="${D} de ${N} actividades del día">${Array.from({ length: N }, (_, k) => `<i class="${k < D ? 'on' : ''}"></i>`).join('')}</div>` : `<div class="bar"><i style="width:${Math.round(D / N * 100)}%"></i></div>`;
   return `<div class="pbl">${seg}<div class="dc-r"><span><b>${D} de ${N}</b> actividades de hoy</span><span>${Math.round(D / N * 100)}%</span></div></div>`;

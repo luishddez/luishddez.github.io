@@ -409,7 +409,7 @@ function heroFlujo(id, forzado) {
 }
 
 // ---------- otros días: mañana y la semana ----------
-let vistaSel = 'hoy';   // 'hoy' | 'man' | 'sem' | 'd:AAAA-MM-DD'
+let vistaSel = innerWidth >= 900 ? 'ini' : 'hoy';   // 'ini' | 'hoy' | 'man' | 'sem' | 'proy' | 'd:AAAA-MM-DD'. En computadora se abre el Inicio tablero; en celular, Hoy (hasta terminar el diseño móvil)
 function carryHoy() {   // lo que hoy no cupo (o se quitó) pasa a mañana
   const d = construirDia(ahoraMin());
   return d.sinHora.concat(d.pospuestas).map(t => ({ ...t, deHoy: true }));
@@ -594,11 +594,12 @@ function render() {
   if (menuAbierto) { $('#menuIn').innerHTML = vistaMenu(); $('#menu').classList.remove('hide'); }
   else $('#menu').classList.add('hide');
   const vs = vistaSel, man = fechaMas(hoyKey(), 1);
-  document.body.classList.toggle('ancho', vs === 'proy');   // en pantalla ancha, Proyectos usa todo el ancho (computadora primero)
+  document.body.classList.toggle('ancho', vs === 'proy' || vs === 'ini');   // en pantalla ancha, Inicio y Proyectos usan todo el ancho (computadora primero)
   const antes = $('#vista').scrollTop;
-  $('#vista').innerHTML = vs === 'hoy' ? vistaHoy() : vs === 'sem' ? vistaSemana() : vs === 'proy' ? vistaProyectos() : vistaDia(vs === 'man' ? man : vs.slice(2));
+  $('#vista').innerHTML = vs === 'hoy' ? vistaHoy() : vs === 'sem' ? vistaSemana() : vs === 'proy' ? vistaProyectos() : vs === 'ini' ? vistaInicio() : vistaDia(vs === 'man' ? man : vs.slice(2));
   if (vs === 'proy') { $('#vista').scrollTop = antes; proyPostRender(); }   // el mapa no salta al volver a pintarse
-  document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', (b.dataset.v === 'hoy' && vs === 'hoy') || (b.dataset.v === 'man' && (vs === 'man' || vs === 'd:' + man)) || (b.dataset.v === 'sem' && vs === 'sem') || (b.dataset.v === 'proy' && vs === 'proy')));
+  else if (vs === 'ini') $('#vista').scrollTop = antes;
+  document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', (b.dataset.v === 'ini' && vs === 'ini') || (b.dataset.v === 'hoy' && vs === 'hoy') || (b.dataset.v === 'man' && (vs === 'man' || vs === 'd:' + man)) || (b.dataset.v === 'sem' && vs === 'sem') || (b.dataset.v === 'proy' && vs === 'proy')));
   guardar();
 }
 
@@ -1023,7 +1024,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) pint
 function revisaDia() { if (est.fecha !== hoyKey()) { guardar(); location.reload(); return true; } return false; }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !revisaDia()) { enviarPendientes(); actualizar(false); } });
 enviarPendientes();
-setInterval(() => { if (revisaDia()) return; if (!menuAbierto && !planAbierto && vistaSel !== 'proy' && !document.querySelector('details[open]')) render(); }, 60000);
+setInterval(() => { if (revisaDia()) return; if (!menuAbierto && !planAbierto && vistaSel !== 'proy' && !document.querySelector('details[open]')) proyRenderSeguro(); }, 60000);
 setInterval(pintaSol, 60000);   // el sol se mueve aunque haya algo abierto
 // Mi día y Hungry se hablan en menos de 1 minuto: con la app a la vista se revisa tu cuenta cada 45 s (sin tocar lo que estés editando)
 setInterval(async () => {
