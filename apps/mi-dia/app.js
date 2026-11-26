@@ -684,7 +684,7 @@ function accion(a, v, el, ev) {
     case 'sol': tocaSol(); return;
     case 'actualizar': return actualizar(true);
     case 'cerrarMenu': menuAbierto = false; break;
-    default: if (typeof proyAccion === 'function' && proyAccion(a, v, el, ev)) break; return;   // acciones de Proyectos (proyectos.js)
+    default: if ((typeof proyAccion === 'function' && proyAccion(a, v, el, ev)) || (typeof iniAccion === 'function' && iniAccion(a, v))) break; return;   // acciones de Proyectos (proyectos.js) y del Inicio (inicio.js)
   }
   render();
 }
@@ -864,7 +864,7 @@ async function desdeSheet() {
 async function desdeSupabase() {
   const g = window.TABLERO.gids;
   // La comida vive en Hungry: Mi día solo la muestra (régimen, por comprar y lo comido). No lee el plan ni la lista anteriores.
-  const [tarD, planH, diaD, falD, regD, proyD] = await Promise.all([SB.coleccion('tareas'), SB.coleccion('comida/regimen').catch(() => []), SB.coleccion('dia').catch(() => []), SB.coleccion('comida/faltantes').catch(() => []), SB.coleccion('comida/registro').catch(() => []), SB.coleccion('proyectos').catch(() => null)]);
+  const [tarD, planH, diaD, falD, regD, proyD, iniD] = await Promise.all([SB.coleccion('tareas'), SB.coleccion('comida/regimen').catch(() => []), SB.coleccion('dia').catch(() => []), SB.coleccion('comida/faltantes').catch(() => []), SB.coleccion('comida/registro').catch(() => []), SB.coleccion('proyectos').catch(() => null), SB.coleccion('inicio').catch(() => null)]);
   const planD = planH, comD = [];
   const ord = (a, b) => (a.orden || 0) - (b.orden || 0);
   const tar = tarD.sort(ord).map(t => ({ ...t, minutos: String(t.minutos ?? ''), prioridad: String(t.prioridad ?? ''), esencial: t.esencial ? 'sí' : 'no' }));
@@ -880,6 +880,7 @@ async function desdeSupabase() {
   if (cal && cal === calC) { const k = e => normFecha(e.fecha) + ' ' + (e.inicio || ''); cal = calC.slice().sort((a, b) => k(a).localeCompare(k(b))); }
   const d = armar(tar, cal || [], plan, compras, cal ? null : (datos.calendario || []));
   d.proyectos = proyD || datos.proyectos || [];   // si falla la lectura, se conserva lo último guardado (nunca rompe tareas ni calendario)
+  d.inicioOrden = (iniD && iniD.find(x => x && x.id === 'orden')) || datos.inicioOrden || null;   // orden de prioridad del Inicio (documento inicio/orden)
   // De Hungry: lo que falta por comprar y lo que llevas comido hoy
   const pend = (est.comprasPend || []).map(f => f.id);
   d.faltantes = falD.filter(f => f && f.articulo && f.estado === 'falta' && !pend.includes(f.id)).sort((a, b) => (a.pasillo || '').localeCompare(b.pasillo || '') || a.articulo.localeCompare(b.articulo)).map(f => ({ id: f.id, articulo: f.articulo, emoji: f.emoji || '', cantidad: f.cantidad_texto || '', pasillo: f.pasillo || '', donde: f.donde || '', raw: f }));

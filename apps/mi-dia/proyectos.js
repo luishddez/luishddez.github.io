@@ -20,18 +20,29 @@ let proyMemo = { base: null, firma: '', v: [] };
 function proyLista() {
   const base = Array.isArray(datos.proyectos) ? datos.proyectos : [], pend = proyPend(), firma = pend.map(x => x.id + ':' + x.data.actualizado).join('|');
   if (proyMemo.base === base && proyMemo.firma === firma) return proyMemo.v;
-  const m = new Map(); base.forEach(p => { if (p && p.id) m.set(p.id, p); }); pend.forEach(x => m.set(x.id, x.data));
+  const m = new Map(); base.forEach(p => { if (p && p.id) m.set(p.id, p); }); pend.filter(proyEsDeProyecto).forEach(x => m.set(x.id, x.data));
   proyMemo = { base, firma, v: Array.from(m.values()).filter(p => p && p.id && p.nombre) };
   return proyMemo.v;
 }
 const proyPorId = id => proyLista().find(p => p.id === id);
-const proyPendiente = id => proyPend().some(x => x.id === id);
+const proyPendiente = id => proyPend().some(x => x.id === id && proyEsDeProyecto(x));
+// Cada elemento de la cola es {id, data} (un proyecto, en proyectos/<id>) o {id, path, data} (otro documento, p. ej. inicio/orden)
+const proyEsDeProyecto = x => !x.path || x.path.startsWith('proyectos/');
+const proyRuta = x => x.path || 'proyectos/' + x.id;
 // Pone el cambio en la cola (se ve ya) y lo manda en cuanto se pueda
-function proyGuardaDoc(doc) {
+function proyEncola(path, id, doc) {
   doc.actualizado = Date.now();
-  proySetPend(proyPend().filter(x => x.id !== doc.id).concat([{ id: doc.id, data: doc }]));
+  const x = path.startsWith('proyectos/') ? { id, data: doc } : { id, path, data: doc };
+  proySetPend(proyPend().filter(y => y.id !== id).concat([x]));
   return proyEnviar();
 }
+const proyGuardaDoc = doc => proyEncola('proyectos/' + doc.id, doc.id, doc);
+// Orden de prioridad que acomoda Luis: documento inicio/orden = { id:'orden', trabajo:[ids], proyectos:[ids] }, de más a menos prioritario.
+// Vive en un documento aparte para que mover una tarjeta nunca reescriba (ni pise) los proyectos. Los que no aparecen en la lista van después, en orden automático.
+function proyOrdenDoc() { const x = proyPend().find(y => y.id === 'inicio-orden'); return x ? x.data : (datos.inicioOrden || null); }
+function proyRango(p) { const d = proyOrdenDoc(), l = d && d[p.trabajo ? 'trabajo' : 'proyectos'], i = Array.isArray(l) ? l.indexOf(p.id) : -1; return i < 0 ? Infinity : i; }
+const proyRangoCmp = (a, b) => { const ra = proyRango(a), rb = proyRango(b); return ra === rb ? 0 : ra < rb ? -1 : 1; };
+const proyCmp = (a, b) => proyRangoCmp(a, b) || (Number(b.importancia) || 0) - (Number(a.importancia) || 0) || (proyDias(b) ?? 0) - (proyDias(a) ?? 0) || String(a.nombre).localeCompare(String(b.nombre));
 const proyConectado = () => !!(window.SB && SB.activo() && SB.conSesion()) && navigator.onLine !== false;
 let proyEnviando = false;
 // Manda la cola. Nunca lanza errores. Si lo mismo se cambió en otro aparato más recientemente, gana ese y se avisa.
@@ -39,14 +50,18 @@ async function proyEnviar() {
   if (proyEnviando || !proyPend().length || !proyConectado()) return;
   proyEnviando = true;
   try {
-    const srv = await SB.coleccion('proyectos'), porId = new Map(srv.filter(p => p && p.id).map(p => [p.id, p])), perdidos = []; let fallo = false;
+    const srv = new Map(), perdidos = []; let fallo = false;
+    const prefs = new Set(proyPend().map(x => proyRuta(x).split('/').slice(0, -1).join('/')));
+    for (const pf of prefs) (await SB.coleccion(pf)).forEach(d => { if (d && d.id) srv.set(pf + '/' + d.id, d); });
     const quita = (id, ts) => proySetPend(proyPend().filter(x => !(x.id === id && x.data.actualizado === ts)));   // solo si no lo volviste a editar mientras se mandaba
     for (const it of proyPend().slice()) {
-      const s = porId.get(it.id);
-      if (s && Number(s.actualizado || 0) > Number(it.data.actualizado || 0)) { perdidos.push(it.data.nombre); quita(it.id, it.data.actualizado); continue; }
-      try { await SB.guardar('proyectos/' + it.id, it.data); porId.set(it.id, it.data); quita(it.id, it.data.actualizado); } catch (e) { fallo = true; break; }
+      const ruta = proyRuta(it), s = srv.get(ruta);
+      if (s && Number(s.actualizado || 0) > Number(it.data.actualizado || 0)) { perdidos.push(it.data.nombre || 'El orden de tu Inicio'); quita(it.id, it.data.actualizado); continue; }
+      try { await SB.guardar(ruta, it.data); srv.set(ruta, it.data); quita(it.id, it.data.actualizado); } catch (e) { fallo = true; break; }
     }
-    datos.proyectos = Array.from(porId.values()); safe.set('tablero-datos', datos);
+    if (prefs.has('proyectos')) datos.proyectos = Array.from(srv.entries()).filter(([k]) => k.startsWith('proyectos/')).map(([, v]) => v);   // solo si se leyó esa colección
+    if (srv.has('inicio/orden')) datos.inicioOrden = srv.get('inicio/orden');
+    safe.set('tablero-datos', datos);
     if (perdidos.length) toast(`“${perdidos[0]}”${perdidos.length > 1 ? ` y ${perdidos.length - 1} más` : ''}: se había cambiado antes en otro aparato y quedó esa versión (la más reciente)`);
     if (!fallo && proyPend().length) setTimeout(proyEnviar, 300);   // lo que se editó mientras se mandaba
   } catch (e) { /* sin conexión o sin sesión: queda en la cola */ }
@@ -199,7 +214,7 @@ function proyCola(m) {
   const trab = dow >= 1 && dow <= 5 && m >= 9 * 60 && m < 18 * 60 && modoActual() === 'trabajo';
   const hechos = est.proyHechos || {}, no = est.proyNoAhora || [];
   const base = proyLista().filter(p => p.estado === 'activo' && String(p.siguiente_paso || '').trim() && !hechos[p.id] && !!p.trabajo === trab)
-    .sort((a, b) => (Number(b.importancia) || 0) - (Number(a.importancia) || 0) || (proyDias(b) ?? 0) - (proyDias(a) ?? 0) || String(a.nombre).localeCompare(String(b.nombre)));
+    .sort(proyCmp);
   const cola = base.filter(p => !no.includes(p.id)).concat(no.map(id => base.find(p => p.id === id)).filter(Boolean));
   return { trab, cola, hechos: Object.keys(hechos).length };
 }
