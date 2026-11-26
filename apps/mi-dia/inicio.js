@@ -4,10 +4,53 @@
    Prioridad de arriba hacia abajo. Por ahora el orden es automático (importancia, luego lo menos tocado); acomodarlo a mano llega en i2. */
 const INI_MAX = 3;   // máximo de tarjetas visibles por columna (poco a la vez); el resto queda en "+ N más"
 
-// Primero los que ya tienen siguiente paso; dentro de cada grupo, lo más importante y lo menos tocado
+// Primero el orden que acomodó Luis; lo que no acomodó, con paso primero, luego lo más importante y lo menos tocado
 function iniOrden(l) {
   const paso = p => String(p.siguiente_paso || '').trim() ? 0 : 1;
-  return l.slice().sort((a, b) => paso(a) - paso(b) || (Number(b.importancia) || 0) - (Number(a.importancia) || 0) || (proyDias(b) ?? 0) - (proyDias(a) ?? 0) || String(a.nombre).localeCompare(String(b.nombre)));
+  return l.slice().sort((a, b) => proyRangoCmp(a, b) || paso(a) - paso(b) || (Number(b.importancia) || 0) - (Number(a.importancia) || 0) || (proyDias(b) ?? 0) - (proyDias(a) ?? 0) || String(a.nombre).localeCompare(String(b.nombre)));
+}
+// La lista de una columna, completa (también lo que queda en "+ N más"), en el orden en que se ve
+const iniLista = esTrabajo => iniOrden(proyLista().filter(p => p.estado === 'activo' && !(est.proyHechos || {})[p.id] && !!p.trabajo === esTrabajo));
+
+// ---------- Acomodar la prioridad (i2): Subir, Bajar y Mover a… Se guarda en inicio/orden ----------
+let iniUndo = null;   // el orden anterior de la columna que se movió, para Deshacer
+function iniMover(id, destino) {
+  const p = proyPorId(id); if (!p) return;
+  const lista = iniLista(!!p.trabajo), de = lista.findIndex(x => x.id === id);
+  if (de < 0) return;
+  destino = Math.max(0, Math.min(lista.length - 1, destino));
+  if (destino === de) { toast(destino === 0 ? 'Ya está hasta arriba' : 'Ya está hasta abajo'); return; }
+  const ids = lista.map(x => x.id); ids.splice(de, 1); ids.splice(destino, 0, id);
+  const doc = { ...(proyOrdenDoc() || {}), id: 'orden' }, col = p.trabajo ? 'trabajo' : 'proyectos';
+  iniUndo = { col, antes: Array.isArray(doc[col]) ? doc[col].slice() : null };
+  doc[col] = ids;
+  proyEncola('inicio/orden', 'inicio-orden', doc);
+}
+function iniDeshacer() {
+  if (!iniUndo) return;
+  const doc = { ...(proyOrdenDoc() || {}), id: 'orden' };
+  if (iniUndo.antes) doc[iniUndo.col] = iniUndo.antes; else delete doc[iniUndo.col];
+  iniUndo = null;
+  proyEncola('inicio/orden', 'inicio-orden', doc);
+}
+function iniAccion(a, v) {
+  switch (a) {
+    case 'iniSubir': { const p = proyPorId(v), l = p && iniLista(!!p.trabajo); if (l) iniMover(v, l.findIndex(x => x.id === v) - 1); return true; }
+    case 'iniBajar': { const p = proyPorId(v), l = p && iniLista(!!p.trabajo); if (l) iniMover(v, l.findIndex(x => x.id === v) + 1); return true; }
+    case 'iniDeshacer': iniDeshacer(); toast('Orden anterior restaurado'); return true;
+  }
+  return false;
+}
+document.addEventListener('change', e => { const t = e.target; if (t && t.dataset && t.dataset.ini === 'mover' && proySel) { iniMover(proySel, Number(t.value)); render(); } });
+// Fila de prioridad en el panel: posición, Subir, Bajar, Mover a… y Deshacer (sirve igual con mouse que con el dedo)
+function iniFilaPrioridad(p) {
+  if (p.estado !== 'activo' || (est.proyHechos || {})[p.id] || proyEditando()) return '';
+  const l = iniLista(!!p.trabajo), pos = l.findIndex(x => x.id === p.id); if (pos < 0) return '';
+  const nom = p.trabajo ? 'Trabajo' : 'Proyectos';
+  return `<section class="ipri"><div class="pk">Prioridad en ${nom}</div><div>Posición <b>${pos + 1}</b> de ${l.length}. Arriba es lo más prioritario.</div>
+  <div class="acc"><button data-a="iniSubir" data-v="${esc(p.id)}">▲ Subir</button><button data-a="iniBajar" data-v="${esc(p.id)}">▼ Bajar</button>
+  <select data-ini="mover" aria-label="Mover a la posición">${l.map((_, k) => `<option value="${k}"${k === pos ? ' selected' : ''}>Mover a la posición ${k + 1}</option>`).join('')}</select>
+  ${iniUndo ? `<button data-a="iniDeshacer">↶ Deshacer</button>` : ''}</div></section>`;
 }
 
 function iniTarjetaProyecto(p, i) {
@@ -34,9 +77,8 @@ function iniHero(real, m) {
 
 function vistaInicio() {
   const m = ahoraMin(), dia = construirDia(m), real = dia.items.filter(i => i.tipo !== 'ctx');
-  const todos = proyLista(), hechos = est.proyHechos || {};
-  const activos = todos.filter(p => p.estado === 'activo' && !hechos[p.id]);
-  const trab = iniOrden(activos.filter(p => p.trabajo)), proy = iniOrden(activos.filter(p => !p.trabajo));
+  const todos = proyLista();
+  const trab = iniLista(true), proy = iniLista(false);
   const ideas = todos.filter(p => p.estado === 'idea semilla');
   // Personal y rutina: lo de hoy que ya calcula Mi día (comida, gym, cena, cierre…) y las tareas, en orden de hora
   const per = real.filter(i => (i.tipo === 'base' || i.tipo === 'tarea') && i.id !== 'pregunta' && !hecho(i) && i.fin > i.ini && i.fin > m).sort((a, b) => a.ini - b.ini)
@@ -50,6 +92,6 @@ function vistaInicio() {
     + `<section class="icol" style="--a:var(--mute)"><div class="icol-h"><span aria-hidden="true">💡</span>Ideas<small>${ideas.length}</small></div>${ideas.map(p => `<button class="iidea" data-a="proySel" data-v="${esc(p.id)}">${esc(p.nombre)}</button>`).join('') || '<div class="nota">Sin ideas por elegir.</div>'}</section>`
     + `</div>`;
   const sel = proySel && proyPorId(proySel);
-  if (sel) h += `<aside class="ipanel" aria-label="Tarjeta del proyecto">${proyTarjeta(sel)}</aside>`;
+  if (sel) h += `<aside class="ipanel" aria-label="Tarjeta del proyecto">${proyTarjeta(sel)}${iniFilaPrioridad(sel)}</aside>`;
   return h;
 }

@@ -51,6 +51,13 @@ Fase 3 (diseño) aprobada por Luis el 2026-11-25. Esta fase solo prepara los dat
 - "Listo" en el siguiente paso del Inicio guarda: el texto pasa a `ultimo_paso_hecho` (con `ultimo_paso_fecha`), `siguiente_paso` queda vacío y `ultima_vez` es hoy. Esto es una interpretación del diseño, pendiente de confirmar por Luis.
 - Estados editables en 5.2a: activo, en pausa, bloqueado, idea semilla, hecho. "Archivado" llega en 5.2b.
 
+## Orden de prioridad del Inicio (i2, 2026-11-25)
+- Vive en **un documento aparte**: `inicio/orden` = `{ id: "orden", trabajo: [ids], proyectos: [ids], actualizado }`, de más a menos prioritario. Mover una tarjeta **no reescribe los proyectos**, así no se pisan ediciones de otros campos.
+- Lo que no aparece en la lista va después, en orden automático (con paso, importancia y lo menos tocado). Ids que ya no existen se ignoran.
+- Misma regla de siempre: gana `actualizado` más reciente, con cola sin internet y aviso si se pierde un cambio. Si Claude cambia `inicio/orden` con SQL debe actualizar `actualizado`.
+- Personal y rutina **no se acomoda a mano**: sigue por hora.
+- Deshacer restaura el orden anterior de la última columna movida.
+
 ## Queda para después (no se pide hoy)
 - Copia de solo lectura en el Sheet para el Segundo Cerebro: se decide en el checkpoint 5.2.
 - Puntos y niveles: checkpoint 5.3.
