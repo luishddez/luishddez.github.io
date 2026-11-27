@@ -998,13 +998,15 @@ function avisaVersionNueva() {
   d.querySelector('#verX').addEventListener('click', () => d.remove());
 }
 if ('serviceWorker' in navigator) {
-  const habiaControl = !!navigator.serviceWorker.controller;
+  // "Ya había una versión" = al cargar esta página ya existía un service worker registrado (aunque la página haya entrado sin control, p. ej. tras una recarga forzada).
+  // Solo en la primera visita de todas no hay nada que avisar.
+  const habiaVersion = navigator.serviceWorker.getRegistration().then(r => !!(r && (r.active || r.waiting || r.installing))).catch(() => !!navigator.serviceWorker.controller);
   navigator.serviceWorker.register('sw.js').then(reg => {
     const revisa = () => { try { reg.update(); } catch (e) { } };
     setInterval(revisa, 10 * 60000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) revisa(); });
   }).catch(() => { });
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaControl) avisaVersionNueva(); });
+  navigator.serviceWorker.addEventListener('controllerchange', () => { habiaVersion.then(h => { if (h) avisaVersionNueva(); }); });
 }
 window.addEventListener('online', () => { enviarPendientes(); actualizar(false); });
 // ---------- alerta de comida: clara e insistente (comer es importante) ----------
