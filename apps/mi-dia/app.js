@@ -316,45 +316,47 @@ function vistaHoy() {
   const quedan = Math.max(0, toMin('23:00') - m);
   const carga = dia.pendTotal.reduce((s, t) => s + t.min, 0);
   const comidaPend = dia.items.some(i => i.id === 'comida') && !est.hechos.comida && m >= toMin('12:30') && m <= toMin('18:00');
-  let h = tarjetaDia(dia, m, `quedan ${dur(quedan)} · ⭐ ${essHechas}/${ess.length} · 🎯 ${dia.pendTotal.length} · ⏱ ${dur(carga)}${comidaPend ? ' · <b class="falta">🍽️ falta comer</b>' : ''}`);
-  h += proyBarra(real, m);   // barra de avance del día (proyectos.js)
+  let h = '', top = '', main = '', rail = '', cola = '';   // top: tira y barra del día · main: el foco (ahora y siguiente paso) · rail: tu día · cola: frase, notas y Hungry
+  top += tarjetaDia(dia, m, `quedan ${dur(quedan)} · ⭐ ${essHechas}/${ess.length} · 🎯 ${dia.pendTotal.length} · ⏱ ${dur(carga)}${comidaPend ? ' · <b class="falta">🍽️ falta comer</b>' : ''}`);
+  top += proyBarra(real, m);   // barra de avance del día (proyectos.js)
 
   // frase: dos líneas; al tocarla se abre con su autor
   const f = fraseDelDia();
-  h += `<div class="frase${fraseAbierta ? ' open' : ''}" data-a="frase"><q>${esc(f.t)}</q><small>${esc(f.a)}</small></div>`;
-  if (dia.todoDia.length) h += `<div class="nota" style="margin:0 0 8px">📅 Hoy, todo el día: ${dia.todoDia.map(esc).join(' · ')}</div>`;
+  cola += `<div class="frase${fraseAbierta ? ' open' : ''}" data-a="frase"><q>${esc(f.t)}</q><small>${esc(f.a)}</small></div>`;
+  if (dia.todoDia.length) top += `<div class="nota" style="margin:0 0 8px">📅 Hoy, todo el día: ${dia.todoDia.map(esc).join(' · ')}</div>`;
 
   // notas que ya escribiste y que Claude todavía no acomoda (se ocultan a las 48 h o con "Limpiar")
   const camino = (est.inbox || []).filter(n => !/^(✅|↩️|Cambios al día)/.test(n.t) && Date.now() - new Date(n.ts).getTime() < 48 * 3600000);
-  if (camino.length) h += `<div class="card" style="margin:0 0 8px"><b>📝 En camino</b>${camino.map(n => `<div class="it2">${n.enviada ? '✓' : '⏳'} ${esc(n.t)} <span class="nota">${n.enviada ? '· enviada, Claude la acomoda en su próxima sesión' : '· sin internet, se enviará sola'}</span></div>`).join('')}<div class="row" style="margin-top:6px"><button data-a="limpiaInbox">Limpiar</button></div></div>`;
+  if (camino.length) cola += `<div class="card" style="margin:0 0 8px"><b>📝 En camino</b>${camino.map(n => `<div class="it2">${n.enviada ? '✓' : '⏳'} ${esc(n.t)} <span class="nota">${n.enviada ? '· enviada, Claude la acomoda en su próxima sesión' : '· sin internet, se enviará sola'}</span></div>`).join('')}<div class="row" style="margin-top:6px"><button data-a="limpiaInbox">Limpiar</button></div></div>`;
 
   // avisos
-  (datos.avisos || []).forEach(a => h += `<div class="aviso">${esc(a)}</div>`);
+  (datos.avisos || []).forEach(a => main += `<div class="aviso">${esc(a)}</div>`);
   // Las compras ya no ocupan Hoy ("en Inicio ordeno, en Hoy ejecuto"): se ordenan en Inicio (tarjeta Compras) y el domingo el Súper es una actividad que abre la lista (heroAhora)
   // de Hungry: cuánto llevas comido
-  if (datos.comido && datos.comido.k) h += `<div class="nota" style="margin:0 0 8px">🍽️ Hoy llevas <b>${datos.comido.k} kcal</b> y ${datos.comido.p} g de proteína registrados en Hungry. <a href="../hungry/">Abrir</a></div>`;
+  if (datos.comido && datos.comido.k) cola += `<div class="nota" style="margin:0 0 8px">🍽️ Hoy llevas <b>${datos.comido.k} kcal</b> y ${datos.comido.p} g de proteína registrados en Hungry. <a href="../hungry/">Abrir</a></div>`;
 
   // HERO: ahora
   const forzado = est.forzar;
   const flujoId = forzado || (ahora && (ahora.id === 'manana' || ahora.id === 'cierre') ? ahora.id : null);
-  if (flujoId) h += heroFlujo(flujoId, !!forzado);
-  else h += heroAhora(ahora, futuros, m, esencialListo);
+  if (flujoId) main += heroFlujo(flujoId, !!forzado);
+  else main += heroAhora(ahora, futuros, m, esencialListo);
 
-  if (esencialListo) h += `<div class="libre-ok">✅ <b>Esencial hecho.</b> Lo demás es opcional, sin culpa.</div>`;
-  h += proyPaso(m);   // siguiente paso de proyectos o de trabajo (proyectos.js)
+  if (esencialListo) main += `<div class="libre-ok">✅ <b>Esencial hecho.</b> Lo demás es opcional, sin culpa.</div>`;
+  main += proyPaso(m);   // siguiente paso de proyectos o de trabajo (proyectos.js)
 
   // siguiente: solo una fila; todo lo demás, plegado en un único lugar
-  if (futuros.length) h += `<h3>Siguiente</h3>` + fila(futuros[0], esencialListo);
+  if (futuros.length) rail += `<h3>Siguiente</h3>` + fila(futuros[0], esencialListo);
   const mas = futuros.slice(1);
   const n = mas.length + dia.sinHora.length + pasados.length;
   if (n) {
-    h += `<details><summary>Ver el resto del día · ${n}</summary>`;
-    if (mas.length) h += `<div class="mini">Más tarde</div>` + mas.map(i => fila(i, esencialListo)).join('');
-    if (dia.sinHora.length) h += `<div class="mini">No caben hoy · sin culpa</div>` + dia.sinHora.map(t => `<div class="it opc k-${t.esencial ? 'ess' : 'tar'}"><div class="t">${esc(t.titulo)} <span class="nota">· ${dur(t.min)}</span></div></div>`).join('');
-    if (pasados.length) h += `<div class="mini">Hecho</div>` + pasados.map(i => `<div class="it opc k-${cat(i)}"><div class="t ${hecho(i) ? 'hecho' : ''}"><span class="h">${i.ini ? fmt(i.ini) : ''}</span>${esc(i.titulo)}</div></div>`).join('');
-    h += `</details>`;
+    rail += `<details${capAncho() ? ' open' : ''}><summary>Ver el resto del día · ${n}</summary>`;
+    if (mas.length) rail += `<div class="mini">Más tarde</div>` + mas.map(i => fila(i, esencialListo)).join('');
+    if (dia.sinHora.length) rail += `<div class="mini">No caben hoy · sin culpa</div>` + dia.sinHora.map(t => `<div class="it opc k-${t.esencial ? 'ess' : 'tar'}"><div class="t">${esc(t.titulo)} <span class="nota">· ${dur(t.min)}</span></div></div>`).join('');
+    if (pasados.length) rail += `<div class="mini">Hecho</div>` + pasados.map(i => `<div class="it opc k-${cat(i)}"><div class="t ${hecho(i) ? 'hecho' : ''}"><span class="h">${i.ini ? fmt(i.ini) : ''}</span>${esc(i.titulo)}</div></div>`).join('');
+    rail += `</details>`;
   }
-  return h;
+  // Escritorio: tira arriba a todo lo ancho, foco a la izquierda y tu día a la derecha. Celular: una columna en ese mismo orden (foco primero).
+  return `<div class="hoy"><div class="hoy-top">${top}</div><div class="hoy-main">${main}</div><div class="hoy-rail">${rail}${cola}</div></div>`;
 }
 
 // Tarjeta de acceso a "Mi día": una tira con todo el día (un color por tipo de actividad), la hora actual y el resumen en una línea
@@ -603,7 +605,7 @@ function render() {
   if (menuAbierto) { $('#menuIn').innerHTML = vistaMenu(); $('#menu').classList.remove('hide'); }
   else $('#menu').classList.add('hide');
   const vs = vistaSel, man = fechaMas(hoyKey(), 1);
-  document.body.classList.toggle('ancho', vs === 'proy' || vs === 'ini');   // en pantalla ancha, Inicio y Proyectos usan todo el ancho (computadora primero)
+  document.body.classList.toggle('ancho', vs === 'proy' || vs === 'ini' || vs === 'hoy');   // en pantalla ancha, Inicio y Proyectos usan todo el ancho (computadora primero)
   const antes = $('#vista').scrollTop;
   $('#vista').innerHTML = vs === 'hoy' ? vistaHoy() : vs === 'sem' ? vistaSemana() : vs === 'proy' ? vistaProyectos() : vs === 'ini' ? vistaInicio() : vistaDia(vs === 'man' ? man : vs.slice(2));
   if (vs === 'proy') { $('#vista').scrollTop = antes; proyPostRender(); }   // el mapa no salta al volver a pintarse
