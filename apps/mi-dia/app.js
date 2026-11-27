@@ -145,7 +145,7 @@ if (!est || est.fecha !== hoyKey()) {
   est = { fecha: hoyKey(), hechos: {}, inicios: {}, pasoManana: 0, pasoCierre: 0, forzar: null, modo: null, inbox: prev.inbox || [], totales: prev.totales || { poemas: 0, llegadas_9: 0 }, sueno: prev.sueno || '00:00', desayuno: prev.desayuno || false, extra: prev.extra || [], dias: prev.dias || {}, cerradas: prev.cerradas || {}, comprasPend: prev.comprasPend || [], registrosPend: prev.registrosPend || [] };
 }
 est.inicios = est.inicios || {}; est.pasoCierre = est.pasoCierre || 0; est.mov = est.mov || {}; est.oculto = est.oculto || {}; est.tocado = est.tocado || {}; est.extra = est.extra || []; est.dias = est.dias || {}; est.cerradas = est.cerradas || {};
-let tema = safe.get('tablero-tema', 'claro');
+let tema = safe.get('tablero-tema', 'oscuro');   // 3b-1: oscuro por defecto; si ya elegiste un fondo en este aparato, se respeta
 const aplicaTema = () => { document.documentElement.dataset.tema = tema; };
 const guardar = () => { safe.set('tablero-estado', est); pintaAlerta(); };   // cada vez que algo cambia, la alerta de comida se revisa
 let estadoSync = '';
@@ -974,7 +974,25 @@ async function actualizar(manual) {
   proyRenderSeguro();   // no borra lo que estás escribiendo en una tarjeta de Proyectos
 }
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });
+// Aviso de versión nueva: "Menú > Actualizar" solo recarga datos, no el programa. Cuando se publica una versión, el programa nuevo se instala solo (sw.js cambia de número)
+// y esta página, que sigue con el código viejo, lo detecta y avisa. Solo avisa si ya había una versión controlando la página (en la primera visita no hay nada que avisar).
+function avisaVersionNueva() {
+  if (document.getElementById('verNueva')) return;
+  const d = document.createElement('div'); d.id = 'verNueva'; d.setAttribute('role', 'status');
+  d.innerHTML = '<span>Hay una versión nueva</span><button id="verBtn" class="pri">Actualizar</button><button id="verX" aria-label="Después">✕</button>';
+  document.body.appendChild(d);
+  d.querySelector('#verBtn').addEventListener('click', () => location.reload());
+  d.querySelector('#verX').addEventListener('click', () => d.remove());
+}
+if ('serviceWorker' in navigator) {
+  const habiaControl = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    const revisa = () => { try { reg.update(); } catch (e) { } };
+    setInterval(revisa, 10 * 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) revisa(); });
+  }).catch(() => { });
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaControl) avisaVersionNueva(); });
+}
 window.addEventListener('online', () => { enviarPendientes(); actualizar(false); });
 // ---------- alerta de comida: clara e insistente (comer es importante) ----------
 let alertaNivel = 0, ultimoPulso = 0, sonidoComida = safe.get('tablero-sonido', true);
