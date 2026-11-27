@@ -161,10 +161,15 @@ let proyBorrador = null;   // lo que escribes en el formulario, en variable: sob
 const proyEditando = () => !!(proyBorrador && proyBorrador.id === proySel);
 const PROY_ESTADOS = ['activo', 'en pausa', 'bloqueado', 'idea semilla', 'hecho'];   // "archivado" llega en 5.2b
 const proyNum = v => { const n = Number(v); return v === null || v === undefined || v === '' || !(n >= 1 && n <= 5) ? null : Math.round(n); };
+// Camino de una idea a proyecto: 3 datos mínimos (por qué me importa, un primer paso de 15 min, qué falta saber). Con los 3 sale "Pasar a Proyectos".
+const proyIdeaReq = p => [{ ok: !!String(p.porque || '').trim(), t: 'Por qué me importa' }, { ok: !!String(p.siguiente_paso || '').trim(), t: 'Un primer paso de 15 minutos' }, { ok: !!String(p.falta_saber || '').trim(), t: 'Qué falta saber' }];
+const proyIdeaN = p => proyIdeaReq(p).filter(x => x.ok).length;
+// Avance largo (no diario): las tareas ligadas al proyecto (campo proyecto), hechas entre el total. Sin tareas ligadas = sin medir.
+const proyAvanceLargo = p => { const k = (datos.tareasProy || {})[p.id]; return k && k.total ? { h: k.hechas, t: k.total } : null; };
 function proySucio() {
   if (!proyEditando()) return false;
   const o = proyPorId(proyBorrador.id), b = proyBorrador; if (!o) return false;
-  return (o.siguiente_paso || '').trim() !== (b.siguiente_paso || '').trim() || (o.porque || '').trim() !== (b.porque || '').trim() || o.estado !== b.estado || !!o.trabajo !== !!b.trabajo || proyNum(o.potencia) !== proyNum(b.potencia) || proyNum(o.importancia) !== proyNum(b.importancia);
+  return (o.siguiente_paso || '').trim() !== (b.siguiente_paso || '').trim() || (o.porque || '').trim() !== (b.porque || '').trim() || (o.falta_saber || '').trim() !== (b.falta_saber || '').trim() || o.estado !== b.estado || !!o.trabajo !== !!b.trabajo || proyNum(o.potencia) !== proyNum(b.potencia) || proyNum(o.importancia) !== proyNum(b.importancia);
 }
 const proyCal = (v) => (v === null || v === undefined || v === '') ? 'sin calificar' : `${esc(v)} de 5`;
 function proyFormulario(p) {
@@ -172,12 +177,23 @@ function proyFormulario(p) {
   return `<section class="pcard pform"><div class="ptop"><div><b class="pt">${esc(p.nombre)}</b><div class="nota">Editando · ${esc(p.area)} · ${esc(p.tipo)}</div></div></div>
   <label class="pl" for="pf-sp">Siguiente paso</label><textarea id="pf-sp" data-pf="siguiente_paso" rows="2" maxlength="300" placeholder="Lo siguiente concreto que harías">${esc(b.siguiente_paso || '')}</textarea>
   <label class="pl" for="pf-pq">Por qué me importa</label><textarea id="pf-pq" data-pf="porque" rows="2" maxlength="400" placeholder="Una frase">${esc(b.porque || '')}</textarea>
+  <label class="pl" for="pf-fs">Qué falta saber</label><textarea id="pf-fs" data-pf="falta_saber" rows="2" maxlength="400" placeholder="Lo que tendrías que averiguar antes de empezar">${esc(b.falta_saber || '')}</textarea>
   <label class="pl" for="pf-es">Estado</label><select id="pf-es" data-pf="estado">${PROY_ESTADOS.map(e => `<option value="${e}"${b.estado === e ? ' selected' : ''}>${e}</option>`).join('')}</select>
   <label class="pchk"><input type="checkbox" data-pf="trabajo"${b.trabajo ? ' checked' : ''}> Es de trabajo (MegaGen)</label>
   <div class="pl">Potencia</div>${cal('potencia')}
   <div class="pl">Importancia</div>${cal('importancia')}
   <div class="nota" style="margin-top:8px">Las calificaciones las pones tú; si no calificas, queda “sin calificar”.</div>
   <div class="acc" style="margin-top:12px"><button class="pri" data-a="proyGuardar">Guardar</button><button data-a="proyCancelar">Cancelar</button></div></section>`;
+}
+function proyCaminoIdea(p) {
+  const r = proyIdeaReq(p), n = r.filter(x => x.ok).length;
+  return `<div class="pk">Camino a proyecto · ${n} de 3</div><ul class="pcam">${r.map(x => `<li class="${x.ok ? 'ok' : ''}"><span aria-hidden="true">${x.ok ? '✓' : '○'}</span> ${esc(x.t)}</li>`).join('')}</ul>
+  ${n === 3 ? `<div class="acc"><button class="pri" data-a="ideaPasar" data-v="${esc(p.id)}">🚀 Pasar a Proyectos</button></div>` : '<div class="nota">Completa los 3 con ✎ Editar y aparece el botón para pasarla a Proyectos.</div>'}`;
+}
+function proyAvanceHtml(p) {
+  if (p.estado !== 'activo') return '';
+  const a = proyAvanceLargo(p);
+  return `<div class="pk">Avance</div><div>${a ? `<b>${a.h} de ${a.t}</b> tareas ligadas hechas (${Math.round(a.h / a.t * 100)}%)` : '<span class="nota">Sin medir: todavía no tiene tareas ligadas.</span>'}</div>`;
 }
 function proyTarjeta(p) {
   if (proyEditando()) return proyFormulario(p);
@@ -186,6 +202,7 @@ function proyTarjeta(p) {
   <div class="pk">Siguiente paso</div><div>${p.siguiente_paso ? esc(p.siguiente_paso) : '<span class="nota">Todavía no lo escribes.</span>'}</div>
   ${p.ultimo_paso_hecho ? `<div class="nota" style="margin-top:4px">Último paso hecho: ${esc(p.ultimo_paso_hecho)}${p.ultimo_paso_fecha ? ' · ' + esc(p.ultimo_paso_fecha) : ''}</div>` : ''}
   <div class="pk">Por qué me importa</div><div>${p.porque ? esc(p.porque) : '<span class="nota">Todavía no lo escribes.</span>'}</div>
+  ${p.estado === 'idea semilla' ? proyCaminoIdea(p) : proyAvanceHtml(p)}
   <div class="pg"><div><div class="pk">Última vez que lo toqué</div><div>${proyHace(d)}</div></div>
   <div><div class="pk">Potencia · importancia</div><div>${proyCal(p.potencia)} · ${proyCal(p.importancia)}</div></div></div>
   <div class="pk">Se conecta con</div><div>${cons.length ? cons.map(c => `<button class="pfil" data-a="proySel" data-v="${esc(c.id)}">${esc(c.nombre)}</button>`).join(' ') : '<span class="nota">Con nada todavía.</span>'}</div>
@@ -263,14 +280,14 @@ const proyBloquea = () => { if (proySucio()) { toast('Guarda o cancela tus cambi
 
 function proyAccion(a, v) {
   switch (a) {
-    case 'proyEditar': { const p = proyPorId(proySel); if (!p) return true; proyBorrador = { id: p.id, siguiente_paso: p.siguiente_paso || '', porque: p.porque || '', estado: PROY_ESTADOS.includes(p.estado) ? p.estado : 'activo', trabajo: !!p.trabajo, potencia: proyNum(p.potencia), importancia: proyNum(p.importancia) }; return true; }
+    case 'proyEditar': { const p = proyPorId(proySel); if (!p) return true; proyBorrador = { id: p.id, siguiente_paso: p.siguiente_paso || '', porque: p.porque || '', falta_saber: p.falta_saber || '', estado: PROY_ESTADOS.includes(p.estado) ? p.estado : 'activo', trabajo: !!p.trabajo, potencia: proyNum(p.potencia), importancia: proyNum(p.importancia) }; return true; }
     case 'proyCancelar': proyBorrador = null; return true;
     case 'proyCal': { const [c, n] = String(v).split(':'); if (proyBorrador && (c === 'potencia' || c === 'importancia')) proyBorrador[c] = proyNum(n); return true; }
     case 'proyGuardar': {
       const b = proyBorrador, o = b && proyPorId(b.id); if (!o) { proyBorrador = null; return true; }
       if (!proySucio()) { proyBorrador = null; toast('Sin cambios'); return true; }
       const aviso = () => toast('Guardado aquí. Se manda solo cuando haya conexión');
-      proyGuardaDoc({ ...o, siguiente_paso: String(b.siguiente_paso || '').trim().slice(0, 300), porque: String(b.porque || '').trim().slice(0, 400), estado: PROY_ESTADOS.includes(b.estado) ? b.estado : o.estado, trabajo: !!b.trabajo, potencia: proyNum(b.potencia), importancia: proyNum(b.importancia), ultima_vez: hoyKey() }).then(() => { if (proyPendiente(o.id)) aviso(); });
+      proyGuardaDoc({ ...o, siguiente_paso: String(b.siguiente_paso || '').trim().slice(0, 300), porque: String(b.porque || '').trim().slice(0, 400), falta_saber: String(b.falta_saber || '').trim().slice(0, 400), estado: PROY_ESTADOS.includes(b.estado) ? b.estado : o.estado, trabajo: !!b.trabajo, potencia: proyNum(b.potencia), importancia: proyNum(b.importancia), ultima_vez: hoyKey() }).then(() => { if (proyPendiente(o.id)) aviso(); });
       proyBorrador = null;
       if (proyConectado()) toast('Guardado ✓'); else aviso();
       return true;
@@ -281,6 +298,11 @@ function proyAccion(a, v) {
       const p = proyPorId(v);
       if (p) proyGuardaDoc({ ...p, ultimo_paso_hecho: p.siguiente_paso || '', ultimo_paso_fecha: hoyKey(), siguiente_paso: '', ultima_vez: hoyKey() });
       celebrar('¡Listo! Ese paso ya cuenta. Anota el siguiente cuando quieras, en Proyectos.', false); return true;
+    }
+    case 'ideaPasar': {   // una idea con sus 3 datos sube a Proyectos: pasa a activo (se puede deshacer editando el estado)
+      const p = proyPorId(v); if (!p || p.estado !== 'idea semilla' || proyIdeaN(p) < 3) { toast('Aún le faltan datos para pasar a Proyectos'); return true; }
+      proyGuardaDoc({ ...p, estado: 'activo', ultima_vez: hoyKey() });
+      celebrar('¡Subió a Proyectos! Ya es un proyecto activo.', false); return true;
     }
     case 'pasoLuego': est.proyNoAhora = (est.proyNoAhora || []).filter(x => x !== v).concat(v); toast('Sin culpa: lo mandé al final de la cola de hoy'); return true;
     case 'proySel': if (proyBloquea()) return true; proySel = proySel === v ? null : v; return true;
