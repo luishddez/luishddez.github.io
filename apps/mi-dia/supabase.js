@@ -70,16 +70,15 @@
   function pedirLogin(mensaje) {
     if (!activo() || document.getElementById('sb-login')) return;
     const m = document.createElement('div');
-    m.id = 'sb-login';
-    m.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px;font-family:inherit';
-    m.innerHTML = '<div style="background:#fff;color:#1c1c1a;border-radius:16px;padding:20px;width:100%;max-width:340px">'
-      + '<div style="font-weight:700;font-size:20px;margin-bottom:4px">Entra a tu cuenta</div>'
-      + '<p style="margin:0 0 14px;font-size:13px;color:#555">Tus tareas, plan y compras ya viven en tu cuenta. Usa el mismo correo y contraseña de Temple.</p>'
-      + '<input id="sb-e" type="email" autocomplete="username" inputmode="email" autocapitalize="off" placeholder="Correo" style="width:100%;box-sizing:border-box;margin-bottom:8px;padding:10px;font-size:16px;border:1px solid #bbb;border-radius:8px">'
-      + '<input id="sb-p" type="password" autocomplete="current-password" placeholder="Contraseña" style="width:100%;box-sizing:border-box;padding:10px;font-size:16px;border:1px solid #bbb;border-radius:8px">'
-      + '<div id="sb-m" style="min-height:18px;margin:8px 0;font-size:13px;color:#b45309">' + (mensaje || '') + '</div>'
-      + '<button id="sb-go" style="width:100%;padding:12px;font-size:16px;font-weight:600;border:0;border-radius:10px;background:#1c1c1a;color:#fff">Entrar</button>'
-      + '<div style="text-align:center;margin-top:12px"><a href="#" id="sb-x" style="font-size:13px;color:#555">Ahora no</a></div></div>';
+    m.id = 'sb-login'; m.className = 'sb-ov';
+    m.innerHTML = '<div class="sb-card" role="dialog" aria-modal="true" aria-labelledby="sb-t">'
+      + '<div class="sb-t" id="sb-t">Entra a tu cuenta</div>'
+      + '<p class="sb-p">Tus tareas, plan y compras ya viven en tu cuenta. Usa el mismo correo y contraseña de Temple.</p>'
+      + '<input id="sb-e" type="email" autocomplete="username" inputmode="email" autocapitalize="off" placeholder="Correo" aria-label="Correo">'
+      + '<input id="sb-p" type="password" autocomplete="current-password" placeholder="Contraseña" aria-label="Contraseña">'
+      + '<div id="sb-m" class="sb-m" role="status">' + (mensaje || '') + '</div>'
+      + '<button id="sb-go" class="sb-go">Entrar</button>'
+      + '<div class="sb-x"><a href="#" id="sb-x">Ahora no</a></div></div>';
     document.body.appendChild(m);
     const $ = id => document.getElementById(id);
     let ocupado = false;

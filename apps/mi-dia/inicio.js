@@ -79,7 +79,7 @@ function iniNuevoHtml() {
   <label class="pl" for="nf-n">Nombre</label><input id="nf-n" type="text" data-nf="nombre" maxlength="80" autocomplete="off" placeholder="Cómo lo llamas" value="${esc(n.nombre)}">
   <div class="pl">Qué es</div><div class="pfils">${chip('nfTipo', 'proyecto', '🚀 Proyecto', n.tipo === 'proyecto')}${chip('nfTipo', 'idea', '💡 Idea', n.tipo === 'idea')}</div>
   <div class="pl">Área</div><div class="pfils">${PROY_AREAS.map(a => chip('nfArea', a, esc(a), n.area === a)).join('')}</div>
-  <label class="pchk"><input type="checkbox" data-nf="trabajo"${n.trabajo ? ' checked' : ''}> Es de trabajo (MegaGen)</label>
+  <label class="pchk"><input type="checkbox" class="sw-in" role="switch" data-nf="trabajo"${n.trabajo ? ' checked' : ''}> Es de trabajo (MegaGen)</label>
   <div class="acc" style="margin-top:12px"><button class="pri" data-a="iniNuevoCrear">Crear</button><button data-a="iniNuevoCancel">Cancelar</button></div></section></aside>`;
 }
 function iniArchHtml() {

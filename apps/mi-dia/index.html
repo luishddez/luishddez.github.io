@@ -499,6 +499,72 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;p
 #alerta.n1 button,#alerta.n2 button,#alerta.n3 button,#alerta button{flex:none;min-height:44px;padding:0 16px;background:transparent;color:var(--ink);border:1px solid color-mix(in srgb,var(--c) 70%,transparent);border-radius:var(--r-pill);box-shadow:none;font-weight:600;font-size:14px}
 #alerta.n1 button:hover,#alerta.n2 button:hover,#alerta.n3 button:hover{background:color-mix(in srgb,var(--c) 20%,transparent)}
 @media (min-width:900px){#alerta{margin:10px 24px 2px}}
+
+/* ===== Formularios, Menú y entrar a la cuenta (2026-11-27): un solo kit, mismo lenguaje que la barra de notas y la franja superior ===== */
+:root{color-scheme:light}
+:root[data-tema="oscuro"]{color-scheme:dark}
+input[type=text],input[type=email],input[type=password],input[type=time],select,textarea{font:inherit;font-size:16px;min-height:44px;padding:0 12px;color:var(--ink);background:color-mix(in srgb,var(--card) 55%,transparent);border:1px solid var(--line);border-radius:var(--r-m);outline:none;transition:border-color .16s,box-shadow .16s}
+textarea{padding:10px 12px}
+input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,input[type=time]:focus,select:focus,textarea:focus{border-color:color-mix(in srgb,var(--now) 65%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--now) 14%,transparent)}
+::placeholder{color:var(--mute);opacity:1}
+a.btn,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--r-pill);border:1px solid var(--line);background:transparent;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px}
+a.btn.pri,.btn.pri{background:var(--now);border-color:var(--now);color:var(--on-now)}
+/* botones de acción en pastilla */
+#menu button:not(.sw):not(.mn-x),#plan .row button,#plan .padd,.pform .acc button,.pcard .acc button,.ipanel .acc button{border-radius:var(--r-pill)}
+.mn-x{min-height:44px;padding:0 16px;background:transparent;box-shadow:none;border:1px solid var(--line);border-radius:var(--r-pill)}
+/* selector segmentado (apariencia, modo del día) */
+.seg2{display:inline-flex;flex-wrap:wrap;gap:4px;padding:2px;border:1px solid var(--line);border-radius:var(--r-pill);background:color-mix(in srgb,var(--card) 50%,transparent)}
+.seg2 button{min-height:40px;padding:0 16px;border-radius:var(--r-pill);background:transparent;box-shadow:none;color:var(--mute);font-size:14px}
+.seg2 button.on{background:var(--now);color:var(--on-now);font-weight:600}
+/* interruptores */
+.sw,.sw-in{position:relative;appearance:none;-webkit-appearance:none;flex:none;width:48px;height:28px;min-height:0;padding:0;border-radius:var(--r-pill);border:1px solid var(--line);background:color-mix(in srgb,var(--line) 55%,transparent);box-shadow:none;cursor:pointer;transition:background .16s,border-color .16s}
+.sw::before,.sw-in::before{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--ink);transition:transform .16s,background .16s}
+.sw::after{content:"";position:absolute;inset:-8px -4px}
+.sw.on,.sw-in:checked{background:var(--now);border-color:var(--now)}
+.sw.on::before,.sw-in:checked::before{transform:translateX(20px);background:var(--on-now)}
+.sw:focus-visible,.sw-in:focus-visible{outline:2px solid var(--now);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.sw,.sw::before,.sw-in,.sw-in::before{transition:none}}
+.mn-fila{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:44px;padding:6px 0}
+.mn-fila + .mn-fila{border-top:1px solid var(--line)}
+.mn-fila .nota{font-size:13px}
+/* Menú: fondo de vidrio; en escritorio, dos columnas */
+#menu{background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2)}
+#menu .top{position:sticky;top:0;z-index:2;padding:14px 0;background:color-mix(in srgb,var(--bg) 70%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#menu h1{font-size:22px;font-weight:600}
+#menu .card{border:1px solid var(--line);box-shadow:none}
+@media (min-width:900px){
+ #menu .in{max-width:1080px}
+ .mn-cols{column-count:2;column-gap:24px}
+ .mn-cols .card,.mn-cols h3{break-inside:avoid}
+ .mn-cols h3{break-after:avoid}
+}
+/* Replantear: vidrio y campos del kit */
+#plan{background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2)}
+.selbar{background:color-mix(in srgb,var(--card) 78%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line);box-shadow:none}
+@media (min-width:900px){#plan .in,.selbar .in{max-width:860px}}
+/* Entrar a la cuenta: tarjeta oscura sobre vidrio */
+.sb-ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:color-mix(in srgb,var(--bg) 62%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.sb-card{width:100%;max-width:360px;padding:22px;border-radius:var(--r-2xl);background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.sb-t{font-size:20px;font-weight:600;margin-bottom:4px}
+.sb-p{margin:0 0 14px;font-size:13.5px;color:var(--mute);line-height:1.4}
+.sb-card input{width:100%;margin-bottom:8px}
+.sb-m{min-height:20px;margin:6px 0 10px;font-size:13px;color:var(--warn)}
+.sb-go{width:100%;min-height:48px;border-radius:var(--r-pill);background:var(--now);color:var(--on-now);font-weight:700;font-size:16px;box-shadow:none;border:0}
+.sb-x{text-align:center;margin-top:10px}
+.sb-x a{display:inline-block;padding:12px 16px;color:var(--mute);font-size:14px}
+
+/* Editar y Nuevo: campos con las esquinas y el borde del kit; "Es de trabajo" como interruptor */
+.pform textarea,.pform select,.pform input[type=text]{border:1px solid var(--line);border-radius:var(--r-m);background:color-mix(in srgb,var(--card) 55%,transparent);padding:10px 12px}
+.pform select{padding:0 12px}
+.pchk{flex-direction:row-reverse;justify-content:space-between;border-top:1px solid var(--line);margin-top:12px;padding-top:6px}
+.pchk .sw-in{width:48px;height:28px}
+.pcal button{border-radius:var(--r-pill);border:1px solid var(--line)}
+.pcal button.on{border-color:var(--now)}
+#plan .blk .bh{color:color-mix(in srgb,var(--ink) 82%,var(--card))}
+#plan .pnav button{width:44px;height:44px}
+#plan .pcls{width:44px;height:44px}
+#plan .padd{height:44px}
+.seg2{border-radius:22px}
 </style>
 </head>
 <body>

@@ -486,21 +486,21 @@ function comprasHtml() {
 const listaCompras = () =>(datos.compras || []).map(c => `<div class="it2">${esc(c.articulo)} · <b>${esc(c.cantidad)}</b>${c.regla ? ` <span class="nota">· ${esc(c.regla)}</span>` : ''}</div>`).join('');
 function vistaMenu() {
   const hs = horasSueno();
-  let h = `<div class="top"><h1>Menú</h1><button data-a="cerrarMenu">Cerrar</button></div>`;
-  h += `<div class="card"><div class="row"><button class="pri" data-a="actualizar">Actualizar</button><button data-a="tema">Fondo: ${tema === 'claro' ? 'claro' : 'oscuro'} (cambiar)</button><button data-a="sonido">Alerta de comida: ${sonidoComida ? 'con sonido' : 'sin sonido'}</button></div><div class="nota" style="margin-top:8px">${esc(estadoSync) || 'Se actualiza solo al abrir y al volver el internet.'}</div></div>`;
-  h += `<div class="card"><a class="btn pri" href="../hungry/" style="display:inline-block;text-decoration:none">🥗 Abrir Hungry</a><div class="nota" style="margin-top:6px">Tu alimentación: régimen, alacena, compras y registro. Se sincroniza con este tablero.</div></div>`;
+  let h = `<div class="top"><h1>Menú</h1><button class="mn-x" data-a="cerrarMenu">Cerrar</button></div><div class="mn-cols">`;
+  h += `<div class="card mn-aj"><div class="mn-fila"><div><b>Datos</b><div class="nota">${esc(estadoSync) || 'Se actualiza solo al abrir y al volver el internet.'}</div></div><button class="pri" data-a="actualizar">Actualizar</button></div><div class="mn-fila"><b id="mn-ap">Apariencia</b><div class="seg2" role="group" aria-labelledby="mn-ap"><button data-a="temaSet" data-v="oscuro" class="${tema === 'oscuro' ? 'on' : ''}" aria-pressed="${tema === 'oscuro'}">Oscuro</button><button data-a="temaSet" data-v="claro" class="${tema === 'claro' ? 'on' : ''}" aria-pressed="${tema === 'claro'}">Claro</button></div></div><div class="mn-fila"><div><b>Alerta de comida con sonido</b><div class="nota">Un pitido suave cuando sube el nivel del aviso.</div></div><button class="sw${sonidoComida ? ' on' : ''}" role="switch" aria-checked="${sonidoComida}" aria-label="Alerta de comida con sonido" data-a="sonido"></button></div></div>`;
+  h += `<div class="card"><a class="btn pri" href="../hungry/">🥗 Abrir Hungry</a><div class="nota" style="margin-top:6px">Tu alimentación: régimen, alacena, compras y registro. Se sincroniza con este tablero.</div></div>`;
   h += `<h3>Notas por acomodar (${est.inbox.length})</h3><div class="card">${est.inbox.map(n => `<div class="it2">${n.enviada ? '✓' : '⏳'} ${esc(n.t)} <span class="nota">${n.enviada ? '· enviada' : '· en cola'}</span></div>`).join('') || '<div class="nota">Nada pendiente.</div>'}${est.inbox.length ? '<div class="row" style="margin-top:8px"><button data-a="reenviar">Enviar ahora</button><button data-a="limpiaInbox">Limpiar lista</button></div><div class="nota" style="margin-top:6px">Las notas se mandan solas. Claude las organiza cuando abres una conversación con él.</div>' : ''}</div>`;
   if ((datos.plan || []).length) h += `<h3>Tu régimen <span class="nota">· de Hungry</span></h3><div class="card">${datos.plan.map(p => `<div class="it2"><b>${esc(fmt(toMin(p.hora || '00:00')))} · ${esc(p.comida)}</b> <span class="nota">· ${esc(p.kcal)} kcal · ${esc(p.proteina)} g de proteína${p.dias === 'gym' ? ' · días de gym' : ''}</span><div class="nota">${esc(p.que_lleva)}</div></div>`).join('')}</div>`;
   if ((datos.compras || []).length) h += `<h3>Compras de la semana</h3><div class="card">${listaCompras()}</div>`;
   h += `<h3>Pendientes</h3>`;
   if ((datos.objetivos_semana || []).length) h += `<div class="card"><b>Objetivos de la semana</b>${datos.objetivos_semana.map(o => `<div class="it2">${esc(o)}</div>`).join('')}</div>`;
   Object.entries(datos.pendientes || {}).forEach(([k, v]) => { h += `<div class="card"><b>${esc(k)}</b>${v.map(x => `<div class="it2">${esc(x)}</div>`).join('') || '<div class="nota">Vacío</div>'}</div>`; });
-  h += `<h3>Modo del día</h3><div class="card row">${Object.entries(MODOS).map(([k, v]) => `<button class="${modoActual() === k ? 'pri' : ''}" data-a="modo" data-v="${k}">${v}</button>`).join('')}</div>`;
-  h += `<h3>Mañana y cierre</h3><div class="card row"><button data-a="abrirFlujo" data-v="manana">Abrir mañana mínima</button><button data-a="abrirFlujo" data-v="cierre">Abrir cierre</button></div><div class="card"><label><input type="checkbox" data-a="desayuno" ${est.desayuno ? 'checked' : ''}> Sumar el desayuno a la mañana mínima</label></div>`;
+  h += `<h3>Modo del día</h3><div class="card"><div class="seg2" role="group" aria-label="Modo del día">${Object.entries(MODOS).map(([k, v]) => `<button class="${modoActual() === k ? 'on' : ''}" aria-pressed="${modoActual() === k}" data-a="modo" data-v="${k}">${v}</button>`).join('')}</div></div>`;
+  h += `<h3>Mañana y cierre</h3><div class="card row"><button data-a="abrirFlujo" data-v="manana">Abrir mañana mínima</button><button data-a="abrirFlujo" data-v="cierre">Abrir cierre</button></div><div class="card"><label class="mn-fila"><span>Sumar el desayuno a la mañana mínima</span><input type="checkbox" class="sw-in" role="switch" data-a="desayuno" ${est.desayuno ? 'checked' : ''}></label></div>`;
   h += `<h3>Sueño</h3><div class="card"><div class="nota" style="margin-bottom:6px">Si te duermes a las:</div><input type="time" data-a="sueno" value="${est.sueno}"><p style="margin:10px 0 0"><b>${hs}</b> <span class="nota">hasta las ${datos.levantarse || '08:30'}. Tú decides.</span></p></div>`;
   h += `<h3>Totales (nunca rachas)</h3><div class="card"><div>Poemas leídos: <b>${est.totales.poemas}</b></div><div>Veces que llegué a las 9: <b>${est.totales.llegadas_9}</b></div><div class="row" style="margin-top:8px"><button data-a="llegue">Hoy llegué a las 9:00</button></div></div>`;
   h += `<h3>Facilitadores</h3><div class="card nota"><div class="it2">Libro junto a la cafetera</div><div class="it2">Vaso de agua listo desde la noche anterior</div><div class="it2">Celular cargando lejos de la cama</div></div>`;
-  return h;
+  return h + '</div>';
 }
 function horasSueno() {
   const [h, m] = est.sueno.split(':').map(Number);
@@ -707,6 +707,7 @@ function accion(a, v, el, ev) {
     case 'modo': est.modo = v; break;
     case 'llegue': est.totales.llegadas_9++; break;
     case 'tema': tema = tema === 'claro' ? 'oscuro' : 'claro'; safe.set('tablero-tema', tema); break;
+    case 'temaSet': tema = v === 'claro' ? 'claro' : 'oscuro'; safe.set('tablero-tema', tema); break;
     case 'limpiaInbox': est.inbox = []; break;
     case 'copiaInbox': copiarNotas(); return;
     case 'reenviar': enviarPendientes(); return;
