@@ -203,7 +203,7 @@ function proyFormulario(p) {
   <label class="pl" for="pf-pq">Por qué me importa</label><textarea id="pf-pq" data-pf="porque" rows="2" maxlength="400" placeholder="Una frase">${esc(b.porque || '')}</textarea>
   <label class="pl" for="pf-fs">Qué falta saber</label><textarea id="pf-fs" data-pf="falta_saber" rows="2" maxlength="400" placeholder="Lo que tendrías que averiguar antes de empezar">${esc(b.falta_saber || '')}</textarea>
   <label class="pl" for="pf-es">Estado</label><select id="pf-es" data-pf="estado">${PROY_ESTADOS.map(e => `<option value="${e}"${b.estado === e ? ' selected' : ''}>${e}</option>`).join('')}</select>
-  <label class="pchk"><input type="checkbox" data-pf="trabajo"${b.trabajo ? ' checked' : ''}> Es de trabajo (MegaGen)</label>
+  <label class="pchk"><input type="checkbox" class="sw-in" role="switch" data-pf="trabajo"${b.trabajo ? ' checked' : ''}> Es de trabajo (MegaGen)</label>
   <div class="pl">Potencia</div>${cal('potencia')}
   <div class="pl">Importancia</div>${cal('importancia')}
   <div class="nota" style="margin-top:8px">Las calificaciones las pones tú; si no calificas, queda “sin calificar”.</div>

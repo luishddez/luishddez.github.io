@@ -224,3 +224,9 @@ Principio: **en Inicio ordeno, en Hoy ejecuto**. Cada pantalla tiene su versión
 - **Sol:** un arco de línea con un punto que recorre el día del amanecer al atardecer (de noche, el arco punteado de abajo); al tocarlo muestra las horas de luz. Ya no es un paisaje pintado.
 - **Escritorio:** una sola fila (saludo, pestañas al centro, Menú a la derecha con el contador de notas en camino) y una línea fina debajo. **Celular:** dos filas, saludo y Menú arriba, pestañas abajo.
 - **Aviso de comida:** sin bloque sólido; un tinte sutil del color del nivel (amarillo, naranja, rojo) con borde y botón de línea. En celular sigue plegable.
+
+## Formularios, Menú, Replantear y entrar a la cuenta (2026-11-27)
+- **Kit de formularios:** campos de vidrio con borde fino y esquinas de 12 px que se iluminan con el acento al enfocar; botones de acción en pastilla; interruptores (Es de trabajo, sonido de la alerta, desayuno) en lugar de casillas; selector segmentado para Apariencia (Oscuro o Claro) y para el Modo del día. Los controles nativos (hora, barras de desplazamiento) siguen el tema.
+- **Menú:** fondo de vidrio y encabezado fijo; en escritorio, dos columnas. Arriba: Datos con Actualizar, Apariencia y Alerta de comida con sonido.
+- **Editar y Nuevo:** usan el mismo kit. **Replantear:** vidrio, campos del kit y botones de 44 px.
+- **Entrar a la cuenta:** tarjeta oscura sobre vidrio, con el mensaje de error en el color de aviso. Ya no hay estilos en línea.
