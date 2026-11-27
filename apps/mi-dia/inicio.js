@@ -42,6 +42,7 @@ function iniAccion(a, v) {
     case 'iniColIzq': case 'iniColDer': { const l = iniColOrden(); iniColMover(v, l.indexOf(v) + (a === 'iniColIzq' ? -1 : 1)); return true; }
     case 'iniMas': iniAbierto[v] = !iniAbierto[v]; return true;
     case 'iniFoco': iniFoco = !iniFoco; return true;
+    case 'iniPleg': iniPlegar(v, proyCola(ahoraMin()).trab ? 'trabajo' : 'proyectos'); return true;
     case 'iniCompras': iniCompAb = !iniCompAb; if (iniCompAb) proySel = null; return true;
   }
   return false;
@@ -51,6 +52,15 @@ function iniAccion(a, v) {
 const INI_COLS = ['trabajo', 'proyectos', 'personal', 'ideas'];
 let iniAbierto = {};      // qué columnas tienen abierto el "+ N más" (no se guarda: al recargar vuelven a mostrar 3)
 let iniCompAb = false;    // el panel de Compras está abierto
+// Secciones plegables en celular (D, 2026-11-27): cada columna se abre o se cierra con su flecha; cerrada deja visible su encabezado y su anillo.
+// Por defecto solo está abierta la sección del foco (Trabajo en horario de trabajo, si no Proyectos). Lo que eliges se recuerda en este aparato. En compu no aplica.
+let iniPleg = null;   // { clave: true } = cerrada; null = todavía sin elegir (se usa el valor por defecto)
+try { const g = safe.get('tablero-ini-pleg', null); if (g && typeof g === 'object') iniPleg = g; } catch (_) { }
+const iniCerrada = (key, foco) => iniPleg ? !!iniPleg[key] : key !== foco;
+function iniPlegar(key, foco) {
+  if (!iniPleg) { iniPleg = {}; INI_COLS.forEach(k => { iniPleg[k] = k !== foco; }); }
+  iniPleg[key] = !iniPleg[key]; try { safe.set('tablero-ini-pleg', iniPleg); } catch (_) { }
+}
 // Modo enfoque (i4): atenúa todo menos el bloque "Empieza aquí", para cuando se satura. No se guarda: al recargar vuelve a verse todo. Escape también sale.
 let iniFoco = false;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && iniFoco && vistaSel === 'ini') { iniFoco = false; render(); } });
@@ -148,12 +158,13 @@ function iniAnillo(D, N) {
 const iniResumen = (anillo, texto) => `<div class="icol-r">${anillo}<span class="nota">${texto}</span></div>`;
 
 // key = trabajo | proyectos | personal | ideas. Con más de 3 tarjetas, "+ N más" se despliega (y vuelve a cerrarse con "Mostrar menos").
-function iniColumna(key, titulo, icono, color, tarjetas, vacio, resumen) {
-  const abierto = !!iniAbierto[key], mas = tarjetas.length - INI_MAX;
+function iniColumna(key, titulo, icono, color, tarjetas, vacio, resumen, foco) {
+  const abierto = !!iniAbierto[key], mas = tarjetas.length - INI_MAX, cerrada = iniCerrada(key, foco);
   const vis = tarjetas.slice(0, abierto ? tarjetas.length : INI_MAX).join('');
   const ord = iniColOrden(), pos = ord.indexOf(key), n = ord.length;
   const flechas = `<span class="icol-mv"><button data-a="iniColIzq" data-v="${key}" aria-label="Mover la columna ${esc(titulo)} antes"${pos === 0 ? ' disabled' : ''}><span class="hz">◀</span><span class="vt">▲</span></button><button data-a="iniColDer" data-v="${key}" aria-label="Mover la columna ${esc(titulo)} después"${pos === n - 1 ? ' disabled' : ''}><span class="hz">▶</span><span class="vt">▼</span></button></span>`;
-  return `<section class="icol" data-key="${key}" style="--a:${color}"><div class="icol-h" ${iniFino() ? 'draggable="true" ' : ''}data-colkey="${key}" title="Arrastra para cambiar el orden de las columnas"><span aria-hidden="true">${icono}</span>${esc(titulo)}<small>${tarjetas.length}</small>${flechas}</div>${resumen || ''}${vis || `<div class="nota">${vacio}</div>`}${mas > 0 ? `<button class="imas" data-a="iniMas" data-v="${key}" aria-expanded="${abierto}">${abierto ? 'Mostrar menos' : `+ ${mas} más`}</button>` : ''}</section>`;
+  const tg = `<button class="icol-tg" data-a="iniPleg" data-v="${key}" aria-expanded="${!cerrada}" aria-label="${cerrada ? 'Abrir' : 'Cerrar'} la sección ${esc(titulo)}">${cerrada ? '▾' : '▴'}</button>`;
+  return `<section class="icol${cerrada ? ' cerrada' : ''}" data-key="${key}" style="--a:${color}"><div class="icol-h" ${iniFino() ? 'draggable="true" ' : ''}data-colkey="${key}" title="Arrastra para cambiar el orden de las columnas"><span aria-hidden="true">${icono}</span>${esc(titulo)}<small>${tarjetas.length}</small>${flechas}${tg}</div>${resumen || ''}${vis || `<div class="nota">${vacio}</div>`}${mas > 0 ? `<button class="imas" data-a="iniMas" data-v="${key}" aria-expanded="${abierto}">${abierto ? 'Mostrar menos' : `+ ${mas} más`}</button>` : ''}</section>`;
 }
 const iniTarjetaIdea = p => `<button class="iidea" data-a="proySel" data-v="${esc(p.id)}"><span>${esc(p.nombre)}</span><span class="ibadge" title="Camino a proyecto">${proyIdeaN(p)}/3</span></button>`;
 
@@ -193,11 +204,12 @@ function vistaInicio() {
     personal: iniResumen(iniAnillo(rutD, rut.length), `${rutD} de ${rut.length} de hoy · se reinicia cada día`),
     ideas: `<div class="icol-r"><span class="nota">${listas ? `${listas} lista${listas > 1 ? 's' : ''} para pasar a Proyectos` : 'Sube a Proyectos con 3 datos: por qué, primer paso y qué falta saber'}</span></div>`
   };
+  const fk = proyCola(m).trab ? 'trabajo' : 'proyectos';   // la sección del foco: es la que arranca abierta en celular
   const cols = {
-    trabajo: () => iniColumna('trabajo', 'Trabajo', '💼', 'var(--cal)', trab.map(iniTarjetaProyecto), 'Sin proyectos de trabajo activos.', res.trabajo),
-    proyectos: () => iniColumna('proyectos', 'Proyectos', '🚀', 'var(--k-rut)', proy.map(iniTarjetaProyecto), 'Sin proyectos activos.', res.proyectos),
-    personal: () => iniColumna('personal', 'Personal y rutina', '🌿', 'var(--now)', per, 'Nada más por hoy.', res.personal),
-    ideas: () => iniColumna('ideas', 'Ideas', '💡', 'var(--mute)', ideas.map(iniTarjetaIdea), 'Sin ideas por elegir.', res.ideas)
+    trabajo: () => iniColumna('trabajo', 'Trabajo', '💼', 'var(--cal)', trab.map(iniTarjetaProyecto), 'Sin proyectos de trabajo activos.', res.trabajo, fk),
+    proyectos: () => iniColumna('proyectos', 'Proyectos', '🚀', 'var(--k-rut)', proy.map(iniTarjetaProyecto), 'Sin proyectos activos.', res.proyectos, fk),
+    personal: () => iniColumna('personal', 'Personal y rutina', '🌿', 'var(--now)', per, 'Nada más por hoy.', res.personal, fk),
+    ideas: () => iniColumna('ideas', 'Ideas', '💡', 'var(--mute)', ideas.map(iniTarjetaIdea), 'Sin ideas por elegir.', res.ideas, fk)
   };
   const f = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
   let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b>${iniUndo ? ` <button class="ideshacer" data-a="iniDeshacer">↶ Deshacer el último movimiento</button>` : ''}<button class="ifoco${iniFoco ? ' on' : ''}" data-a="iniFoco" aria-pressed="${iniFoco}">${iniFoco ? '✕ Salir del modo enfoque' : '🎯 Modo enfoque'}</button></div>` + iniHero(real, m);
