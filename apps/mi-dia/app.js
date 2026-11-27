@@ -892,8 +892,8 @@ async function desdeSupabase() {
   d.proyectos = proyD || datos.proyectos || [];   // si falla la lectura, se conserva lo último guardado (nunca rompe tareas ni calendario)
   d.inicioOrden = (iniD && iniD.find(x => x && x.id === 'orden')) || datos.inicioOrden || null;   // orden de prioridad del Inicio (documento inicio/orden)
   // Avance largo de cada proyecto: sus tareas ligadas (campo proyecto), hechas entre el total. Sin tareas ligadas = "sin medir".
-  d.tareasProy = {};
-  tarD.forEach(t => { if (t && t.proyecto) { const k = d.tareasProy[t.proyecto] = d.tareasProy[t.proyecto] || { hechas: 0, total: 0 }; k.total++; if (String(t.estado || '').toLowerCase() === 'hecho') k.hechas++; } });
+  // 5.2b: todas las tareas (con su documento completo) para ver y ligar tareas desde la tarjeta del proyecto; el avance largo sale de aquí (ver proyectos.js).
+  d.tareasLista = tarD.filter(t => t && t.id).map(proyTareaItem);
   // De Hungry: lo que falta por comprar y lo que llevas comido hoy
   const pend = (est.comprasPend || []).map(f => f.id);
   d.faltantes = falD.filter(f => f && f.articulo && f.estado === 'falta' && !pend.includes(f.id)).sort((a, b) => (a.pasillo || '').localeCompare(b.pasillo || '') || a.articulo.localeCompare(b.articulo)).map(f => ({ id: f.id, articulo: f.articulo, emoji: f.emoji || '', cantidad: f.cantidad_texto || '', pasillo: f.pasillo || '', donde: f.donde || '', raw: f }));

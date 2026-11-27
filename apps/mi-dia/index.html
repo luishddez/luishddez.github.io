@@ -273,6 +273,18 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
 .pcard .pk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:10px 0 2px}
 /* Formulario de edición: letra de 16 px (iOS no amplía) y zonas de toque de 44 px, igual de cómodo con mouse que con el dedo */
 .pform .pl{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:12px 0 4px}
+/* 5.2b: formulario Nuevo, tareas ligadas y Archivados */
+.pform input[type=text]{width:100%;font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:var(--r-s);padding:10px;background:var(--card);color:var(--ink);min-height:44px}
+.pfils{display:flex;flex-wrap:wrap;gap:8px}
+.pfils .pfil{min-height:44px}
+.ptar{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)}
+.ptar-t{flex:1;min-width:0;overflow-wrap:anywhere}
+.ptar button,.ptar-n button{min-height:44px;padding:0 14px;flex:none}
+.ptar-n{display:flex;gap:8px;margin-top:8px;align-items:center}
+.ptar-n select{flex:1;min-width:0;min-height:44px;font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:var(--r-s);padding:0 8px;background:var(--card);color:var(--ink)}
+.iarch{margin:14px 0 4px;text-align:center}
+.iarch button{min-height:44px;padding:0 16px;background:transparent;box-shadow:none;border:1px dashed var(--line);color:var(--mute)}
+.inuevo{min-height:44px;padding:0 14px}
 .pform textarea,.pform select{width:100%;font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:var(--r-s);padding:10px;background:var(--card);color:var(--ink);min-height:44px}
 .pform textarea{resize:vertical;min-height:68px}
 .pchk{display:flex;gap:10px;align-items:center;min-height:44px;font-size:15px;margin-top:6px}
