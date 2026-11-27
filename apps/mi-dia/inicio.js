@@ -43,7 +43,13 @@ function iniAccion(a, v) {
     case 'iniMas': iniAbierto[v] = !iniAbierto[v]; return true;
     case 'iniFoco': iniFoco = !iniFoco; return true;
     case 'iniPleg': iniPlegar(v, proyCola(ahoraMin()).trab ? 'trabajo' : 'proyectos'); return true;
-    case 'iniCompras': iniCompAb = !iniCompAb; if (iniCompAb) proySel = null; return true;
+    case 'iniCompras': iniCompAb = !iniCompAb; if (iniCompAb) { proySel = null; iniArchAb = false; iniNuevo = null; } return true;
+    case 'iniArch': iniArchAb = !iniArchAb; if (iniArchAb) { proySel = null; iniCompAb = false; iniNuevo = null; } return true;
+    case 'iniNuevoAbrir': proySel = null; iniCompAb = false; iniArchAb = false; iniNuevo = { nombre: '', tipo: 'proyecto', area: 'Yo', trabajo: false }; return true;
+    case 'iniNuevoCancel': iniNuevo = null; return true;
+    case 'nfTipo': if (iniNuevo) iniNuevo.tipo = v === 'idea' ? 'idea' : 'proyecto'; return true;
+    case 'nfArea': if (iniNuevo && PROY_AREAS.includes(v)) iniNuevo.area = v; return true;
+    case 'iniNuevoCrear': return iniCrear();
   }
   return false;
 }
@@ -52,6 +58,35 @@ function iniAccion(a, v) {
 const INI_COLS = ['trabajo', 'proyectos', 'personal', 'ideas'];
 let iniAbierto = {};      // qué columnas tienen abierto el "+ N más" (no se guarda: al recargar vuelven a mostrar 3)
 let iniCompAb = false;    // el panel de Compras está abierto
+// 5.2b: panel "Nuevo" (proyecto o idea) y panel "Archivados". Un solo panel a la vez.
+let iniNuevo = null;      // { nombre, tipo, area, trabajo } mientras el formulario está abierto (vive en variable: sobrevive a cualquier pintado)
+let iniArchAb = false;
+const iniSlug = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'nuevo';
+function iniCrear() {
+  const n = iniNuevo, nombre = String(n && n.nombre || '').trim().slice(0, 80);
+  if (!nombre) { toast('Ponle un nombre primero'); return true; }
+  const usados = new Set(proyLista().map(p => p.id)); let id = iniSlug(nombre), k = 2; const base = id; while (usados.has(id)) id = base + '-' + (k++);
+  const idea = n.tipo === 'idea';
+  proyGuardaDoc({ id, nombre, area: PROY_AREAS.includes(n.area) ? n.area : 'Yo', tipo: idea ? 'idea' : 'proyecto', estado: idea ? 'idea semilla' : 'activo', trabajo: !!n.trabajo, siguiente_paso: '', porque: '', falta_saber: '', potencia: null, importancia: null, conexiones: [], ultima_vez: hoyKey(), origen: 'app ' + hoyKey() });
+  iniNuevo = null; proySel = id; toast(idea ? 'Idea creada. Complétala con ✎ Editar' : 'Proyecto creado. Escribe su siguiente paso con ✎ Editar');
+  return true;
+}
+document.addEventListener('input', e => { const t = e.target, f = t && t.dataset && t.dataset.nf; if (f && iniNuevo && t.type !== 'checkbox') iniNuevo[f] = t.value; });
+document.addEventListener('change', e => { const t = e.target, f = t && t.dataset && t.dataset.nf; if (f && iniNuevo && t.type === 'checkbox') iniNuevo[f] = t.checked; });
+function iniNuevoHtml() {
+  const n = iniNuevo, chip = (a, v, txt, on) => `<button type="button" class="pfil${on ? ' on' : ''}" data-a="${a}" data-v="${v}" aria-pressed="${on}">${txt}</button>`;
+  return `<aside class="ipanel" aria-label="Nuevo"><section class="pcard pform"><div class="ptop"><div><b class="pt">＋ Nuevo</b><div class="nota">Lo demás lo llenas después con ✎ Editar. Nada de esto se borra.</div></div><button class="pcls2" data-a="iniNuevoCancel" aria-label="Cerrar">✕</button></div>
+  <label class="pl" for="nf-n">Nombre</label><input id="nf-n" type="text" data-nf="nombre" maxlength="80" autocomplete="off" placeholder="Cómo lo llamas" value="${esc(n.nombre)}">
+  <div class="pl">Qué es</div><div class="pfils">${chip('nfTipo', 'proyecto', '🚀 Proyecto', n.tipo === 'proyecto')}${chip('nfTipo', 'idea', '💡 Idea', n.tipo === 'idea')}</div>
+  <div class="pl">Área</div><div class="pfils">${PROY_AREAS.map(a => chip('nfArea', a, esc(a), n.area === a)).join('')}</div>
+  <label class="pchk"><input type="checkbox" data-nf="trabajo"${n.trabajo ? ' checked' : ''}> Es de trabajo (MegaGen)</label>
+  <div class="acc" style="margin-top:12px"><button class="pri" data-a="iniNuevoCrear">Crear</button><button data-a="iniNuevoCancel">Cancelar</button></div></section></aside>`;
+}
+function iniArchHtml() {
+  const l = proyLista().filter(p => p.estado === 'archivado').sort((a, b) => String(b.archivado_fecha || '').localeCompare(String(a.archivado_fecha || '')));
+  return `<aside class="ipanel" aria-label="Archivados"><section class="pcard"><div class="ptop"><div><b class="pt">🗄 Archivados</b><div class="nota">Archivar no borra nada. Recuperar los regresa a donde estaban.</div></div><button class="pcls2" data-a="iniArch" aria-label="Cerrar">✕</button></div>
+  ${l.length ? l.map(p => `<div class="ptar"><span class="ptar-t">${esc(p.nombre)} <small class="nota">· ${esc(p.area)}${p.archivado_fecha ? ' · ' + esc(p.archivado_fecha) : ''}</small></span><button data-a="proyRecuperar" data-v="${esc(p.id)}">↩ Recuperar</button></div>`).join('') : '<div class="nota" style="margin-top:8px">Nada archivado todavía.</div>'}</section></aside>`;
+}
 // Secciones plegables en celular (D, 2026-11-27): cada columna se abre o se cierra con su flecha; cerrada deja visible su encabezado y su anillo.
 // Por defecto solo está abierta la sección del foco (Trabajo en horario de trabajo, si no Proyectos). Lo que eliges se recuerda en este aparato. En compu no aplica.
 let iniPleg = null;   // { clave: true } = cerrada; null = todavía sin elegir (se usa el valor por defecto)
@@ -212,11 +247,15 @@ function vistaInicio() {
     ideas: () => iniColumna('ideas', 'Ideas', '💡', 'var(--mute)', ideas.map(iniTarjetaIdea), 'Sin ideas por elegir.', res.ideas, fk)
   };
   const f = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-  let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b>${iniUndo ? ` <button class="ideshacer" data-a="iniDeshacer">↶ Deshacer el último movimiento</button>` : ''}<button class="ifoco${iniFoco ? ' on' : ''}" data-a="iniFoco" aria-pressed="${iniFoco}">${iniFoco ? '✕ Salir del modo enfoque' : '🎯 Modo enfoque'}</button></div>` + iniHero(real, m);
+  let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b>${iniUndo ? ` <button class="ideshacer" data-a="iniDeshacer">↶ Deshacer el último movimiento</button>` : ''}<button class="inuevo" data-a="iniNuevoAbrir">＋ Nuevo</button><button class="ifoco${iniFoco ? ' on' : ''}" data-a="iniFoco" aria-pressed="${iniFoco}">${iniFoco ? '✕ Salir del modo enfoque' : '🎯 Modo enfoque'}</button></div>` + iniHero(real, m);
   h += `<div class="icols${iniFoco ? ' foco' : ''}"${iniFoco ? ' aria-hidden="true" inert' : ''}>${iniColOrden().map(k => cols[k]()).join('')}</div>${iniFoco ? '<div class="nota ifoco-n">Modo enfoque: solo lo que toca ahora. Lo demás sigue guardado.</div>' : ''}`;
   const sel = proySel && proyPorId(proySel);
-  if (sel) iniCompAb = false;
-  if (iniCompAb) h += `<aside class="ipanel" aria-label="Compras"><section class="pcard"><div class="ptop"><div><b class="pt">🛒 Compras</b><div class="nota">${toca ? 'Hoy toca el súper' : 'El súper es el domingo'}</div></div><button class="pcls2" data-a="iniCompras" aria-label="Cerrar">✕</button></div>${comprasHtml()}</section></aside>`;
+  if (sel) { iniCompAb = false; iniArchAb = false; iniNuevo = null; }   // un solo panel a la vez; abrir un proyecto cierra los demás
+  const nArch = proyLista().filter(p => p.estado === 'archivado').length;
+  h += `<div class="iarch"><button data-a="iniArch" aria-expanded="${iniArchAb}">🗄 Archivados (${nArch})</button></div>`;
+  if (iniNuevo) h += iniNuevoHtml();
+  else if (iniArchAb) h += iniArchHtml();
+  else if (iniCompAb) h +=`<aside class="ipanel" aria-label="Compras"><section class="pcard"><div class="ptop"><div><b class="pt">🛒 Compras</b><div class="nota">${toca ? 'Hoy toca el súper' : 'El súper es el domingo'}</div></div><button class="pcls2" data-a="iniCompras" aria-label="Cerrar">✕</button></div>${comprasHtml()}</section></aside>`;
   else if (sel) h += `<aside class="ipanel" aria-label="Tarjeta del proyecto">${proyTarjeta(sel)}${iniFilaPrioridad(sel)}</aside>`;
   return h;
 }

@@ -31,7 +31,7 @@ const proyEsDeProyecto = x => !x.path || x.path.startsWith('proyectos/');
 const proyRuta = x => x.path || 'proyectos/' + x.id;
 // Pone el cambio en la cola (se ve ya) y lo manda en cuanto se pueda
 function proyEncola(path, id, doc) {
-  doc.actualizado = Date.now();
+  if (!path.startsWith('tareas/')) doc.actualizado = Date.now();   // en las tareas NO se agrega ningún campo: solo se toca "proyecto"
   const x = path.startsWith('proyectos/') ? { id, data: doc } : { id, path, data: doc };
   proySetPend(proyPend().filter(y => y.id !== id).concat([x]));
   return proyEnviar();
@@ -56,11 +56,12 @@ async function proyEnviar() {
     const quita = (id, ts) => proySetPend(proyPend().filter(x => !(x.id === id && x.data.actualizado === ts)));   // solo si no lo volviste a editar mientras se mandaba
     for (const it of proyPend().slice()) {
       const ruta = proyRuta(it), s = srv.get(ruta);
-      if (s && Number(s.actualizado || 0) > Number(it.data.actualizado || 0)) { perdidos.push(it.data.nombre || 'El orden de tu Inicio'); quita(it.id, it.data.actualizado); continue; }
+      if (s && Number(s.actualizado || 0) > Number(it.data.actualizado || 0)) { perdidos.push(it.data.nombre || it.data.titulo || 'El orden de tu Inicio'); quita(it.id, it.data.actualizado); continue; }
       try { await SB.guardar(ruta, it.data); srv.set(ruta, it.data); quita(it.id, it.data.actualizado); } catch (e) { fallo = true; break; }
     }
     if (prefs.has('proyectos')) datos.proyectos = Array.from(srv.entries()).filter(([k]) => k.startsWith('proyectos/')).map(([, v]) => v);   // solo si se leyó esa colección
     if (srv.has('inicio/orden')) datos.inicioOrden = srv.get('inicio/orden');
+    if (prefs.has('tareas')) datos.tareasLista = Array.from(srv.entries()).filter(([k]) => k.startsWith('tareas/')).map(([, v]) => proyTareaItem(v));
     safe.set('tablero-datos', datos);
     if (perdidos.length) toast(`“${perdidos[0]}”${perdidos.length > 1 ? ` y ${perdidos.length - 1} más` : ''}: se había cambiado antes en otro aparato y quedó esa versión (la más reciente)`);
     if (!fallo && proyPend().length) setTimeout(proyEnviar, 300);   // lo que se editó mientras se mandaba
@@ -165,7 +166,20 @@ const proyNum = v => { const n = Number(v); return v === null || v === undefined
 const proyIdeaReq = p => [{ ok: !!String(p.porque || '').trim(), t: 'Por qué me importa' }, { ok: !!String(p.siguiente_paso || '').trim(), t: 'Un primer paso de 15 minutos' }, { ok: !!String(p.falta_saber || '').trim(), t: 'Qué falta saber' }];
 const proyIdeaN = p => proyIdeaReq(p).filter(x => x.ok).length;
 // Avance largo (no diario): las tareas ligadas al proyecto (campo proyecto), hechas entre el total. Sin tareas ligadas = sin medir.
-const proyAvanceLargo = p => { const k = (datos.tareasProy || {})[p.id]; return k && k.total ? { h: k.hechas, t: k.total } : null; };
+// Tareas (5.2b): el documento completo de cada tarea viaja en "raw", para que ligar o desligar solo cambie el campo "proyecto" y nada más.
+const proyTareaItem = v => ({ id: v.id, titulo: v.titulo || '', estado: String(v.estado || 'pendiente').toLowerCase(), proyecto: v.proyecto || '', raw: v });
+function proyTareasLista() {   // lo guardado en la cuenta + tus cambios que todavía no se mandan
+  const base = Array.isArray(datos.tareasLista) ? datos.tareasLista : [], m = new Map(base.map(t => [t.id, t]));
+  proyPend().filter(x => x.path && x.path.startsWith('tareas/')).forEach(x => m.set(x.data.id, proyTareaItem(x.data)));
+  return Array.from(m.values());
+}
+const proyTareasDe = pid => proyTareasLista().filter(t => t.proyecto === pid);
+const proyAvanceLargo = p => { const l = proyTareasDe(p.id); return l.length ? { h: l.filter(t => t.estado === 'hecho').length, t: l.length } : null; };
+function proyLigaTarea(tid, pid) {   // pid vacío = desligar. Solo se toca el campo "proyecto".
+  const t = proyTareasLista().find(x => x.id === tid); if (!t) return false;
+  const doc = { ...t.raw }; if (pid) doc.proyecto = pid; else delete doc.proyecto;
+  proyEncola('tareas/' + tid, 'tarea-' + tid, doc); return true;
+}
 function proySucio() {
   if (!proyEditando()) return false;
   const o = proyPorId(proyBorrador.id), b = proyBorrador; if (!o) return false;
@@ -195,7 +209,19 @@ function proyAvanceHtml(p) {
   const a = proyAvanceLargo(p);
   return `<div class="pk">Avance</div><div>${a ? `<b>${a.h} de ${a.t}</b> tareas ligadas hechas (${Math.round(a.h / a.t * 100)}%)` : '<span class="nota">Sin medir: todavía no tiene tareas ligadas.</span>'}</div>`;
 }
+const PROY_ESTADO_TXT = { hecho: '✓ hecha', pendiente: 'pendiente', bloqueada: 'bloqueada', luego: 'luego', objetivo: 'objetivo', prueba: 'prueba' };
+function proyTareasHtml(p) {
+  const l = proyTareasDe(p.id), libres = proyTareasLista().filter(t => !t.proyecto && !['hecho', 'prueba'].includes(t.estado));
+  return `<div class="pk">Tareas de este proyecto</div>${l.length ? l.map(t => `<div class="ptar"><span class="ptar-t">${esc(t.titulo)} <small class="nota">· ${esc(PROY_ESTADO_TXT[t.estado] || t.estado)}</small></span><button data-a="tarDesligar" data-v="${esc(t.id)}" aria-label="Quitar la tarea ${esc(t.titulo)} de este proyecto">Quitar</button></div>`).join('') : '<div class="nota">Todavía no tiene tareas ligadas.</div>'}
+  ${libres.length ? `<div class="ptar-n"><select id="lig-sel" aria-label="Elegir una tarea para ligar"><option value="">Ligar una tarea…</option>${libres.map(t => `<option value="${esc(t.id)}">${esc(t.titulo)}</option>`).join('')}</select><button data-a="tarLigar" data-v="${esc(p.id)}">Ligar</button></div>` : '<div class="nota">No hay tareas sueltas para ligar.</div>'}`;
+}
+function proyTarjetaArchivada(p) {
+  return `<section class="pcard" aria-live="polite"><div class="ptop"><div><b class="pt">${esc(p.nombre)}</b><div class="nota">${esc(p.area)} · 🗄 archivado${p.archivado_fecha ? ' el ' + esc(p.archivado_fecha) : ''}</div></div><button class="pcls2" data-a="proyCerrar" aria-label="Cerrar">✕</button></div>
+  <div class="nota" style="margin-top:8px">No se borró nada: sale de tus columnas y de Hoy, y vuelve cuando lo recuperes${p.estado_antes ? ` (regresa como “${esc(p.estado_antes)}”)` : ''}. Sin culpa.</div>
+  <div class="acc" style="margin-top:12px"><button class="pri" data-a="proyRecuperar" data-v="${esc(p.id)}">↩ Recuperar</button></div></section>`;
+}
 function proyTarjeta(p) {
+  if (p.estado === 'archivado') return proyTarjetaArchivada(p);
   if (proyEditando()) return proyFormulario(p);
   const d = proyDias(p), cons = (p.conexiones || []).map(proyPorId).filter(Boolean), pend = proyPendiente(p.id);
   return `<section class="pcard" aria-live="polite"><div class="ptop"><div><b class="pt">${esc(p.nombre)}</b><div class="nota">${esc(p.area)} · ${esc(p.estado)} · ${esc(p.tipo)}${p.trabajo ? ' · trabajo' : ''}${pend ? ' · <b style="color:var(--warn)">⏳ por enviar</b>' : ''}</div></div><button class="pcls2" data-a="proyCerrar" aria-label="Cerrar">✕</button></div>
@@ -206,7 +232,8 @@ function proyTarjeta(p) {
   <div class="pg"><div><div class="pk">Última vez que lo toqué</div><div>${proyHace(d)}</div></div>
   <div><div class="pk">Potencia · importancia</div><div>${proyCal(p.potencia)} · ${proyCal(p.importancia)}</div></div></div>
   <div class="pk">Se conecta con</div><div>${cons.length ? cons.map(c => `<button class="pfil" data-a="proySel" data-v="${esc(c.id)}">${esc(c.nombre)}</button>`).join(' ') : '<span class="nota">Con nada todavía.</span>'}</div>
-  <div class="acc" style="margin-top:12px"><button class="pri" data-a="proyEditar">✎ Editar</button></div></section>`;
+  ${proyTareasHtml(p)}
+  <div class="acc" style="margin-top:12px"><button class="pri" data-a="proyEditar">✎ Editar</button><button data-a="proyArchivar" data-v="${esc(p.id)}">🗄 Archivar</button></div></section>`;
 }
 
 // Después de pintar: el mapa conserva dónde lo dejaste (y arranca centrado)
@@ -299,6 +326,22 @@ function proyAccion(a, v) {
       if (p) proyGuardaDoc({ ...p, ultimo_paso_hecho: p.siguiente_paso || '', ultimo_paso_fecha: hoyKey(), siguiente_paso: '', ultima_vez: hoyKey() });
       celebrar('¡Listo! Ese paso ya cuenta. Anota el siguiente cuando quieras, en Proyectos.', false); return true;
     }
+    case 'proyArchivar': {   // archivar NUNCA borra: guarda el estado de antes para poder recuperarlo
+      const p = proyPorId(v); if (!p || p.estado === 'archivado') return true;
+      proyGuardaDoc({ ...p, estado: 'archivado', estado_antes: p.estado, archivado_fecha: hoyKey() });
+      toast('Archivado. Lo recuperas desde “Archivados”'); return true;
+    }
+    case 'proyRecuperar': {
+      const p = proyPorId(v); if (!p || p.estado !== 'archivado') return true;
+      const { estado_antes, archivado_fecha, ...resto } = p;
+      proyGuardaDoc({ ...resto, estado: PROY_ESTADOS.includes(estado_antes) ? estado_antes : 'activo', ultima_vez: hoyKey() });
+      toast('Recuperado'); return true;
+    }
+    case 'tarLigar': {
+      const s = document.getElementById('lig-sel'), tid = s && s.value; if (!tid) { toast('Elige una tarea primero'); return true; }
+      if (proyLigaTarea(tid, v)) toast('Tarea ligada'); return true;
+    }
+    case 'tarDesligar': if (proyLigaTarea(v, '')) toast('Tarea quitada del proyecto'); return true;
     case 'ideaPasar': {   // una idea con sus 3 datos sube a Proyectos: pasa a activo (se puede deshacer editando el estado)
       const p = proyPorId(v); if (!p || p.estado !== 'idea semilla' || proyIdeaN(p) < 3) { toast('Aún le faltan datos para pasar a Proyectos'); return true; }
       proyGuardaDoc({ ...p, estado: 'activo', ultima_vez: hoyKey() });
