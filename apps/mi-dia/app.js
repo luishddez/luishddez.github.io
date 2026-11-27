@@ -725,13 +725,15 @@ let INACTIVIDAD_MS = 30000, MAX_MS = 5 * 60 * 1000;   // el micrófono sigue enc
 let srFalla = safe.get('tablero-sr-falla', false);   // si el navegador negó el dictado, las próximas veces se va directo al teclado; "Reintentar" lo vuelve a probar
 const sinDictadoApp = () => !SR || window.navigator.standalone === true || srFalla;
 function pista(txt) { $('#compH').textContent = txt || ''; if (!txt) $('#capRe').classList.add('hide'); actualizaBoton(); }
+// La barra de notas vive arriba y siempre a la vista. Celular: el botón redondo es 🎤 dicta · ➤ guarda · ⏹ detiene.
+// Escritorio (900 px o más): el botón redondo solo dicta o detiene, y guardar es el botón "Guardar ↵" (o Enter); / escribe y Esc borra.
+const capAncho = () => { try { return matchMedia('(min-width:900px)').matches; } catch (e) { return false; } };
 function actualizaBoton() {
-  const b = $('#capBtn'), inp = $('#capIn'), hayTexto = inp.value.trim().length > 0, activo = escuchando || quiere;
+  const b = $('#capBtn'), inp = $('#capIn'), hayTexto = inp.value.trim().length > 0, activo = escuchando || quiere, guardaAqui = hayTexto && !capAncho();
   b.classList.toggle('rec', activo);
-  b.textContent = activo ? '⏹' : (hayTexto ? '➤' : '🎤');
-  b.setAttribute('aria-label', activo ? 'Detener el dictado' : (hayTexto ? 'Guardar la nota' : 'Dictar una nota'));
-  const abierta = hayTexto || activo || document.activeElement === inp || $('#compH').textContent !== '';
-  $('#cap').classList.toggle('on', abierta);
+  b.textContent = activo ? '⏹' : (guardaAqui ? '➤' : '🎤');
+  b.setAttribute('aria-label', activo ? 'Detener el dictado' : (guardaAqui ? 'Guardar la nota' : 'Dictar una nota'));
+  $('#cap').classList.toggle('tiene', hayTexto);
 }
 function mensajeError(c) {
   if (c === 'not-allowed') return 'El navegador tiene bloqueado el micrófono para este sitio. Actívalo en los permisos del sitio (el candado junto a la dirección) y toca "Reintentar". Mientras, dicta con el micrófono 🎙️ de tu teclado. (código: not-allowed)';
@@ -791,15 +793,24 @@ function dictar() {
   try { iniciarRec(); escuchando = true; reiniciaInactividad(); pista(AVISO_ESCUCHANDO); } catch (e) { detenerDictado(mensajeError('start')); }
 }function capClick() {
   if (escuchando || quiere) return dictar();             // detener
-  if ($('#capIn').value.trim()) return anotar();         // hay texto: guardar
-  dictar();                                              // vacío: dictar
+  if ($('#capIn').value.trim() && !capAncho()) return anotar();   // celular con texto: guardar
+  dictar();                                              // vacío (o escritorio): dictar
 }
-function abreCaja() { $('#cap').classList.add('on'); $('#capIn').focus(); }
+function abreCaja() { $('#capIn').focus(); }
 $('#capIn').addEventListener('input', () => { if ($('#compH').textContent) $('#compH').textContent = ''; actualizaBoton(); });
 $('#capIn').addEventListener('focus', actualizaBoton);
 $('#capIn').addEventListener('blur', () => setTimeout(actualizaBoton, 150));
 $('#capX').addEventListener('click', () => { $('#capIn').value = ''; $('#compH').textContent = ''; detenerDictado(''); actualizaBoton(); });
-$('#capTxt').addEventListener('click', abreCaja);
+$('#capGo').addEventListener('click', anotar);
+window.addEventListener('resize', actualizaBoton);   // al pasar de celular a escritorio (o al girar) el botón redondo cambia de papel
+// Atajos de teclado (escritorio): "/" lleva el cursor a la barra de notas desde cualquier parte; Esc borra la nota, y si ya está vacía, sale de la barra
+document.addEventListener('keydown', e => {
+  const t = e.target, escribiendo = !!t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
+  if (e.key === '/' && !escribiendo && !e.ctrlKey && !e.metaKey && !e.altKey && !document.getElementById('sb-login')) { e.preventDefault(); $('#capIn').focus(); return; }
+  if (e.key === 'Escape' && t === $('#capIn')) {
+    if ($('#capIn').value) { $('#capIn').value = ''; $('#compH').textContent = ''; detenerDictado(''); actualizaBoton(); } else $('#capIn').blur();
+  }
+});
 $('#capRe').addEventListener('click', () => { srFalla = false; safe.set('tablero-sr-falla', false); $('#capRe').classList.add('hide'); dictar(); });
 actualizaBoton();
 // 🍽️ sobre la tira: se ve dónde cae la comida
