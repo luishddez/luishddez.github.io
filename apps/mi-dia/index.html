@@ -192,10 +192,15 @@ button.icd{cursor:pointer}
 .idrag.sobre{outline:2px dashed var(--a);outline-offset:2px}
 .ihead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .ideshacer{min-height:44px;padding:0 14px}
+.ifoco{min-height:44px;padding:0 14px;margin-left:auto}
+.ifoco.on{background:var(--now);color:#fff}
+.icols.foco{opacity:.16;filter:grayscale(1);pointer-events:none;user-select:none;transition:opacity .2s}
+.ifoco-n{text-align:center;margin-top:10px}
+@media (prefers-reduced-motion:reduce){.icols.foco{transition:none}}
 .icd-x{display:block;font-weight:700;font-size:14.5px;line-height:1.3}
 .icd-p{display:block;font-size:12px;color:var(--mute);margin-top:2px}
 .imas{font-size:12px;color:var(--mute);text-align:center;padding:4px}
-.iidea{display:block;width:100%;text-align:left;font-size:13px;padding:9px 10px;margin-bottom:6px;border-radius:10px;background:transparent;border:1px dashed var(--line);box-shadow:none;min-height:40px}
+.iidea{display:block;width:100%;text-align:left;font-size:13px;padding:9px 10px;margin-bottom:6px;border-radius:10px;background:transparent;border:1px dashed var(--line);box-shadow:none;min-height:44px}
 .ipri{margin-top:12px;background:var(--card);border-radius:18px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--line);font-size:14.5px}
 .ipri .acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .ipri .acc button,.ipri select{min-height:44px;padding:0 14px}
@@ -215,7 +220,7 @@ button.icd{cursor:pointer}
 .icr{position:relative;width:46px;height:46px;flex:none}
 .icr svg{display:block;transform:rotate(-90deg)}
 .icr b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px}
-button.imas{display:block;width:100%;background:transparent;border:1px dashed var(--line);box-shadow:none;color:var(--mute);min-height:40px;border-radius:10px;font-size:13px;cursor:pointer}
+button.imas{display:block;width:100%;background:transparent;border:1px dashed var(--line);box-shadow:none;color:var(--mute);min-height:44px;border-radius:10px;font-size:13px;cursor:pointer}
 .iidea{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .ibadge{flex:none;font-size:11.5px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
 .icd.compras .icd-x{font-weight:700}

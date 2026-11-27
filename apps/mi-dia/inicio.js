@@ -40,6 +40,7 @@ function iniAccion(a, v) {
     case 'iniDeshacer': iniDeshacer(); toast('Orden anterior restaurado'); return true;
     case 'iniColIzq': case 'iniColDer': { const l = iniColOrden(); iniColMover(v, l.indexOf(v) + (a === 'iniColIzq' ? -1 : 1)); return true; }
     case 'iniMas': iniAbierto[v] = !iniAbierto[v]; return true;
+    case 'iniFoco': iniFoco = !iniFoco; return true;
     case 'iniCompras': iniCompAb = !iniCompAb; if (iniCompAb) proySel = null; return true;
   }
   return false;
@@ -49,6 +50,9 @@ function iniAccion(a, v) {
 const INI_COLS = ['trabajo', 'proyectos', 'personal', 'ideas'];
 let iniAbierto = {};      // qué columnas tienen abierto el "+ N más" (no se guarda: al recargar vuelven a mostrar 3)
 let iniCompAb = false;    // el panel de Compras está abierto
+// Modo enfoque (i4): atenúa todo menos el bloque "Empieza aquí", para cuando se satura. No se guarda: al recargar vuelve a verse todo. Escape también sale.
+let iniFoco = false;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && iniFoco && vistaSel === 'ini') { iniFoco = false; render(); } });
 function iniColOrden() {
   const d = proyOrdenDoc(), l = d && Array.isArray(d.columnas) ? d.columnas.filter(k => INI_COLS.includes(k)) : [];
   return l.concat(INI_COLS.filter(k => !l.includes(k)));
@@ -191,8 +195,8 @@ function vistaInicio() {
     ideas: () => iniColumna('ideas', 'Ideas', '💡', 'var(--mute)', ideas.map(iniTarjetaIdea), 'Sin ideas por elegir.', res.ideas)
   };
   const f = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-  let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b>${iniUndo ? ` <button class="ideshacer" data-a="iniDeshacer">↶ Deshacer el último movimiento</button>` : ''}</div>` + iniHero(real, m);
-  h += `<div class="icols">${iniColOrden().map(k => cols[k]()).join('')}</div>`;
+  let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b>${iniUndo ? ` <button class="ideshacer" data-a="iniDeshacer">↶ Deshacer el último movimiento</button>` : ''}<button class="ifoco${iniFoco ? ' on' : ''}" data-a="iniFoco" aria-pressed="${iniFoco}">${iniFoco ? '✕ Salir del modo enfoque' : '🎯 Modo enfoque'}</button></div>` + iniHero(real, m);
+  h += `<div class="icols${iniFoco ? ' foco' : ''}"${iniFoco ? ' aria-hidden="true" inert' : ''}>${iniColOrden().map(k => cols[k]()).join('')}</div>${iniFoco ? '<div class="nota ifoco-n">Modo enfoque: solo lo que toca ahora. Lo demás sigue guardado.</div>' : ''}`;
   const sel = proySel && proyPorId(proySel);
   if (sel) iniCompAb = false;
   if (iniCompAb) h += `<aside class="ipanel" aria-label="Compras"><section class="pcard"><div class="ptop"><div><b class="pt">🛒 Compras</b><div class="nota">${toca ? 'Hoy toca el súper' : 'El súper es el domingo'}</div></div><button class="pcls2" data-a="iniCompras" aria-label="Cerrar">✕</button></div>${comprasHtml()}</section></aside>`;
