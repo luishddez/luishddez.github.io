@@ -428,32 +428,39 @@ function tira(its, conAhora, conComida = true) {
 }
 const bloquesDe = dia => dia.items.filter(i => i.tipo !== 'ctx' && i.fin > i.ini && i.ini > 0);
 function vistaDia(fecha) {
-  const dia = diaDe(fecha), its = bloquesDe(dia);
+  // Mañana y cualquier día: título, resumen y agenda. Escritorio: agenda a la izquierda y resumen a la derecha. Celular: título, resumen y agenda en una columna.
+  const dia = diaDe(fecha), its = bloquesDe(dia), esHoy = fecha === hoyKey(), d = fechaObj(fecha);
   const nTar = its.filter(i => i.tipo === 'tarea').length, nCal = its.filter(i => i.tipo === 'cal').length;
   const carga = its.filter(i => i.tipo === 'tarea').reduce((s, i) => s + i.min, 0);
   const sinFecha = (datos.tareas || []).filter(t => !t.fecha).length;
-  let h = '';
-  if (vistaSel.startsWith('d:')) h += `<button class="atras" data-a="vista" data-v="sem">‹ Semana</button>`;
-  h += `<div class="dia-t"><b>${nombreDia(fecha)}</b><span class="nota">${dia.modo === 'finde' ? 'Fin de semana' : (MODOS[dia.modo] || '')}</span></div>`;
-  h += `<div class="dia-card sola">${tira(its, fecha === hoyKey())}<div class="dc-r">${nCal ? `📅 ${nCal} en Calendar · ` : ''}🎯 ${nTar} tareas · ⏱ ${dur(carga)}</div><button class="ghost" data-a="planDia" data-v="${fecha}">🗓 Replantear o agregar</button></div>`;
-  if (dia.todoDia.length) h += `<div class="nota" style="margin:0 2px 8px">📅 Todo el día: ${dia.todoDia.map(esc).join(' · ')}</div>`;
-  if (!nCal && !dia.todoDia.length) h += `<div class="nota" style="margin:0 2px 8px">No hay nada agendado en Calendar para este día.</div>`;
-  h += its.map(i => fila(i, false)).join('');
-  if (dia.sinHora.length) h += `<div class="mini">No caben · sin culpa</div>` + dia.sinHora.map(t => `<div class="it opc k-${t.esencial ? 'ess' : 'tar'}"><div class="t">${esc(t.titulo)} <span class="nota">· ${dur(t.min)}</span></div></div>`).join('');
-  if (fecha !== hoyKey() && sinFecha) h += `<div class="nota" style="margin:10px 2px">Hay ${sinFecha} pendiente(s) sin fecha: entran al día cuando les toca.</div>`;
-  return h;
+  const rel = fecha === fechaMas(hoyKey(), 1) ? 'Mañana' : esHoy ? 'Hoy' : DIAS_C[d.getDay()];
+  let top = '';
+  if (vistaSel.startsWith('d:')) top += `<button class="atras" data-a="vista" data-v="sem">‹ Semana</button>`;
+  top += `<div class="dia2-t"><h2>${esc(nombreDia(fecha))}</h2><span class="dia2-chip">${esc(rel)}${dia.modo === 'finde' ? ' · fin de semana' : (MODOS[dia.modo] ? ' · ' + esc(MODOS[dia.modo]) : '')}</span></div>`;
+  let rail = `<div class="dia2-res">${tira(its, esHoy)}<div class="dia2-cifras"><div><b>${nCal}</b><span>📅 en Calendar</span></div><div><b>${nTar}</b><span>🎯 tareas</span></div><div><b>${dur(carga)}</b><span>⏱ de tareas</span></div></div><button class="ghost" data-a="planDia" data-v="${fecha}">🗓 Replantear o agregar</button></div>`;
+  if (dia.todoDia.length) rail += `<div class="nota dia2-nota">📅 Todo el día: ${dia.todoDia.map(esc).join(' · ')}</div>`;
+  if (!nCal && !dia.todoDia.length) rail += `<div class="nota dia2-nota">No hay nada agendado en Calendar para este día.</div>`;
+  if (dia.sinHora.length) rail += `<div class="mini">No caben · sin culpa</div>` + dia.sinHora.map(t => `<div class="it opc k-${t.esencial ? 'ess' : 'tar'}"><div class="t">${esc(t.titulo)} <span class="nota">· ${dur(t.min)}</span></div></div>`).join('');
+  if (!esHoy && sinFecha) rail += `<div class="nota dia2-nota">Hay ${sinFecha} pendiente(s) sin fecha: entran al día cuando les toca.</div>`;
+  const main = (its.length ? `<div class="mini dia2-h">Agenda · ${its.length}</div>` : '') + its.map(i => fila(i, false)).join('') || '<div class="empty">Nada en la agenda de este día.</div>';
+  return `<div class="dia2"><div class="dia2-top">${top}</div><div class="dia2-rail">${rail}</div><div class="dia2-main">${main}</div></div>`;
 }
+// Semana: escritorio = siete columnas (una por día, con lo que hay en cada una); celular = una tarjeta por día. Tocar un día lo abre.
 function vistaSemana() {
-  const hoy = hoyKey(); let h = '';
+  const hoy = hoyKey(); let dias = '';
   for (let k = 0; k < 7; k++) {
     const f = fechaMas(hoy, k), dia = diaDe(f), its = bloquesDe(dia).filter(i => !(k === 0 && hecho(i)));
     const nTar = its.filter(i => i.tipo === 'tarea').length, nCal = its.filter(i => i.tipo === 'cal').length + dia.todoDia.length, d = fechaObj(f);
-    h += `<button class="sem-d${k === 0 ? ' hoy' : ''}" data-a="dia" data-v="${f}"><div class="sem-n"><b>${k === 0 ? 'Hoy' : DIAS_C[d.getDay()]}</b> <span class="nota">${d.getDate()}/${d.getMonth() + 1}</span></div>${tira(its, k === 0, false)}<div class="sem-m">${nCal ? `📅 ${nCal}` : ''} ${nTar ? `🎯 ${nTar}` : ''}${dia.modo === 'finde' ? ' · fin de semana' : ''}</div></button>`;
+    const clave = its.filter(i => i.tipo === 'cal' || i.tipo === 'tarea' || i.id === 'super').sort((x, y) => x.ini - y.ini);   // lo importante del día: Calendar, tareas y el súper
+    const mostrar = clave.slice(0, 3), mas = clave.length - mostrar.length;
+    const lista = dia.todoDia.slice(0, 1).map(t => `<div class="sem-i k-cal"><span class="h">todo el día</span>${esc(t)}</div>`).join('') + mostrar.map(i => `<div class="sem-i k-${cat(i)}"><span class="h">${fmt(i.ini)}</span>${esc(i.titulo)}</div>`).join('') + (mas > 0 ? `<div class="sem-mas">+ ${mas} más</div>` : '');
+    dias += `<button class="sem-d${k === 0 ? ' hoy' : ''}${dia.modo === 'finde' ? ' finde' : ''}" data-a="dia" data-v="${f}" aria-label="${esc(nombreDia(f))}: ${nCal} en Calendar, ${nTar} tareas"><div class="sem-n"><b>${k === 0 ? 'Hoy' : DIAS_C[d.getDay()]}</b> <span class="nota">${d.getDate()}/${d.getMonth() + 1}</span></div>${tira(its, k === 0, false)}<div class="sem-lista">${lista || '<div class="sem-vacio">Libre</div>'}</div><div class="sem-m">${nCal ? `📅 ${nCal}` : ''} ${nTar ? `🎯 ${nTar}` : ''}${dia.modo === 'finde' ? ' · fin de semana' : ''}</div></button>`;
   }
-  if ((datos.objetivos_semana || []).length) h += `<div class="mini">Objetivos de la semana</div><div class="card">${datos.objetivos_semana.map(o => `<div class="it2">${esc(o)}</div>`).join('')}</div>`;
+  let extra = '';
+  if ((datos.objetivos_semana || []).length) extra += `<section class="sem-bloque"><div class="mini">Objetivos de la semana</div><div class="card">${datos.objetivos_semana.map(o => `<div class="it2">${esc(o)}</div>`).join('')}</div></section>`;
   const sf = (datos.tareas || []).filter(t => !t.fecha);
-  if (sf.length) h += `<div class="mini">Sin día asignado · ${sf.length}</div><div class="card">${sf.map(t => `<div class="it2">${esc(t.titulo)} <span class="nota">· ${dur(t.min)}</span></div>`).join('')}<div class="nota" style="margin-top:6px">Para darles día, escribe la fecha (AAAA-MM-DD) en la columna "fecha" de la hoja Tareas.</div></div>`;
-  return h;
+  if (sf.length) extra += `<section class="sem-bloque"><div class="mini">Sin día asignado · ${sf.length}</div><div class="card">${sf.map(t => `<div class="it2">${esc(t.titulo)} <span class="nota">· ${dur(t.min)}</span></div>`).join('')}<div class="nota" style="margin-top:6px">Para darles día, escribe la fecha (AAAA-MM-DD) en la columna "fecha" de la hoja Tareas.</div></div></section>`;
+  return `<div class="sem2"><div class="sem-dias">${dias}</div>${extra ? `<div class="sem-extra">${extra}</div>` : ''}</div>`;
 }
 
 // Todo lo que hay por comprar: los faltantes de la alacena de Hungry (con "Comprado") y la lista de la semana. Lo usan Inicio (tarjeta Compras) y el Súper de Hoy.
@@ -605,7 +612,7 @@ function render() {
   if (menuAbierto) { $('#menuIn').innerHTML = vistaMenu(); $('#menu').classList.remove('hide'); }
   else $('#menu').classList.add('hide');
   const vs = vistaSel, man = fechaMas(hoyKey(), 1);
-  document.body.classList.toggle('ancho', vs === 'proy' || vs === 'ini' || vs === 'hoy');   // en pantalla ancha, Inicio y Proyectos usan todo el ancho (computadora primero)
+  document.body.classList.toggle('ancho', vs === 'proy' || vs === 'ini' || vs === 'hoy' || vs === 'man' || vs === 'sem' || vs.startsWith('d:'));   // en pantalla ancha, Inicio y Proyectos usan todo el ancho (computadora primero)
   const antes = $('#vista').scrollTop;
   $('#vista').innerHTML = vs === 'hoy' ? vistaHoy() : vs === 'sem' ? vistaSemana() : vs === 'proy' ? vistaProyectos() : vs === 'ini' ? vistaInicio() : vistaDia(vs === 'man' ? man : vs.slice(2));
   if (vs === 'proy') { $('#vista').scrollTop = antes; proyPostRender(); }   // el mapa no salta al volver a pintarse
