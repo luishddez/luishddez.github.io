@@ -729,11 +729,16 @@ const sinDictadoApp = () => !SR || window.navigator.standalone === true || srFal
 function pista(txt) { $('#compH').textContent = txt || ''; if (!txt) $('#capRe').classList.add('hide'); actualizaBoton(); }
 // La barra de notas vive arriba y siempre a la vista. Celular: el botón redondo es 🎤 dicta · ➤ guarda · ⏹ detiene.
 // Escritorio (900 px o más): el botón redondo solo dicta o detiene, y guardar es el botón "Guardar ↵" (o Enter); / escribe y Esc borra.
+const CAP_ICO = {
+  mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>'
+};
 const capAncho = () => { try { return matchMedia('(min-width:900px)').matches; } catch (e) { return false; } };
 function actualizaBoton() {
   const b = $('#capBtn'), inp = $('#capIn'), hayTexto = inp.value.trim().length > 0, activo = escuchando || quiere, guardaAqui = hayTexto && !capAncho();
   b.classList.toggle('rec', activo);
-  b.textContent = activo ? '⏹' : (guardaAqui ? '➤' : '🎤');
+  b.innerHTML = activo ? CAP_ICO.stop : (guardaAqui ? CAP_ICO.send : CAP_ICO.mic);
   b.setAttribute('aria-label', activo ? 'Detener el dictado' : (guardaAqui ? 'Guardar la nota' : 'Dictar una nota'));
   $('#cap').classList.toggle('tiene', hayTexto);
 }
@@ -998,13 +1003,15 @@ function avisaVersionNueva() {
   d.querySelector('#verX').addEventListener('click', () => d.remove());
 }
 if ('serviceWorker' in navigator) {
-  const habiaControl = !!navigator.serviceWorker.controller;
+  // "Ya había una versión" = al cargar esta página ya existía un service worker registrado (aunque la página haya entrado sin control, p. ej. tras una recarga forzada).
+  // Solo en la primera visita de todas no hay nada que avisar.
+  const habiaVersion = navigator.serviceWorker.getRegistration().then(r => !!(r && (r.active || r.waiting || r.installing))).catch(() => !!navigator.serviceWorker.controller);
   navigator.serviceWorker.register('sw.js').then(reg => {
     const revisa = () => { try { reg.update(); } catch (e) { } };
     setInterval(revisa, 10 * 60000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) revisa(); });
   }).catch(() => { });
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (habiaControl) avisaVersionNueva(); });
+  navigator.serviceWorker.addEventListener('controllerchange', () => { habiaVersion.then(h => { if (h) avisaVersionNueva(); }); });
 }
 window.addEventListener('online', () => { enviarPendientes(); actualizar(false); });
 // ---------- alerta de comida: clara e insistente (comer es importante) ----------
