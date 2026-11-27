@@ -177,3 +177,27 @@ Las mismas secciones apiladas, cada una con su lista de arriba hacia abajo; el b
 - **i4** Modo enfoque, Listo y Ahora no conectados al bloque nuevo, celular apilado, estilo oscuro con tokens.
 - Después: 5.2b (archivar y recuperar, proyecto nuevo, tareas ligadas), 5.2c (gym desde Temple) y el Modo caos, que ya vive en este Inicio.
 - Pendiente de decidir al construir: dónde se guarda el orden de Personal y rutina; si el total del anillo cuenta pasos de proyecto además de la rutina.
+
+## Principio de Luis (2026-11-27): en Inicio ordeno, en Hoy ejecuto
+- **Inicio** sirve para ver todas las opciones y acomodarlas (columnas, prioridad, compras, ideas, avance). **Hoy** solo muestra lo que toca hacer hoy, ya ordenado. Lo que se decide en Inicio manda sobre lo que se ejecuta en Hoy.
+- Consecuencia: las compras se ordenan en Inicio (tarjeta Compras dentro de Personal y rutina) y en Hoy solo aparece el Súper como actividad (domingo, 11:00 a 12:30 por defecto, movible) que abre la lista.
+
+## Cambios aprobados el 2026-11-27 (Luis: "APRUEBO 5.2a, i1, i2, i3 y los 4 cambios")
+1. **Columnas en orden libre.** Trabajo primero por defecto. Flechas en el encabezado (en celular, arriba y abajo) y arrastrar el encabezado en compu. Se guarda en `inicio/orden`, campo `columnas`, con Deshacer.
+2. **"+ N más" desplegable** en cada columna (se abre, se cierra con "Mostrar menos"). No se guarda: al recargar vuelve a mostrar 3. Las tarjetas desplegadas también se arrastran.
+3. **Un anillo por columna**, cada uno a su ritmo:
+   - Trabajo (diario): pasos hechos hoy entre proyectos de trabajo activos (un paso por proyecto). Se reinicia cada día.
+   - Personal y rutina (diario): actividades hechas entre las del día. Se reinicia cada día. El Súper cuenta solo el domingo.
+   - Proyectos (largo): tareas ligadas (campo `proyecto`) hechas entre el total. Sin tareas ligadas dice "Sin medir".
+   - Ideas: sin anillo. Cada idea muestra n/3 (por qué me importa, un primer paso de 15 minutos, qué falta saber). Con los 3 sale **Pasar a Proyectos**, que la pasa a activo.
+   - El anillo grande de arriba sigue siendo el avance del día completo.
+4. **Compras.** Tarjeta en Personal y rutina con contador (faltantes de la alacena de Hungry más la lista de la semana), resaltada el día del súper. Abre un panel con la lista y "Comprado". Se quitan de Hoy las tarjetas de compras.
+
+### Datos nuevos
+- `proyectos/<id>.falta_saber` (texto, aditivo). Se edita en el formulario de Editar.
+- `inicio/orden.columnas` (lista de claves: trabajo, proyectos, personal, ideas).
+- La app calcula el avance largo con las tareas de Supabase que traen `proyecto`; no se guarda aparte.
+
+### Pendiente de verificar (no probado con aparatos reales)
+- Arrastre con mouse real y con Safari; iPhone real; "Pasar a Proyectos" con una idea real; el Súper en un domingo real.
+- Siguiente en el plan: i4 (Modo enfoque, estilo oscuro con tokens, celular), luego 5.2b, 5.2c y el Modo caos.
