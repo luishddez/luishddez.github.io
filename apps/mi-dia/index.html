@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <script>/* Modo de vista: auto (según el ancho), app o escritorio. Se guarda por aparato. */(function(){var d=document.documentElement,p="auto";try{p=localStorage.getItem("tablero-vista")||"auto"}catch(e){}function calc(){var m=p==="app"||p==="escritorio"?p:(window.innerWidth>=900?"escritorio":"app");if(d.getAttribute("data-vista")!==m){d.setAttribute("data-vista",m);window.dispatchEvent(new Event("cambio-vista"))}}window.__vista={pref:function(){return p},modo:function(){return d.getAttribute("data-vista")},set:function(x){p=x;try{localStorage.setItem("tablero-vista",x)}catch(e){}calc()}};calc();window.addEventListener("resize",calc);try{matchMedia("(min-width:900px)").addEventListener("change",calc)}catch(e){}})();</script>
-<meta name="theme-color" content="#fff4e0">
+<meta name="theme-color" content="#000000">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Mi día">

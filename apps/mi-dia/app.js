@@ -116,10 +116,7 @@ function pintaSol() {
   const reducir = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const e = solEscena(d, !reducir);
   const el = $('#sol'); if (el) el.innerHTML = solMini(d);
-  // Ícono de la pestaña y color de la barra del navegador: también cambian con la hora
-  const fav = solEscena(d, false);
-  let link = document.querySelector('link[rel="icon"]');
-  if (link) { link.type = 'image/svg+xml'; link.href = 'data:image/svg+xml,' + encodeURIComponent(fav.svg); }
+  // Color de la barra del navegador (el ícono de la pestaña y del acceso directo es fijo: icon.svg, estilo sol de línea)
   const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = tema === 'oscuro' ? '#000000' : '#fbf7ef';   // la barra del navegador sigue el tema, no el cielo
 }
 function tocaSol() {
