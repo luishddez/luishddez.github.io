@@ -422,7 +422,7 @@ function heroFlujo(id, forzado) {
 }
 
 // ---------- otros días: mañana y la semana ----------
-let vistaSel = innerWidth >= 900 ? 'ini' : 'hoy';   // 'ini' | 'hoy' | 'man' | 'sem' | 'proy' | 'd:AAAA-MM-DD'. En computadora se abre el Inicio tablero; en celular, Hoy (hasta terminar el diseño móvil)
+let vistaSel = document.documentElement.getAttribute('data-vista') === 'escritorio' ? 'ini' : 'hoy';   // 'ini' | 'hoy' | 'man' | 'sem' | 'proy' | 'd:AAAA-MM-DD'. En computadora se abre el Inicio tablero; en celular, Hoy (hasta terminar el diseño móvil)
 function carryHoy() {   // lo que hoy no cupo (o se quitó) pasa a mañana
   const d = construirDia(ahoraMin());
   return d.sinHora.concat(d.pospuestas).map(t => ({ ...t, deHoy: true }));
@@ -753,7 +753,7 @@ const CAP_ICO = {
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   stop: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>'
 };
-const capAncho = () => { try { return matchMedia('(min-width:900px)').matches; } catch (e) { return false; } };
+const capAncho = () => document.documentElement.getAttribute('data-vista') === 'escritorio';   // modo escritorio (ver el motor del modo en index.html)
 function actualizaBoton() {
   const b = $('#capBtn'), inp = $('#capIn'), hayTexto = inp.value.trim().length > 0, activo = escuchando || quiere, guardaAqui = hayTexto && !capAncho();
   b.classList.toggle('rec', activo);
@@ -828,7 +828,8 @@ $('#capIn').addEventListener('focus', actualizaBoton);
 $('#capIn').addEventListener('blur', () => setTimeout(actualizaBoton, 150));
 $('#capX').addEventListener('click', () => { $('#capIn').value = ''; $('#compH').textContent = ''; detenerDictado(''); actualizaBoton(); });
 $('#capGo').addEventListener('click', anotar);
-window.addEventListener('resize', actualizaBoton);   // al pasar de celular a escritorio (o al girar) el botón redondo cambia de papel
+window.addEventListener('resize', actualizaBoton);
+window.addEventListener('cambio-vista', () => { actualizaBoton(); render(); });   // al cambiar de modo (ancho en automático, o el selector del Menú) se vuelve a pintar   // al pasar de celular a escritorio (o al girar) el botón redondo cambia de papel
 // Atajos de teclado (escritorio): "/" lleva el cursor a la barra de notas desde cualquier parte; Esc borra la nota, y si ya está vacía, sale de la barra
 document.addEventListener('keydown', e => {
   const t = e.target, escribiendo = !!t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>/* Modo de vista: auto (según el ancho), app o escritorio. Se guarda por aparato. */(function(){var d=document.documentElement,p="auto";try{p=localStorage.getItem("tablero-vista")||"auto"}catch(e){}function calc(){var m=p==="app"||p==="escritorio"?p:(window.innerWidth>=900?"escritorio":"app");if(d.getAttribute("data-vista")!==m){d.setAttribute("data-vista",m);window.dispatchEvent(new Event("cambio-vista"))}}window.__vista={pref:function(){return p},modo:function(){return d.getAttribute("data-vista")},set:function(x){p=x;try{localStorage.setItem("tablero-vista",x)}catch(e){}calc()}};calc();window.addEventListener("resize",calc);try{matchMedia("(min-width:900px)").addEventListener("change",calc)}catch(e){}})();</script>
 <meta name="theme-color" content="#fff4e0">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
@@ -140,22 +141,22 @@ details{margin-top:6px} summary{cursor:pointer;color:var(--mute);font-size:13px;
 .comp-h{font-size:12.5px;color:var(--mute);padding:0 14px 6px}
 .comp-h:empty{display:none}
 .cap-re{font-size:12.5px;min-height:44px;padding:0 12px;margin:0 8px 6px;box-shadow:none;background:transparent;border:1px solid var(--line);border-radius:var(--r-s);font-weight:700}
-@media (max-width:899px){
+
  /* celular con texto: el botón redondo se vuelve "guardar" y toma el acento */
- #cap.tiene .cap-b:not(.rec){background:var(--now);color:var(--on-now)}
-}
-@media (min-width:900px){
- #cap{left:24px;right:24px;top:8px}
- :root{--cap-h:66px}
- #capIn{font-size:17px}
- #cap:not(.tiene) .cap-k{display:inline-flex}
- .cap-k,.cap-go kbd{align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;font:600 12px/1 system-ui,sans-serif;color:var(--mute);border:1px solid color-mix(in srgb,var(--line) 80%,transparent);border-radius:6px;background:transparent}
- #cap.tiene .cap-go{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;margin-right:4px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--now) 18%,transparent);color:var(--now);font-weight:600;box-shadow:none}
- #cap.tiene .cap-go:hover{background:color-mix(in srgb,var(--now) 28%,transparent)}
- #cap.tiene .cap-go kbd{color:inherit;border-color:currentColor;opacity:.7}
- .cap-x:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}
- .comp-h{padding:0 16px 8px;font-size:13px}
-}
+ :where(:root[data-vista="app"]) #cap.tiene .cap-b:not(.rec){background:var(--now);color:var(--on-now)}
+
+
+ :where(:root[data-vista="escritorio"]) #cap{left:24px;right:24px;top:8px}
+ :root[data-vista="escritorio"]{--cap-h:66px}
+ :where(:root[data-vista="escritorio"]) #capIn{font-size:17px}
+ :where(:root[data-vista="escritorio"]) #cap:not(.tiene) .cap-k{display:inline-flex}
+ :where(:root[data-vista="escritorio"]) .cap-k, :where(:root[data-vista="escritorio"]) .cap-go kbd{align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;font:600 12px/1 system-ui,sans-serif;color:var(--mute);border:1px solid color-mix(in srgb,var(--line) 80%,transparent);border-radius:6px;background:transparent}
+ :where(:root[data-vista="escritorio"]) #cap.tiene .cap-go{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;margin-right:4px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--now) 18%,transparent);color:var(--now);font-weight:600;box-shadow:none}
+ :where(:root[data-vista="escritorio"]) #cap.tiene .cap-go:hover{background:color-mix(in srgb,var(--now) 28%,transparent)}
+ :where(:root[data-vista="escritorio"]) #cap.tiene .cap-go kbd{color:inherit;border-color:currentColor;opacity:.7}
+ :where(:root[data-vista="escritorio"]) .cap-x:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}
+ :where(:root[data-vista="escritorio"]) .comp-h{padding:0 16px 8px;font-size:13px}
+
 /* Hoy · Mañana · Semana: tres opciones en orden de tiempo */
 .seg{flex:none;display:flex;gap:18px;margin:4px 16px 8px;padding:0;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
@@ -182,7 +183,7 @@ input[type=time]{font:inherit;border:1.5px solid var(--line);border-radius:var(-
 .pbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 6px}
 .pfil{padding:7px 12px;font-size:13.5px;border-radius:var(--r-pill);background:transparent;box-shadow:none;border:1px solid var(--line);color:var(--ink)}
 .pfil.on{background:var(--now);border-color:var(--now);color:var(--on-now);font-weight:700}
-@media (max-width:899px){.pfil{min-height:44px;padding:0 16px}}
+:where(:root[data-vista="app"]) .pfil{min-height:44px;padding:0 16px}
 .pmapa{overflow:auto;height:min(62vh,620px);border:1px solid var(--line);border-radius:var(--r-xl);background:var(--card);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
 .pmapa svg{display:block}
 .pe{stroke:var(--line);stroke-width:1.6}
@@ -229,10 +230,12 @@ button.icd{cursor:pointer}
 .imv{display:none;flex:none;gap:6px}
 .imv button{min-width:44px;min-height:44px;padding:0;font-size:15px}
 .idrag:focus-within .imv{display:inline-flex}
-@media (max-width:899px),(pointer:coarse){.imv{display:inline-flex}.pcls2{min-width:44px;min-height:44px}}
+@media (pointer:coarse){.imv{display:inline-flex}.pcls2{min-width:44px;min-height:44px}}
+:where(:root[data-vista="app"]) .imv{display:inline-flex}
+:where(:root[data-vista="app"]) .pcls2{min-width:44px;min-height:44px}
 /* arriba del Inicio siempre a la mano: Deshacer y Modo enfoque no se pierden al desplazarte */
 .ihead{position:sticky;top:0;z-index:3;background:var(--bg);padding:6px 0;margin:0 0 6px}
-@media (max-width:899px){.ihead>b{display:none}}   /* en celular la fecha ya sale en el saludo de arriba */
+:where(:root[data-vista="app"]) .ihead>b{display:none}   /* en celular la fecha ya sale en el saludo de arriba */
 .idrag.arr{opacity:.45}
 .idrag.sobre{outline:2px dashed var(--a);outline-offset:2px}
 .ihead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -251,8 +254,8 @@ button.icd{cursor:pointer}
 .ipri .acc button,.ipri select{min-height:44px;padding:0 14px}
 .ipri select{font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:var(--r-m);background:var(--card);color:var(--ink);max-width:100%}
 .ipanel{position:fixed;top:0;right:0;bottom:0;width:min(430px,100%);background:var(--bg);box-shadow:var(--sh-panel);padding:16px;overflow:auto;z-index:5}
-@media (max-width:899px){.ihero{grid-template-columns:84px 1fr}.iacts{grid-column:1/-1;flex-direction:row}.iacts button{flex:1}}
-@media (min-width:900px){.icols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+:where(:root[data-vista="app"]) .ihero{grid-template-columns:84px 1fr}:where(:root[data-vista="app"]) .iacts{grid-column:1/-1;flex-direction:row}:where(:root[data-vista="app"]) .iacts button{flex:1}
+:where(:root[data-vista="escritorio"]) .icols{grid-template-columns:repeat(4,minmax(0,1fr))}
 /* Columnas del Inicio: orden libre, anillo propio, "+ N más" desplegable, tarjeta Compras */
 .icol.arr{opacity:.5}
 .icol.sobre{outline:2px dashed var(--a);outline-offset:4px;border-radius:var(--r-m)}
@@ -260,14 +263,14 @@ button.icd{cursor:pointer}
 .icol-mv{display:inline-flex;gap:4px;margin-left:6px}
 .icol-mv button{min-width:34px;min-height:34px;padding:0;font-size:12px;line-height:1}
 .icol-mv .vt{display:none}
-@media (max-width:899px){.icol-mv .hz{display:none}.icol-mv .vt{display:inline}.icol-h[draggable="true"]{cursor:default}.icol-mv button{min-width:44px;min-height:44px}}
+:where(:root[data-vista="app"]) .icol-mv .hz{display:none}:where(:root[data-vista="app"]) .icol-mv .vt{display:inline}:where(:root[data-vista="app"]) .icol-h[draggable="true"]{cursor:default}:where(:root[data-vista="app"]) .icol-mv button{min-width:44px;min-height:44px}
 .icol-tg{display:none;min-width:44px;min-height:44px;padding:0;font-size:15px}
-@media (max-width:899px){
- .icol-tg{display:inline-flex;align-items:center;justify-content:center}
- .icol.cerrada>:not(.icol-h):not(.icol-r){display:none}   /* cerrada: solo encabezado y anillo */
- .icol.cerrada .icol-h{margin-bottom:6px}
- .icols{gap:10px}
-}
+
+ :where(:root[data-vista="app"]) .icol-tg{display:inline-flex;align-items:center;justify-content:center}
+ :where(:root[data-vista="app"]) .icol.cerrada>:not(.icol-h):not(.icol-r){display:none}   /* cerrada: solo encabezado y anillo */
+ :where(:root[data-vista="app"]) .icol.cerrada .icol-h{margin-bottom:6px}
+ :where(:root[data-vista="app"]) .icols{gap:10px}
+
 .icol-r{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:12.5px;line-height:1.3}
 .icr{position:relative;width:46px;height:46px;flex:none}
 .icr svg{display:block;transform:rotate(-90deg)}
@@ -283,18 +286,18 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
 .pn:hover rect{stroke-opacity:1}
 /* COMPUTADORA PRIMERO: en pantalla ancha, Proyectos usa todo el ancho: mapa completo (sin arrastrar) a la izquierda y tarjeta a la derecha.
    En celular se queda en una columna, con el mapa arrastrable con el dedo. */
-@media (min-width:900px){
- body.ancho{max-width:1360px}
- body.ancho #vista{padding:var(--cap-h) 24px 40px}
- body.ancho .seg,body.ancho header{margin-left:24px;margin-right:24px}
- body.ancho header{padding-left:0;padding-right:0}
- body.ancho .pwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start}
- body.ancho .pder{position:sticky;top:0}
- body.ancho .pvacio{display:block}
- body.ancho .pmapa,body.ancho .pmapa.cc{height:calc(100vh - 340px);min-height:420px;overflow:hidden}
- body.ancho .pmapa svg{width:100%;height:100%}
- body.ancho .pcard{margin-top:0}
-}
+
+ :where(:root[data-vista="escritorio"]) body.ancho{max-width:1360px}
+ :where(:root[data-vista="escritorio"]) body.ancho #vista{padding:var(--cap-h) 24px 40px}
+ :where(:root[data-vista="escritorio"]) body.ancho .seg, :where(:root[data-vista="escritorio"]) body.ancho header{margin-left:24px;margin-right:24px}
+ :where(:root[data-vista="escritorio"]) body.ancho header{padding-left:0;padding-right:0}
+ :where(:root[data-vista="escritorio"]) body.ancho .pwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start}
+ :where(:root[data-vista="escritorio"]) body.ancho .pder{position:sticky;top:0}
+ :where(:root[data-vista="escritorio"]) body.ancho .pvacio{display:block}
+ :where(:root[data-vista="escritorio"]) body.ancho .pmapa, :where(:root[data-vista="escritorio"]) body.ancho .pmapa.cc{height:calc(100vh - 340px);min-height:420px;overflow:hidden}
+ :where(:root[data-vista="escritorio"]) body.ancho .pmapa svg{width:100%;height:100%}
+ :where(:root[data-vista="escritorio"]) body.ancho .pcard{margin-top:0}
+
 .pcard{margin-top:10px;background:var(--card);border-radius:var(--r-2xl);padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--line);font-size:14.5px;line-height:1.35}
 .pcard .pg{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
 .pcard .ptop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
@@ -339,18 +342,18 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
 @keyframes alerta{50%{box-shadow:0 0 0 5px var(--rec-ring)}}
 @media (prefers-reduced-motion:reduce){#alerta.n3{animation:none}}
 /* Hoy en escritorio: tira del día arriba a todo lo ancho · el foco a la izquierda · tu día a la derecha */
-@media (min-width:900px){
- .hoy{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);grid-template-areas:"top top" "main rail";column-gap:28px;align-items:start}
- .hoy-top{grid-area:top}.hoy-main{grid-area:main}.hoy-rail{grid-area:rail;border-left:1px solid var(--line);padding-left:24px;min-height:300px}
- .hoy .hero{padding:22px 26px}
- .hoy .hero h2{font-size:26px}
- .hoy .hero .hora{font-size:14px}
- .hoy .hero.paso h2{font-size:20px}
- .hoy .hero .acc .pri{font-size:18px;padding:12px 28px}
- .hoy-rail details>summary{pointer-events:none;list-style:none;color:var(--mute);text-transform:uppercase;letter-spacing:.09em;font-size:11.5px}
- .hoy-rail details>summary::-webkit-details-marker{display:none}
- .hoy .it:hover{background:color-mix(in srgb,var(--now) 6%,transparent)}
-}
+
+ :where(:root[data-vista="escritorio"]) .hoy{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);grid-template-areas:"top top" "main rail";column-gap:28px;align-items:start}
+ :where(:root[data-vista="escritorio"]) .hoy-top{grid-area:top}:where(:root[data-vista="escritorio"]) .hoy-main{grid-area:main}:where(:root[data-vista="escritorio"]) .hoy-rail{grid-area:rail;border-left:1px solid var(--line);padding-left:24px;min-height:300px}
+ :where(:root[data-vista="escritorio"]) .hoy .hero{padding:22px 26px}
+ :where(:root[data-vista="escritorio"]) .hoy .hero h2{font-size:26px}
+ :where(:root[data-vista="escritorio"]) .hoy .hero .hora{font-size:14px}
+ :where(:root[data-vista="escritorio"]) .hoy .hero.paso h2{font-size:20px}
+ :where(:root[data-vista="escritorio"]) .hoy .hero .acc .pri{font-size:18px;padding:12px 28px}
+ :where(:root[data-vista="escritorio"]) .hoy-rail details>summary{pointer-events:none;list-style:none;color:var(--mute);text-transform:uppercase;letter-spacing:.09em;font-size:11.5px}
+ :where(:root[data-vista="escritorio"]) .hoy-rail details>summary::-webkit-details-marker{display:none}
+ :where(:root[data-vista="escritorio"]) .hoy .it:hover{background:color-mix(in srgb,var(--now) 6%,transparent)}
+
 /* Proyectos: cada nodo lleva el color de su sección (con ícono y nombre) y el panel vacío es un resumen */
 .pley{display:flex;gap:16px;flex-wrap:wrap;margin:2px 2px 8px;font-size:13px;color:var(--mute)}
 .pley span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:var(--c)}
@@ -380,37 +383,37 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
 .sem-lista{min-height:20px}
 .ghost{min-height:44px}
 .sem-bloque .card{margin-bottom:10px}
-@media (min-width:900px){
- .dia2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);grid-template-areas:"top top" "main rail";column-gap:28px;align-items:start}
- .dia2-top{grid-area:top}.dia2-main{grid-area:main}.dia2-rail{grid-area:rail;position:sticky;top:0}
- .dia2-t h2{font-size:28px}
- .dia2-main .it:hover{background:color-mix(in srgb,var(--now) 6%,transparent)}
- .sem-dias{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:stretch}
- .sem-d{margin-bottom:0;display:flex;flex-direction:column;min-height:260px;padding:12px}
- .sem-d:hover{border-color:color-mix(in srgb,var(--now) 55%,transparent)}
- .sem-d .sem-lista{flex:1}
- .sem-d .dc-strip{height:14px}
- .sem-extra{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px}
-}
+
+ :where(:root[data-vista="escritorio"]) .dia2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);grid-template-areas:"top top" "main rail";column-gap:28px;align-items:start}
+ :where(:root[data-vista="escritorio"]) .dia2-top{grid-area:top}:where(:root[data-vista="escritorio"]) .dia2-main{grid-area:main}:where(:root[data-vista="escritorio"]) .dia2-rail{grid-area:rail;position:sticky;top:0}
+ :where(:root[data-vista="escritorio"]) .dia2-t h2{font-size:28px}
+ :where(:root[data-vista="escritorio"]) .dia2-main .it:hover{background:color-mix(in srgb,var(--now) 6%,transparent)}
+ :where(:root[data-vista="escritorio"]) .sem-dias{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:stretch}
+ :where(:root[data-vista="escritorio"]) .sem-d{margin-bottom:0;display:flex;flex-direction:column;min-height:260px;padding:12px}
+ :where(:root[data-vista="escritorio"]) .sem-d:hover{border-color:color-mix(in srgb,var(--now) 55%,transparent)}
+ :where(:root[data-vista="escritorio"]) .sem-d .sem-lista{flex:1}
+ :where(:root[data-vista="escritorio"]) .sem-d .dc-strip{height:14px}
+ :where(:root[data-vista="escritorio"]) .sem-extra{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px}
+
 /* Aviso de versión nueva */
 #verNueva{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:8px;background:var(--card);color:var(--ink);border-radius:var(--r-pill);box-shadow:var(--sh-pop);padding:4px 4px 4px 16px;max-width:calc(100% - 24px);font-size:14.5px}
 #verNueva button{min-height:44px;min-width:44px;padding:0 14px;border-radius:var(--r-pill)}
 /* Celular (A y B, 2026-11-27): cabecera más baja y aviso de comida en una línea que se abre al tocarlo */
-@media (max-width:899px){
- header{padding:8px 16px 0}
- .sol{width:44px;height:44px}
- .saludo{font-size:16px}
- .fechaTxt{font-size:12px;margin-top:0}
- .seg{gap:6px;margin:2px 16px 4px}
- .seg button{min-height:44px;min-width:44px;padding:0 10px}
- #alerta{padding:4px 10px;margin:0 16px 4px}
- #alerta .at{font-size:14.5px;cursor:pointer;min-height:44px;display:flex;flex-wrap:wrap;align-items:center;column-gap:6px}
- #alerta .as{display:none;flex-basis:100%}
- #alerta.abierto .as{display:block}
- #alerta .at::before{content:"▾";opacity:.6;font-size:12px}
- #alerta.abierto .at::before{content:"▴"}
- #alerta button{min-height:44px}
-}
+
+ :where(:root[data-vista="app"]) header{padding:8px 16px 0}
+ :where(:root[data-vista="app"]) .sol{width:44px;height:44px}
+ :where(:root[data-vista="app"]) .saludo{font-size:16px}
+ :where(:root[data-vista="app"]) .fechaTxt{font-size:12px;margin-top:0}
+ :where(:root[data-vista="app"]) .seg{gap:6px;margin:2px 16px 4px}
+ :where(:root[data-vista="app"]) .seg button{min-height:44px;min-width:44px;padding:0 10px}
+ :where(:root[data-vista="app"]) #alerta{padding:4px 10px;margin:0 16px 4px}
+ :where(:root[data-vista="app"]) #alerta .at{font-size:14.5px;cursor:pointer;min-height:44px;display:flex;flex-wrap:wrap;align-items:center;column-gap:6px}
+ :where(:root[data-vista="app"]) #alerta .as{display:none;flex-basis:100%}
+ :where(:root[data-vista="app"]) #alerta.abierto .as{display:block}
+ :where(:root[data-vista="app"]) #alerta .at::before{content:"▾";opacity:.6;font-size:12px}
+ :where(:root[data-vista="app"]) #alerta.abierto .at::before{content:"▴"}
+ :where(:root[data-vista="app"]) #alerta button{min-height:44px}
+
 .ghost{width:100%;margin-top:8px;background:transparent;border:1px solid var(--line);box-shadow:none;padding:8px;font-size:14px;color:var(--mute)}
 .fi{font-size:12px;opacity:.8}
 .dc-strip{position:relative;height:24px;border-radius:var(--r-m);background:var(--bg);margin-top:12px;overflow:hidden;border:1px solid var(--line)}
@@ -477,16 +480,16 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;p
 .seg button{flex:none;min-height:44px;min-width:44px;padding:0 2px;box-shadow:none;background:transparent;border-radius:0;font-size:14px;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .16s}
 .seg button:hover{color:var(--ink)}
 .seg button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--now)}
-@media (min-width:900px){
- #topbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:36px;margin:6px 24px 0;border-bottom:1px solid var(--line)}
- #topbar header{display:contents}
- #topbar .hdr{padding:8px 0}
- #topbar .seg{margin:0;border:0;gap:30px;justify-content:center;align-self:stretch;align-items:stretch}
- #topbar .seg button{min-height:0;height:100%;padding:0 4px;font-size:14.5px;margin-bottom:-1px}
- #topbar .hdr{order:1}
- #topbar .seg{order:2}
- #topbar #btnMenu{order:3;align-self:center;justify-self:end}
-}
+
+ :where(:root[data-vista="escritorio"]) #topbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:36px;margin:6px 24px 0;border-bottom:1px solid var(--line)}
+ :where(:root[data-vista="escritorio"]) #topbar header{display:contents}
+ :where(:root[data-vista="escritorio"]) #topbar .hdr{padding:8px 0}
+ :where(:root[data-vista="escritorio"]) #topbar .seg{margin:0;border:0;gap:30px;justify-content:center;align-self:stretch;align-items:stretch}
+ :where(:root[data-vista="escritorio"]) #topbar .seg button{min-height:0;height:100%;padding:0 4px;font-size:14.5px;margin-bottom:-1px}
+ :where(:root[data-vista="escritorio"]) #topbar .hdr{order:1}
+ :where(:root[data-vista="escritorio"]) #topbar .seg{order:2}
+ :where(:root[data-vista="escritorio"]) #topbar #btnMenu{order:3;align-self:center;justify-self:end}
+
 /* Aviso de comida: tinte sutil del color del nivel (sin bloque sólido) */
 #alerta{--c:var(--warn);flex:none;margin:8px 16px 2px;border-radius:var(--r-2xl);padding:4px 6px 4px 14px;display:flex;align-items:center;gap:10px;color:var(--ink);background:color-mix(in srgb,var(--c) 11%,var(--card));border:1px solid color-mix(in srgb,var(--c) 42%,transparent)}
 #alerta.n1{--c:var(--warn);background:color-mix(in srgb,var(--c) 11%,var(--card));border-color:color-mix(in srgb,var(--c) 42%,transparent);color:var(--ink);border-left:1px solid color-mix(in srgb,var(--c) 42%,transparent)}
@@ -498,7 +501,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;p
 #alerta .as{font-weight:400;font-size:13px;color:var(--mute)}
 #alerta.n1 button,#alerta.n2 button,#alerta.n3 button,#alerta button{flex:none;min-height:44px;padding:0 16px;background:transparent;color:var(--ink);border:1px solid color-mix(in srgb,var(--c) 70%,transparent);border-radius:var(--r-pill);box-shadow:none;font-weight:600;font-size:14px}
 #alerta.n1 button:hover,#alerta.n2 button:hover,#alerta.n3 button:hover{background:color-mix(in srgb,var(--c) 20%,transparent)}
-@media (min-width:900px){#alerta{margin:10px 24px 2px}}
+:where(:root[data-vista="escritorio"]) #alerta{margin:10px 24px 2px}
 
 /* ===== Formularios, Menú y entrar a la cuenta (2026-11-27): un solo kit, mismo lenguaje que la barra de notas y la franja superior ===== */
 :root{color-scheme:light}
@@ -532,16 +535,16 @@ a.btn.pri,.btn.pri{background:var(--now);border-color:var(--now);color:var(--on-
 #menu .top{position:sticky;top:0;z-index:2;padding:14px 0;background:color-mix(in srgb,var(--bg) 70%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 #menu h1{font-size:22px;font-weight:600}
 #menu .card{border:1px solid var(--line);box-shadow:none}
-@media (min-width:900px){
- #menu .in{max-width:1080px}
- .mn-cols{column-count:2;column-gap:24px}
- .mn-cols .card,.mn-cols h3{break-inside:avoid}
- .mn-cols h3{break-after:avoid}
-}
+
+ :where(:root[data-vista="escritorio"]) #menu .in{max-width:1080px}
+ :where(:root[data-vista="escritorio"]) .mn-cols{column-count:2;column-gap:24px}
+ :where(:root[data-vista="escritorio"]) .mn-cols .card, :where(:root[data-vista="escritorio"]) .mn-cols h3{break-inside:avoid}
+ :where(:root[data-vista="escritorio"]) .mn-cols h3{break-after:avoid}
+
 /* Replantear: vidrio y campos del kit */
 #plan{background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2)}
 .selbar{background:color-mix(in srgb,var(--card) 78%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line);box-shadow:none}
-@media (min-width:900px){#plan .in,.selbar .in{max-width:860px}}
+:where(:root[data-vista="escritorio"]) #plan .in, :where(:root[data-vista="escritorio"]) .selbar .in{max-width:860px}
 /* Entrar a la cuenta: tarjeta oscura sobre vidrio */
 .sb-ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:color-mix(in srgb,var(--bg) 62%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .sb-card{width:100%;max-width:360px;padding:22px;border-radius:var(--r-2xl);background:var(--card);border:1px solid var(--line);color:var(--ink)}
