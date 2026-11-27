@@ -74,7 +74,11 @@ const proyEscribiendo = () => { const a = document.activeElement; return !!(a &&
 function proyRenderSeguro() { if (!proyEscribiendo()) render(); }
 const proyNombre = p => String(p.nombre);
 const proyCorto = p => { const n = proyNombre(p); return n.length > 21 ? n.slice(0, 20) + '…' : n; };
-const proyAncho = p => Math.round(proyCorto(p).length * 6.6 + 28);
+// Secciones (mismo código de color que el Inicio): t = trabajo, p = proyectos, i = ideas. Siempre con ícono y nombre; el color nunca es lo único que informa.
+const proySec = p => p.estado === 'idea semilla' ? 'i' : p.trabajo ? 't' : 'p';
+const PROY_SEC = { t: { ic: '💼', nom: 'Trabajo' }, p: { ic: '🚀', nom: 'Proyectos' }, i: { ic: '💡', nom: 'Ideas' } };
+const proySub = p => `${PROY_SEC[proySec(p)].ic} ${p.area} · ${p.estado}`;
+const proyAncho = p => Math.round(Math.max(proyCorto(p).length * 6.6, proySub(p).length * 5.4) + 28);
 function proyDias(p) {
   const t = Date.parse(String(p.ultima_vez || '') + 'T00:00:00');
   return isNaN(t) ? null : Math.max(0, Math.floor((Date.now() - t) / 864e5));
@@ -129,8 +133,9 @@ function vistaProyectos() {
   const ideasOcultas = todos.filter(p => p.estado === 'idea semilla' && (proyArea === 'todas' || p.area === proyArea)).length;
   const cerrados = todos.filter(p => ['hecho', 'archivado'].includes(p.estado)).length;
   const aristas = proyAristas(vis);
-  const n = Math.max(vis.length, 1), W = Math.round(Math.max(380, 270 * Math.sqrt(n))), H = Math.round(W * 0.9);
-  const clave = [proyArea, proyIdeas, vis.map(p => p.id).join(','), aristas.length].join('|');
+  const ancha = capAncho();   // escritorio: lienzo apaisado, para que el mapa llene la pantalla y los nodos se vean más grandes
+  const n = Math.max(vis.length, 1), W = Math.round(Math.max(380, (ancha ? 330 : 270) * Math.sqrt(n))), H = Math.round(W * (ancha ? 0.56 : 0.9));
+  const clave = [proyArea, proyIdeas, vis.map(p => p.id).join(','), aristas.length, ancha ? 'a' : 'c'].join('|');
   if (proyCache.clave !== clave) {
     proyCache.clave = clave; proyCache.pos = proyAcomoda(vis, aristas, W, H); proyPos.listo = false;
     // el lienzo se recorta a donde de verdad hay nodos, para no arrastrar por espacio vacío
@@ -142,18 +147,23 @@ function vistaProyectos() {
 
   const chips = ['todas'].concat(PROY_AREAS).map(a => `<button class="pfil${proyArea === a ? ' on' : ''}" data-a="proyArea" data-v="${a}">${a === 'todas' ? 'Todas' : a}</button>`).join('');
   const ideasBtn = ideasOcultas || proyIdeas ? `<button class="pfil" data-a="proyIdeas">${proyIdeas ? 'Ocultar ideas' : `Mostrar ideas (${ideasOcultas})`}</button>` : '';
-  let h = `<div class="pbar">${chips}${ideasBtn}</div><div class="nota" style="margin:2px 2px 6px">${vis.length} a la vista${cerrados ? ` · ${cerrados} hechos o archivados guardados` : ''}. ${proySel ? '' : 'Toca uno para ver sus conexiones.'}</div>`;
+  const leyenda = `<div class="pley" aria-label="Leyenda de colores">${['t', 'p', 'i'].map(k => `<span class="s-${k}">${PROY_SEC[k].ic} ${PROY_SEC[k].nom}</span>`).join('')}</div>`;
+  let h = `<div class="pbar">${chips}${ideasBtn}</div>${leyenda}<div class="nota" style="margin:2px 2px 6px">${vis.length} a la vista${cerrados ? ` · ${cerrados} hechos o archivados guardados` : ''}. ${proySel ? '' : 'Toca uno para ver sus conexiones.'}</div>`;
 
   if (!vis.length) return h + `<div class="card"><b>Nada para mostrar con este filtro.</b></div>`;
   const lineas = aristas.map(([a, b]) => `<line class="pe${sel ? (a === sel || b === sel ? ' on' : ' dim') : ''}" x1="${P[a].x.toFixed(1)}" y1="${P[a].y.toFixed(1)}" x2="${P[b].x.toFixed(1)}" y2="${P[b].y.toFixed(1)}"/>`).join('');
   const nodos = vis.map(p => {
-    const q = P[p.id], w = q.w, cl = ['pn', p.estado === 'idea semilla' ? 'idea' : '', sel === p.id ? 'sel' : '', sel && !vecinos.has(p.id) ? 'dim' : ''].filter(Boolean).join(' ');
-    return `<g class="${cl}" data-a="proySel" data-v="${esc(p.id)}" role="button" tabindex="0" aria-label="${esc(p.nombre)}. ${esc(p.area)}, ${esc(p.estado)}"><rect x="${(q.x - w / 2).toFixed(1)}" y="${(q.y - 20).toFixed(1)}" width="${w}" height="40" rx="14"/><text x="${q.x.toFixed(1)}" y="${(q.y - 3).toFixed(1)}" text-anchor="middle" class="nm">${esc(proyCorto(p))}</text><text x="${q.x.toFixed(1)}" y="${(q.y + 12).toFixed(1)}" text-anchor="middle" class="sub">${esc(p.area)} · ${esc(p.estado)}</text></g>`;
+    const q = P[p.id], w = q.w, cl = ['pn', 's-' + proySec(p), p.estado === 'idea semilla' ? 'idea' : '', sel === p.id ? 'sel' : '', sel && !vecinos.has(p.id) ? 'dim' : ''].filter(Boolean).join(' ');
+    return `<g class="${cl}" data-a="proySel" data-v="${esc(p.id)}" role="button" tabindex="0" aria-label="${esc(p.nombre)}. ${PROY_SEC[proySec(p)].nom}, ${esc(p.area)}, ${esc(p.estado)}"><rect x="${(q.x - w / 2).toFixed(1)}" y="${(q.y - 20).toFixed(1)}" width="${w}" height="40" rx="14"/><text x="${q.x.toFixed(1)}" y="${(q.y - 3).toFixed(1)}" text-anchor="middle" class="nm">${esc(proyCorto(p))}</text><text x="${q.x.toFixed(1)}" y="${(q.y + 12).toFixed(1)}" text-anchor="middle" class="sub">${esc(proySub(p))}</text></g>`;
   }).join('');
   h += `<div class="pmapa${sel ? ' cc' : ''}" id="pmapa"><svg width="${VB.w}" height="${VB.h}" viewBox="${VB.x.toFixed(0)} ${VB.y.toFixed(0)} ${VB.w} ${VB.h}" role="group" aria-label="Mapa de proyectos y sus conexiones">${lineas}${nodos}</svg></div>`;
   // Computadora: mapa a la izquierda y tarjeta a la derecha (los dos a la vista). Celular: uno debajo del otro.
   const activos = todos.filter(p => p.estado === 'activo'), propios = activos.filter(p => !p.trabajo).length;
-  const vacio = `<div class="pvacio card"><b>Elige un proyecto</b><div class="nota" style="margin-top:6px">Aquí verás su tarjeta: siguiente paso, por qué te importa, última vez y con qué se conecta.</div><div class="nota" style="margin-top:10px">Hoy tienes ${activos.length} activos (${propios} sin contar los de trabajo).</div></div>`;
+  const cuenta = k => todos.filter(p => p.estado === 'activo' && proySec(p) === k).length;
+  const nIdeas = todos.filter(p => p.estado === 'idea semilla').length, nParados = todos.filter(p => ['en pausa', 'bloqueado'].includes(p.estado)).length, nArch = todos.filter(p => p.estado === 'archivado').length;
+  const vacio = `<div class="pvacio card"><b>Tu mapa</b><div class="pres"><div><b>${cuenta('t')}</b><span>${PROY_SEC.t.ic} Trabajo activos</span></div><div><b>${cuenta('p')}</b><span>${PROY_SEC.p.ic} Proyectos activos</span></div><div><b>${nIdeas}</b><span>${PROY_SEC.i.ic} Ideas</span></div><div><b>${nParados}</b><span>⏸ En pausa o bloqueados</span></div></div>
+  <div class="nota">Toca un nodo para ver su siguiente paso, por qué te importa y con qué se conecta. ${propios} de tus ${activos.length} activos no son de trabajo.${nArch ? ` Hay ${nArch} archivado${nArch > 1 ? 's' : ''}: se recuperan desde el Inicio.` : ''}</div>
+  <div class="acc" style="margin-top:12px"><button class="pri" data-a="proyNuevo">＋ Nuevo</button></div></div>`;
   return `<div class="pwrap"><div class="pizq">${h}</div><aside class="pder">${sel ? proyTarjeta(proyPorId(sel)) : vacio}</aside></div>`;
 }
 
@@ -285,7 +295,7 @@ function proyPaso(m) {
   const d = proyDias(p), sig = c.cola[1];
   const porque = p.porque ? esc(p.porque) : c.trab ? 'Es horario de trabajo: primero lo de MegaGen.' : d !== null && d >= 3 ? `Lleva ${d} días sin tocarse.` : 'Es el que sigue en tu cola de hoy.';
   const final = sig ? `Después sigue: ${esc(sig.siguiente_paso)} (${esc(sig.nombre)}).` : 'No hay más pasos anotados hoy. Lo demás es tiempo tuyo.';
-  return `<section class="hero paso"><div class="cab"><div class="ico k-tar" aria-hidden="true">${c.trab ? '💼' : '🎯'}</div><div><div class="etq">SIGUIENTE PASO · ${c.trab ? 'TRABAJO' : 'PROYECTOS'}</div><h2>${esc(p.siguiente_paso)}</h2></div></div>
+  return `<section class="hero paso ${c.trab ? 'pt' : 'pp'}"><div class="cab"><div class="ico k-tar" aria-hidden="true">${c.trab ? '💼' : '🎯'}</div><div><div class="etq">SIGUIENTE PASO · ${c.trab ? 'TRABAJO' : 'PROYECTOS'}</div><h2>${esc(p.siguiente_paso)}</h2></div></div>
   <div class="hora">${esc(p.nombre)} · ${esc(p.area)}</div>
   <div class="pk2">Por qué ahora</div><div class="pv">${porque}</div>
   <div class="pk2">Al terminar</div><div class="pv">${final}</div>
@@ -326,6 +336,7 @@ function proyAccion(a, v) {
       if (p) proyGuardaDoc({ ...p, ultimo_paso_hecho: p.siguiente_paso || '', ultimo_paso_fecha: hoyKey(), siguiente_paso: '', ultima_vez: hoyKey() });
       celebrar('¡Listo! Ese paso ya cuenta. Anota el siguiente cuando quieras, en Proyectos.', false); return true;
     }
+    case 'proyNuevo': vistaSel = 'ini'; proySel = null; iniCompAb = false; iniArchAb = false; iniNuevo = { nombre: '', tipo: 'proyecto', area: 'Yo', trabajo: false }; return true;   // el formulario Nuevo vive en el Inicio
     case 'proyArchivar': {   // archivar NUNCA borra: guarda el estado de antes para poder recuperarlo
       const p = proyPorId(v); if (!p || p.estado === 'archivado') return true;
       proyGuardaDoc({ ...p, estado: 'archivado', estado_antes: p.estado, archivado_fecha: hoyKey() });

@@ -69,8 +69,16 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;p
 .mini{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:12px 2px 4px}
 .dc-r{font-size:12px;color:var(--mute);margin-top:5px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .dc-r .falta{color:var(--k-comida);font-weight:700}
-.hero{border-radius:var(--r-2xl);padding:14px 16px;margin-bottom:8px;background:var(--now-g1);position:relative}
-.hero.cal{background:var(--cal-g1)}
+.hero{border-radius:var(--r-2xl);padding:14px 16px;margin-bottom:8px;background:linear-gradient(135deg,color-mix(in srgb,var(--now) 11%,var(--card)),var(--card) 65%);border:1px solid var(--line);position:relative}
+.hero.cal{background:linear-gradient(135deg,var(--cal-g1),var(--card) 65%)}
+/* Hoy (2026-11-27): aquí se ejecuta. "Ahora" es el bloque fuerte; "Siguiente paso" es una tarjeta secundaria con el color de su sección (azul trabajo, violeta proyectos). */
+.hero.paso{background:var(--card);border-left:4px solid var(--cal)}
+.hero.paso.pt .etq{color:var(--cal-t)}
+.hero.paso.pp{border-left-color:var(--k-rut)} .hero.paso.pp .etq{color:var(--k-rut)}
+.hero.paso h2{font-size:17px}
+.hoy-top{margin-bottom:4px}
+.hoy-rail>h3:first-child{margin-top:14px}
+.hoy-rail details>summary{min-height:44px;display:flex;align-items:center}
 .hero.opt,.hero.libre{background:var(--opt-g1)}
 .hero .cab{display:flex;gap:12px;align-items:center}
 .ico{width:40px;height:40px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;border:2.5px solid var(--k,transparent)}
@@ -262,7 +270,7 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
 .pcam{list-style:none;margin:4px 0 8px;padding:0}
 .pcam li{padding:3px 0;color:var(--mute)}
 .pcam li.ok{color:inherit}
-.pvacio{display:none}
+.pvacio{display:block;margin-top:12px}   /* el resumen se ve también en celular, debajo del mapa */
 .pn:hover rect{stroke-opacity:1}
 /* COMPUTADORA PRIMERO: en pantalla ancha, Proyectos usa todo el ancho: mapa completo (sin arrastrar) a la izquierda y tarjeta a la derecha.
    En celular se queda en una columna, con el mapa arrastrable con el dedo. */
@@ -274,7 +282,7 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
  body.ancho .pwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start}
  body.ancho .pder{position:sticky;top:0}
  body.ancho .pvacio{display:block}
- body.ancho .pmapa,body.ancho .pmapa.cc{height:calc(100vh - 250px);min-height:460px;overflow:hidden}
+ body.ancho .pmapa,body.ancho .pmapa.cc{height:calc(100vh - 340px);min-height:420px;overflow:hidden}
  body.ancho .pmapa svg{width:100%;height:100%}
  body.ancho .pcard{margin-top:0}
 }
@@ -321,6 +329,29 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
 #alerta.n3 button{background:var(--on-rec);color:var(--rec-deep)}
 @keyframes alerta{50%{box-shadow:0 0 0 5px var(--rec-ring)}}
 @media (prefers-reduced-motion:reduce){#alerta.n3{animation:none}}
+/* Hoy en escritorio: tira del día arriba a todo lo ancho · el foco a la izquierda · tu día a la derecha */
+@media (min-width:900px){
+ .hoy{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);grid-template-areas:"top top" "main rail";column-gap:28px;align-items:start}
+ .hoy-top{grid-area:top}.hoy-main{grid-area:main}.hoy-rail{grid-area:rail;border-left:1px solid var(--line);padding-left:24px;min-height:300px}
+ .hoy .hero{padding:22px 26px}
+ .hoy .hero h2{font-size:26px}
+ .hoy .hero .hora{font-size:14px}
+ .hoy .hero.paso h2{font-size:20px}
+ .hoy .hero .acc .pri{font-size:18px;padding:12px 28px}
+ .hoy-rail details>summary{pointer-events:none;list-style:none;color:var(--mute);text-transform:uppercase;letter-spacing:.09em;font-size:11.5px}
+ .hoy-rail details>summary::-webkit-details-marker{display:none}
+ .hoy .it:hover{background:color-mix(in srgb,var(--now) 6%,transparent)}
+}
+/* Proyectos: cada nodo lleva el color de su sección (con ícono y nombre) y el panel vacío es un resumen */
+.pley{display:flex;gap:16px;flex-wrap:wrap;margin:2px 2px 8px;font-size:13px;color:var(--mute)}
+.pley span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:var(--c)}
+.pley .s-t{--c:var(--cal)} .pley .s-p{--c:var(--k-rut)} .pley .s-i{--c:var(--mute)}
+.pn.s-t rect{stroke:var(--cal);stroke-opacity:.95}
+.pn.s-p rect{stroke:var(--k-rut);stroke-opacity:.95}
+.pres{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.pres>div{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-m);padding:10px 12px}
+.pres b{display:block;font-size:26px;line-height:1.1}
+.pres span{font-size:12.5px;color:var(--mute)}
 /* Aviso de versión nueva */
 #verNueva{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:8px;background:var(--card);color:var(--ink);border-radius:var(--r-pill);box-shadow:var(--sh-pop);padding:4px 4px 4px 16px;max-width:calc(100% - 24px);font-size:14.5px}
 #verNueva button{min-height:44px;min-width:44px;padding:0 14px;border-radius:var(--r-pill)}

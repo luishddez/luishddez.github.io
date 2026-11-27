@@ -201,3 +201,16 @@ Las mismas secciones apiladas, cada una con su lista de arriba hacia abajo; el b
 ### Pendiente de verificar (no probado con aparatos reales)
 - Arrastre con mouse real y con Safari; iPhone real; "Pasar a Proyectos" con una idea real; el Súper en un domingo real.
 - Siguiente en el plan: i4 (Modo enfoque, estilo oscuro con tokens, celular), luego 5.2b, 5.2c y el Modo caos.
+
+## Hoy y Proyectos con el estilo nuevo (2026-11-27)
+Principio: **en Inicio ordeno, en Hoy ejecuto**. Cada pantalla tiene su versión de escritorio y su versión de celular.
+
+### Hoy
+- **Escritorio (900 px o más):** la tira del día y la barra de avance van arriba a todo lo ancho. Debajo, dos columnas: a la izquierda el foco ("Ahora" y "Siguiente paso", con letra más grande), a la derecha "tu día" con la lista de actividades abierta, separada por una línea.
+- **Celular:** una columna con el foco primero (tira y barra, "Ahora", "Siguiente paso", luego tu día plegado, y al final la frase, las notas en camino y lo comido).
+- **Jerarquía:** "Ahora" es el único bloque con degradado suave. "Siguiente paso" es una tarjeta secundaria con una barra lateral del color de su sección (azul Trabajo, violeta Proyectos).
+
+### Proyectos
+- **Mapa:** cada nodo lleva el color de su sección (azul Trabajo, violeta Proyectos, punteado gris para ideas), con ícono y nombre (💼 🚀 💡). Hay una leyenda. En escritorio el lienzo es apaisado para llenar la pantalla; en celular se mueve con el dedo.
+- **Panel sin selección:** deja de estar vacío y pasa a ser "Tu mapa": cuántos activos de Trabajo y de Proyectos, ideas, en pausa o bloqueados, y el botón ＋ Nuevo (abre el formulario del Inicio). Se ve a la derecha en escritorio y debajo del mapa en celular.
+- **Pendiente:** las pastillas del mapa miden 40 px de alto (el mínimo táctil es 44 px) y aún no existe la revisión de parados.
