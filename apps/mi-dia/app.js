@@ -100,16 +100,27 @@ function solEscena(d, animar) {
   const svg = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bot}"/></linearGradient></defs><rect width="64" height="64" fill="url(#${gid})"/>${estrellas}${cuerpo}<path d="M0 53 Q16 45 32 51 T64 49 V64 H0Z" fill="${colina}"/></svg>`;
   return { svg, top, s, m, dia };
 }
+// Sol de línea (2026-11-27): un arco por donde pasa un punto del amanecer al atardecer; de noche, el arco punteado de abajo. Sigue mostrando las horas al tocarlo.
+function solMini(d) {
+  const m = d.getHours() * 60 + d.getMinutes(), s = solHoy(d), dia = m >= s.sale && m <= s.pone;
+  let p;
+  if (dia) p = (m - s.sale) / (s.pone - s.sale);
+  else { const noche = 1440 - (s.pone - s.sale); p = (m >= s.pone ? m - s.pone : m + 1440 - s.pone) / noche; }
+  p = Math.max(0, Math.min(1, p));
+  const x = (20 - 13 * Math.cos(Math.PI * p)).toFixed(1), y = (dia ? 26 - 13 * Math.sin(Math.PI * p) : 26 + 9 * Math.sin(Math.PI * p)).toFixed(1);
+  const punto = dia ? `<circle class="sol-halo" cx="${x}" cy="${y}" r="6.5"/><circle class="sol-p" cx="${x}" cy="${y}" r="3.4"/>` : `<circle class="sol-l" cx="${x}" cy="${y}" r="3.2"/>`;
+  return `<svg viewBox="0 0 40 40" aria-hidden="true"><path class="sol-hz" d="M4 26h32"/><path class="sol-arco" d="M7 26a13 13 0 0 1 26 0"/><path class="sol-noche" d="M7 26a13 9 0 0 0 26 0"/>${punto}</svg>`;
+}
 function pintaSol() {
   const d = new Date();
   const reducir = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const e = solEscena(d, !reducir);
-  const el = $('#sol'); if (el) el.innerHTML = e.svg;
+  const el = $('#sol'); if (el) el.innerHTML = solMini(d);
   // Ícono de la pestaña y color de la barra del navegador: también cambian con la hora
   const fav = solEscena(d, false);
   let link = document.querySelector('link[rel="icon"]');
   if (link) { link.type = 'image/svg+xml'; link.href = 'data:image/svg+xml,' + encodeURIComponent(fav.svg); }
-  const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = e.top;
+  const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = tema === 'oscuro' ? '#000000' : '#fbf7ef';   // la barra del navegador sigue el tema, no el cielo
 }
 function tocaSol() {
   const d = new Date(), e = solEscena(d, false), m = e.m, s = e.s;
@@ -608,7 +619,7 @@ function render() {
   $('#fecha').textContent = f.charAt(0).toUpperCase() + f.slice(1);
   $('#saludo').textContent = saludo();
   pintaSol();
-  $('#btnMenu').textContent = est.inbox.length ? `Menú · ${est.inbox.length}` : 'Menú';
+  $('#btnMenu').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg><span>Menú</span>${est.inbox.length ? `<span class="mn-n" aria-label="${est.inbox.length} notas en camino">${est.inbox.length}</span>` : ''}`;
   if (menuAbierto) { $('#menuIn').innerHTML = vistaMenu(); $('#menu').classList.remove('hide'); }
   else $('#menu').classList.add('hide');
   const vs = vistaSel, man = fechaMas(hoyKey(), 1);
@@ -709,7 +720,7 @@ function accion(a, v, el, ev) {
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (b && b.type !== 'checkbox' && b.tagName !== 'INPUT') return accion(b.dataset.a, b.dataset.v, b, e);
-  if (e.target.id === 'btnMenu') { menuAbierto = true; render(); }
+  if (e.target.closest && e.target.closest('#btnMenu')) { menuAbierto = true; render(); }
   else if (e.target.closest('#capBtn')) capClick();
 });
 document.addEventListener('change', e => {
