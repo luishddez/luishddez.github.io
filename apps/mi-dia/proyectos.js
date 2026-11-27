@@ -103,7 +103,7 @@ function proyAcomoda(vis, aristas, W, H) {
   vis.forEach(n => {
     const s = Math.max(0, PROY_AREAS.indexOf(n.area)), mis = vis.filter(x => x.area === n.area), k = mis.indexOf(n);
     const ang = (s + (k + 0.5) / mis.length) / 3 * 2 * Math.PI - Math.PI / 2, r = m * (0.26 + (k % 3) * 0.08);
-    P[n.id] = { x: cx + Math.cos(ang) * r * 1.25, y: cy + Math.sin(ang) * r, w: proyAncho(n), h: 40 };
+    P[n.id] = { x: cx + Math.cos(ang) * r * 1.25, y: cy + Math.sin(ang) * r, w: proyAncho(n), h: 44 };
   });
   for (let it = 0; it < 320; it++) {
     const f = 1 - it / 320;
@@ -139,7 +139,7 @@ function vistaProyectos() {
   if (proyCache.clave !== clave) {
     proyCache.clave = clave; proyCache.pos = proyAcomoda(vis, aristas, W, H); proyPos.listo = false;
     // el lienzo se recorta a donde de verdad hay nodos, para no arrastrar por espacio vacío
-    const q = Object.values(proyCache.pos), x0 = Math.min(...q.map(a => a.x - a.w / 2)) - 24, x1 = Math.max(...q.map(a => a.x + a.w / 2)) + 24, y0 = Math.min(...q.map(a => a.y - 20)) - 24, y1 = Math.max(...q.map(a => a.y + 20)) + 24;
+    const q = Object.values(proyCache.pos), x0 = Math.min(...q.map(a => a.x - a.w / 2)) - 24, x1 = Math.max(...q.map(a => a.x + a.w / 2)) + 24, y0 = Math.min(...q.map(a => a.y - 22)) - 24, y1 = Math.max(...q.map(a => a.y + 22)) + 24;
     proyCache.vb = { x: x0, y: y0, w: Math.round(x1 - x0), h: Math.round(y1 - y0) };
   }
   const P = proyCache.pos, VB = proyCache.vb, sel = proySel && vis.find(p => p.id === proySel) ? proySel : null;
@@ -154,7 +154,7 @@ function vistaProyectos() {
   const lineas = aristas.map(([a, b]) => `<line class="pe${sel ? (a === sel || b === sel ? ' on' : ' dim') : ''}" x1="${P[a].x.toFixed(1)}" y1="${P[a].y.toFixed(1)}" x2="${P[b].x.toFixed(1)}" y2="${P[b].y.toFixed(1)}"/>`).join('');
   const nodos = vis.map(p => {
     const q = P[p.id], w = q.w, cl = ['pn', 's-' + proySec(p), p.estado === 'idea semilla' ? 'idea' : '', sel === p.id ? 'sel' : '', sel && !vecinos.has(p.id) ? 'dim' : ''].filter(Boolean).join(' ');
-    return `<g class="${cl}" data-a="proySel" data-v="${esc(p.id)}" role="button" tabindex="0" aria-label="${esc(p.nombre)}. ${PROY_SEC[proySec(p)].nom}, ${esc(p.area)}, ${esc(p.estado)}"><rect x="${(q.x - w / 2).toFixed(1)}" y="${(q.y - 20).toFixed(1)}" width="${w}" height="40" rx="14"/><text x="${q.x.toFixed(1)}" y="${(q.y - 3).toFixed(1)}" text-anchor="middle" class="nm">${esc(proyCorto(p))}</text><text x="${q.x.toFixed(1)}" y="${(q.y + 12).toFixed(1)}" text-anchor="middle" class="sub">${esc(proySub(p))}</text></g>`;
+    return `<g class="${cl}" data-a="proySel" data-v="${esc(p.id)}" role="button" tabindex="0" aria-label="${esc(p.nombre)}. ${PROY_SEC[proySec(p)].nom}, ${esc(p.area)}, ${esc(p.estado)}"><rect x="${(q.x - w / 2).toFixed(1)}" y="${(q.y - 22).toFixed(1)}" width="${w}" height="44" rx="14"/><text x="${q.x.toFixed(1)}" y="${(q.y - 3).toFixed(1)}" text-anchor="middle" class="nm">${esc(proyCorto(p))}</text><text x="${q.x.toFixed(1)}" y="${(q.y + 12).toFixed(1)}" text-anchor="middle" class="sub">${esc(proySub(p))}</text></g>`;
   }).join('');
   h += `<div class="pmapa${sel ? ' cc' : ''}" id="pmapa"><svg width="${VB.w}" height="${VB.h}" viewBox="${VB.x.toFixed(0)} ${VB.y.toFixed(0)} ${VB.w} ${VB.h}" role="group" aria-label="Mapa de proyectos y sus conexiones">${lineas}${nodos}</svg></div>`;
   // Computadora: mapa a la izquierda y tarjeta a la derecha (los dos a la vista). Celular: uno debajo del otro.
