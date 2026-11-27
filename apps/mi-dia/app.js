@@ -693,6 +693,7 @@ function accion(a, v, el, ev) {
     case 'sol': tocaSol(); return;
     case 'actualizar': return actualizar(true);
     case 'cerrarMenu': menuAbierto = false; break;
+    case 'alertaTog': alertaAbierta = !alertaAbierta; pintaAlerta(); return;
     default: if ((typeof proyAccion === 'function' && proyAccion(a, v, el, ev)) || (typeof iniAccion === 'function' && iniAccion(a, v))) break; return;   // acciones de Proyectos (proyectos.js) y del Inicio (inicio.js)
   }
   render();
@@ -977,6 +978,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catc
 window.addEventListener('online', () => { enviarPendientes(); actualizar(false); });
 // ---------- alerta de comida: clara e insistente (comer es importante) ----------
 let alertaNivel = 0, ultimoPulso = 0, sonidoComida = safe.get('tablero-sonido', true);
+let alertaAbierta = false;   // celular: el aviso de comida arranca en una línea; al tocar el texto se abre la explicación (no se guarda)
 function nivelComida() {
   if (est.hechos.comida || !['trabajo', 'finde'].includes(modoActual())) return 0;
   const m = ahoraMin();
@@ -1010,9 +1012,9 @@ function pintaAlerta() {
   const n = nivelComida(), m = ahoraMin();
   const pl = n ? null : comidaPlanPendiente();
   if (pl) {
-    el.className = 'n' + pl.nivel;
+    el.className = 'n' + pl.nivel + (alertaAbierta ? ' abierto' : '');
     const ayuda = (pl.it.planFac && pl.it.planFac[0]) ? pl.it.planFac[0].t : '';
-    el.innerHTML = `<div class="at">${pl.nivel === 1 ? '🍽️ Ya es hora' : '🍽️ Sigue pendiente'}: ${esc(pl.it.titulo)}<span class="as">${esc(ayuda)}</span></div><button data-a="ok" data-v="${esc(pl.it.id)}">✓ Ya comí</button>`;
+    el.innerHTML = `<div class="at" data-a="alertaTog" role="button" tabindex="0" aria-expanded="${alertaAbierta}">${pl.nivel === 1 ? '🍽️ Ya es hora' : '🍽️ Sigue pendiente'}: ${esc(pl.it.titulo)}<span class="as">${esc(ayuda)}</span></div><button data-a="ok" data-v="${esc(pl.it.id)}">✓ Ya comí</button>`;
     document.title = '🍽️ ' + pl.it.titulo + ' · Mi día';
     if (!document.hidden && pl.nivel > alertaNivel) pulsoComida();
     alertaNivel = pl.nivel; return;
@@ -1022,8 +1024,8 @@ function pintaAlerta() {
     : n === 2 ? ['🍽️ Come ahora', `Te quedan ${dur(toMin('15:00') - m)} de tu ventana.`]
     : m < toMin('18:00') ? ['🍽️ Ya pasaron las 15:00 y no has comido', 'Come algo ahorita. Es importante.']
     : ['🍽️ Hoy todavía no marcas la comida', 'Si ya comiste, tócalo para quitar este aviso.'];
-  el.className = 'n' + n;
-  el.innerHTML = `<div class="at">${t}<span class="as">${s}</span></div><button data-a="comi">✓ Ya comí</button>`;
+  el.className = 'n' + n + (alertaAbierta ? ' abierto' : '');
+  el.innerHTML = `<div class="at" data-a="alertaTog" role="button" tabindex="0" aria-expanded="${alertaAbierta}">${t}<span class="as">${s}</span></div><button data-a="comi">✓ Ya comí</button>`;
   document.title = n >= 2 ? '🍽️ ¡Come! · Mi día' : 'Mi día';
   // insistencia: un pulso (vibración y sonido) al subir de nivel y luego cada 10 min (urgente) o cada 5 min (rojo), solo si la app está a la vista
   const cada = n === 3 ? 5 * 60000 : n === 2 ? 10 * 60000 : 0;
@@ -1031,6 +1033,7 @@ function pintaAlerta() {
   alertaNivel = n;
 }
 setInterval(pintaAlerta, 30000);
+document.addEventListener('keydown', e => { const t = e.target; if ((e.key === 'Enter' || e.key === ' ') && t && t.matches && t.matches('#alerta .at')) { e.preventDefault(); alertaAbierta = !alertaAbierta; pintaAlerta(); } });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) pintaAlerta(); });
 
 // Si la app se quedó abierta y cambió el día, se carga el día nuevo (todo lo del día anterior se reinicia solo)
