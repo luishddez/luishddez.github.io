@@ -586,6 +586,12 @@ a.btn.pri,.btn.pri{background:var(--now);border-color:var(--now);color:var(--on-
 .mn-vista{flex-wrap:wrap}
 .mn-vista .seg2{flex:1 1 100%;flex-wrap:nowrap}
 .mn-vista .seg2 button{flex:1;padding:0 8px}
+.iarch{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.ppar{flex-wrap:wrap;gap:8px}
+.ppar-b{display:flex;gap:8px;flex-wrap:wrap}
+.ppar button{min-height:44px;padding:0 14px}
+:where(:root[data-vista="app"]) .ppar{flex-direction:column;align-items:stretch;padding:10px 0}
+:where(:root[data-vista="app"]) .ppar-b button{flex:1}
 </style>
 </head>
 <body>

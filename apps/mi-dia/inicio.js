@@ -43,9 +43,11 @@ function iniAccion(a, v) {
     case 'iniMas': iniAbierto[v] = !iniAbierto[v]; return true;
     case 'iniFoco': iniFoco = !iniFoco; return true;
     case 'iniPleg': iniPlegar(v, proyCola(ahoraMin()).trab ? 'trabajo' : 'proyectos'); return true;
-    case 'iniCompras': iniCompAb = !iniCompAb; if (iniCompAb) { proySel = null; iniArchAb = false; iniNuevo = null; } return true;
-    case 'iniArch': iniArchAb = !iniArchAb; if (iniArchAb) { proySel = null; iniCompAb = false; iniNuevo = null; } return true;
-    case 'iniNuevoAbrir': proySel = null; iniCompAb = false; iniArchAb = false; iniNuevo = { nombre: '', tipo: 'proyecto', area: 'Yo', trabajo: false }; return true;
+    case 'iniCompras': iniCompAb = !iniCompAb; if (iniCompAb) { proySel = null; iniArchAb = false; iniNuevo = null; iniParAb = false; } return true;
+    case 'iniArch': iniArchAb = !iniArchAb; if (iniArchAb) { proySel = null; iniCompAb = false; iniNuevo = null; iniParAb = false; } return true;
+    case 'iniPar': iniParAb = !iniParAb; if (iniParAb) { proySel = null; iniCompAb = false; iniNuevo = null; iniArchAb = false; } return true;
+    case 'iniMantener': iniMantener(v); return true;
+    case 'iniNuevoAbrir': proySel = null; iniCompAb = false; iniArchAb = false; iniParAb = false; iniNuevo = { nombre: '', tipo: 'proyecto', area: 'Yo', trabajo: false }; return true;
     case 'iniNuevoCancel': iniNuevo = null; return true;
     case 'nfTipo': if (iniNuevo) iniNuevo.tipo = v === 'idea' ? 'idea' : 'proyecto'; return true;
     case 'nfArea': if (iniNuevo && PROY_AREAS.includes(v)) iniNuevo.area = v; return true;
@@ -81,6 +83,33 @@ function iniNuevoHtml() {
   <div class="pl">Área</div><div class="pfils">${PROY_AREAS.map(a => chip('nfArea', a, esc(a), n.area === a)).join('')}</div>
   <label class="pchk"><input type="checkbox" class="sw-in" role="switch" data-nf="trabajo"${n.trabajo ? ' checked' : ''}> Es de trabajo (MegaGen)</label>
   <div class="acc" style="margin-top:12px"><button class="pri" data-a="iniNuevoCrear">Crear</button><button data-a="iniNuevoCancel">Cancelar</button></div></section></aside>`;
+}
+// Revisión de parados (2026-11-27): proyectos que llevan mucho sin tocarse. Umbrales: idea 30 días, activo 14, investigación 21.
+// "Mantener" solo se recuerda en este aparato (no escribe en tu cuenta); "Archivar" usa el archivado de siempre (no borra, se recupera).
+let iniParAb = false;
+const INI_UMBRAL = { idea: 30, investigacion: 21, activo: 14 };
+let iniMant = {}; try { const g = safe.get('tablero-ini-mant', null); if (g && typeof g === 'object') iniMant = g; } catch (_) { }
+const iniDiasDesde = k => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(k || '')); if (!m) return null; const a = new Date(+m[1], +m[2] - 1, +m[3]), b = new Date(); b.setHours(0, 0, 0, 0); return Math.round((b - a) / 86400000); };
+function iniParados() {
+  const hoy = hoyKey();
+  return proyLista().map(p => {
+    if (p.estado === 'archivado' || p.estado === 'hecho') return null;
+    const idea = p.tipo === 'idea' || String(p.estado).startsWith('idea'), inv = p.tipo === 'investigación';
+    const um = idea ? INI_UMBRAL.idea : inv ? INI_UMBRAL.investigacion : p.estado === 'activo' ? INI_UMBRAL.activo : null;
+    const d = iniDiasDesde(p.ultima_vez); if (um === null || d === null || d <= um) return null;
+    if (iniMant[p.id] && iniMant[p.id] > hoy) return null;
+    return { p, d, um };
+  }).filter(Boolean).sort((a, b) => b.d - a.d);
+}
+function iniMantener(id) {
+  const x = iniParados().find(e => e.p.id === id); const dias = x ? x.um : 14, f = new Date(); f.setDate(f.getDate() + dias);
+  iniMant[id] = `${f.getFullYear()}-${pad(f.getMonth() + 1)}-${pad(f.getDate())}`; try { safe.set('tablero-ini-mant', iniMant); } catch (_) { }
+  toast(`Se queda. Te lo vuelvo a preguntar en ${dias} días`);
+}
+function iniParHtml() {
+  const l = iniParados();
+  return `<aside class="ipanel" aria-label="Revisión de parados"><section class="pcard"><div class="ptop"><div><b class="pt">⏳ Parados</b><div class="nota">Llevan tiempo sin tocarse. Mantener lo deja y te lo vuelve a preguntar más adelante. Archivar no borra nada.</div></div><button class="pcls2" data-a="iniPar" aria-label="Cerrar">✕</button></div>
+  ${l.length ? l.map(({ p, d }) => `<div class="ptar ppar"><span class="ptar-t">${esc(p.nombre)} <small class="nota">· ${esc(p.area)} · ${esc(p.estado)} · sin tocar hace ${d} días</small></span><span class="ppar-b"><button data-a="iniMantener" data-v="${esc(p.id)}">Mantener</button><button data-a="proyArchivar" data-v="${esc(p.id)}">🗄 Archivar</button></span></div>`).join('') : '<div class="nota" style="margin-top:8px">Nada parado. Todo se ha tocado a tiempo.</div>'}</section></aside>`;
 }
 function iniArchHtml() {
   const l = proyLista().filter(p => p.estado === 'archivado').sort((a, b) => String(b.archivado_fecha || '').localeCompare(String(a.archivado_fecha || '')));
@@ -250,11 +279,13 @@ function vistaInicio() {
   let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b>${iniUndo ? ` <button class="ideshacer" data-a="iniDeshacer">↶ Deshacer el último movimiento</button>` : ''}<button class="inuevo" data-a="iniNuevoAbrir">＋ Nuevo</button><button class="ifoco${iniFoco ? ' on' : ''}" data-a="iniFoco" aria-pressed="${iniFoco}">${iniFoco ? '✕ Salir del modo enfoque' : '🎯 Modo enfoque'}</button></div>` + iniHero(real, m);
   h += `<div class="icols${iniFoco ? ' foco' : ''}"${iniFoco ? ' aria-hidden="true" inert' : ''}>${iniColOrden().map(k => cols[k]()).join('')}</div>${iniFoco ? '<div class="nota ifoco-n">Modo enfoque: solo lo que toca ahora. Lo demás sigue guardado.</div>' : ''}`;
   const sel = proySel && proyPorId(proySel);
-  if (sel) { iniCompAb = false; iniArchAb = false; iniNuevo = null; }   // un solo panel a la vez; abrir un proyecto cierra los demás
+  if (sel) { iniCompAb = false; iniArchAb = false; iniNuevo = null; iniParAb = false; }   // un solo panel a la vez; abrir un proyecto cierra los demás
   const nArch = proyLista().filter(p => p.estado === 'archivado').length;
-  h += `<div class="iarch"><button data-a="iniArch" aria-expanded="${iniArchAb}">🗄 Archivados (${nArch})</button></div>`;
+  const nPar = iniParados().length;
+  h += `<div class="iarch">${nPar ? `<button data-a="iniPar" aria-expanded="${iniParAb}">⏳ Parados (${nPar})</button> ` : ''}<button data-a="iniArch" aria-expanded="${iniArchAb}">🗄 Archivados (${nArch})</button></div>`;
   if (iniNuevo) h += iniNuevoHtml();
   else if (iniArchAb) h += iniArchHtml();
+  else if (iniParAb) h += iniParHtml();
   else if (iniCompAb) h +=`<aside class="ipanel" aria-label="Compras"><section class="pcard"><div class="ptop"><div><b class="pt">🛒 Compras</b><div class="nota">${toca ? 'Hoy toca el súper' : 'El súper es el domingo'}</div></div><button class="pcls2" data-a="iniCompras" aria-label="Cerrar">✕</button></div>${comprasHtml()}</section></aside>`;
   else if (sel) h += `<aside class="ipanel" aria-label="Tarjeta del proyecto">${proyTarjeta(sel)}${iniFilaPrioridad(sel)}</aside>`;
   return h;
