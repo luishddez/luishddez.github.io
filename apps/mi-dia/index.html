@@ -454,11 +454,56 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
 .conf{position:fixed;width:10px;height:14px;top:40%;left:50%;z-index:10;pointer-events:none;border-radius:3px;animation:cae 1.3s ease-out forwards}
 @keyframes cae{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
 @media (prefers-reduced-motion:reduce){.conf{display:none}.bar i{transition:none}button:active{transform:none}}
+
+/* ===== Franja superior (2026-11-27): sol de línea, saludo, Menú, pestañas y aviso de comida en el mismo lenguaje que el resto =====
+   Celular: dos filas (saludo y Menú; pestañas). Escritorio (900 px o más): una sola fila (saludo · pestañas · Menú) con una línea fina debajo. */
+#topbar{flex:none}
+header{flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 16px 0}
+.hdr{display:flex;gap:12px;align-items:center;min-width:0}
+.sol{width:44px;height:44px;padding:0;border-radius:50%;overflow:hidden;flex:none;box-shadow:none;background:transparent;border:1px solid var(--line);transition:border-color .16s}
+.sol:hover{border-color:color-mix(in srgb,var(--now) 60%,transparent)}
+.sol svg{width:100%;height:100%;display:block}
+.sol-hz,.sol-arco,.sol-noche{fill:none;stroke:var(--line);stroke-width:1.5;stroke-linecap:round}
+.sol-arco{stroke:color-mix(in srgb,var(--mute) 55%,transparent)}
+.sol-noche{stroke-dasharray:2 3}
+.sol-p{fill:var(--now)} .sol-halo{fill:var(--now);opacity:.2} .sol-l{fill:var(--mute)}
+.saludo{font-size:17px;font-weight:600;letter-spacing:-.005em;line-height:1.2}
+.fechaTxt{color:var(--mute);font-size:12.5px;margin-top:1px}
+#btnMenu{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;background:transparent;border:1px solid var(--line);box-shadow:none;border-radius:var(--r-pill);color:var(--ink);font-size:14px;transition:border-color .16s,background .16s}
+#btnMenu svg{width:18px;height:18px;flex:none}
+#btnMenu:hover{border-color:color-mix(in srgb,var(--now) 55%,transparent);background:color-mix(in srgb,var(--now) 8%,transparent)}
+#btnMenu .mn-n{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:var(--r-pill);background:var(--now);color:var(--on-now);font-size:12px;font-weight:700}
+.seg{flex:none;display:flex;gap:22px;margin:0 16px;padding:0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.seg button{flex:none;min-height:44px;min-width:44px;padding:0 2px;box-shadow:none;background:transparent;border-radius:0;font-size:14px;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .16s}
+.seg button:hover{color:var(--ink)}
+.seg button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--now)}
+@media (min-width:900px){
+ #topbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:36px;margin:6px 24px 0;border-bottom:1px solid var(--line)}
+ #topbar header{display:contents}
+ #topbar .hdr{padding:8px 0}
+ #topbar .seg{margin:0;border:0;gap:30px;justify-content:center;align-self:stretch;align-items:stretch}
+ #topbar .seg button{min-height:0;height:100%;padding:0 4px;font-size:14.5px;margin-bottom:-1px}
+ #topbar .hdr{order:1}
+ #topbar .seg{order:2}
+ #topbar #btnMenu{order:3;align-self:center;justify-self:end}
+}
+/* Aviso de comida: tinte sutil del color del nivel (sin bloque sólido) */
+#alerta{--c:var(--warn);flex:none;margin:8px 16px 2px;border-radius:var(--r-2xl);padding:4px 6px 4px 14px;display:flex;align-items:center;gap:10px;color:var(--ink);background:color-mix(in srgb,var(--c) 11%,var(--card));border:1px solid color-mix(in srgb,var(--c) 42%,transparent)}
+#alerta.n1{--c:var(--warn);background:color-mix(in srgb,var(--c) 11%,var(--card));border-color:color-mix(in srgb,var(--c) 42%,transparent);color:var(--ink);border-left:1px solid color-mix(in srgb,var(--c) 42%,transparent)}
+#alerta.n2{--c:var(--fire);background:color-mix(in srgb,var(--c) 14%,var(--card));border-color:color-mix(in srgb,var(--c) 50%,transparent);color:var(--ink);border-left:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
+#alerta.n3{--c:var(--rec);background:color-mix(in srgb,var(--c) 16%,var(--card));border-color:color-mix(in srgb,var(--c) 60%,transparent);color:var(--ink);animation:alerta2 2.4s ease-in-out infinite}
+@keyframes alerta2{50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 16%,transparent)}}
+@media (prefers-reduced-motion:reduce){#alerta.n3{animation:none}}
+#alerta .at{flex:1;font-weight:600;line-height:1.25;font-size:14.5px}
+#alerta .as{font-weight:400;font-size:13px;color:var(--mute)}
+#alerta.n1 button,#alerta.n2 button,#alerta.n3 button,#alerta button{flex:none;min-height:44px;padding:0 16px;background:transparent;color:var(--ink);border:1px solid color-mix(in srgb,var(--c) 70%,transparent);border-radius:var(--r-pill);box-shadow:none;font-weight:600;font-size:14px}
+#alerta.n1 button:hover,#alerta.n2 button:hover,#alerta.n3 button:hover{background:color-mix(in srgb,var(--c) 20%,transparent)}
+@media (min-width:900px){#alerta{margin:10px 24px 2px}}
 </style>
 </head>
 <body>
-<header><div class="hdr"><button id="sol" class="sol" data-a="sol" aria-label="Sol del día: toca para ver a qué hora sale y se pone"></button><div><div class="saludo" id="saludo">Hola</div><div class="fechaTxt" id="fecha"></div></div></div><button id="btnMenu" aria-label="Abrir menú">☰ Menú</button></header>
-<nav class="seg" id="seg" aria-label="Ver día"><button data-a="vista" data-v="ini">Inicio</button><button data-a="vista" data-v="hoy" class="on">Hoy</button><button data-a="vista" data-v="man">Mañana</button><button data-a="vista" data-v="sem">Semana</button><button data-a="vista" data-v="proy">Proyectos</button></nav>
+<div id="topbar"><header><div class="hdr"><button id="sol" class="sol" data-a="sol" aria-label="Sol del día: toca para ver a qué hora sale y se pone"></button><div><div class="saludo" id="saludo">Hola</div><div class="fechaTxt" id="fecha"></div></div></div><button id="btnMenu" aria-label="Abrir menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg><span>Menú</span></button></header>
+<nav class="seg" id="seg" aria-label="Ver día"><button data-a="vista" data-v="ini">Inicio</button><button data-a="vista" data-v="hoy" class="on">Hoy</button><button data-a="vista" data-v="man">Mañana</button><button data-a="vista" data-v="sem">Semana</button><button data-a="vista" data-v="proy">Proyectos</button></nav></div>
 <div id="alerta" class="hide" role="alert" aria-live="assertive"></div>
 <div id="zona">
 <section id="cap" aria-label="Anotar una nota">

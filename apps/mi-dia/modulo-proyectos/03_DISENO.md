@@ -219,3 +219,8 @@ Principio: **en Inicio ordeno, en Hoy ejecuto**. Cada pantalla tiene su versión
 - **Mañana (y cualquier día que abras desde Semana):** escritorio con título grande y un chip (Mañana · fin de semana), la agenda a la izquierda y un resumen a la derecha (tira del día, cuántos eventos de Calendar, cuántas tareas, cuánto tiempo de tareas, Replantear o agregar, lo de todo el día y lo que no cabe). Celular en una columna: título, resumen, agenda.
 - **Semana:** escritorio con una cuadrícula de 7 columnas, una por día, con lo importante de cada uno (Calendar, tareas, el súper). Hoy va resaltado y el fin de semana con un fondo suave. Debajo, Objetivos de la semana y Sin día asignado, lado a lado. Celular con una tarjeta por día y sus primeros eventos. Tocar un día lo abre y "‹ Semana" regresa.
 - Pendiente: marcar tareas como hechas desde Semana, mover una tarea de un día a otro arrastrando (con Subir y Bajar en celular) y la revisión de parados.
+
+## Franja superior (2026-11-27)
+- **Sol:** un arco de línea con un punto que recorre el día del amanecer al atardecer (de noche, el arco punteado de abajo); al tocarlo muestra las horas de luz. Ya no es un paisaje pintado.
+- **Escritorio:** una sola fila (saludo, pestañas al centro, Menú a la derecha con el contador de notas en camino) y una línea fina debajo. **Celular:** dos filas, saludo y Menú arriba, pestañas abajo.
+- **Aviso de comida:** sin bloque sólido; un tinte sutil del color del nivel (amarillo, naranja, rojo) con borde y botón de línea. En celular sigue plegable.
