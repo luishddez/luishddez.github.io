@@ -214,3 +214,8 @@ Principio: **en Inicio ordeno, en Hoy ejecuto**. Cada pantalla tiene su versión
 - **Mapa:** cada nodo lleva el color de su sección (azul Trabajo, violeta Proyectos, punteado gris para ideas), con ícono y nombre (💼 🚀 💡). Hay una leyenda. En escritorio el lienzo es apaisado para llenar la pantalla; en celular se mueve con el dedo.
 - **Panel sin selección:** deja de estar vacío y pasa a ser "Tu mapa": cuántos activos de Trabajo y de Proyectos, ideas, en pausa o bloqueados, y el botón ＋ Nuevo (abre el formulario del Inicio). Se ve a la derecha en escritorio y debajo del mapa en celular.
 - **Pendiente:** las pastillas del mapa miden 40 px de alto (el mínimo táctil es 44 px) y aún no existe la revisión de parados.
+
+## Mañana y Semana con el estilo nuevo (2026-11-27)
+- **Mañana (y cualquier día que abras desde Semana):** escritorio con título grande y un chip (Mañana · fin de semana), la agenda a la izquierda y un resumen a la derecha (tira del día, cuántos eventos de Calendar, cuántas tareas, cuánto tiempo de tareas, Replantear o agregar, lo de todo el día y lo que no cabe). Celular en una columna: título, resumen, agenda.
+- **Semana:** escritorio con una cuadrícula de 7 columnas, una por día, con lo importante de cada uno (Calendar, tareas, el súper). Hoy va resaltado y el fin de semana con un fondo suave. Debajo, Objetivos de la semana y Sin día asignado, lado a lado. Celular con una tarjeta por día y sus primeros eventos. Tocar un día lo abre y "‹ Semana" regresa.
+- Pendiente: marcar tareas como hechas desde Semana, mover una tarea de un día a otro arrastrando (con Subir y Bajar en celular) y la revisión de parados.
