@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-app
  /* La página no se desplaza: se desplaza solo #vista por dentro. Así la barra del navegador del celular se queda quieta. */
  position:fixed;top:0;bottom:0;left:0;right:0;overflow:hidden;overscroll-behavior:none;display:flex;flex-direction:column}
 html{height:100%;overflow:hidden;overscroll-behavior:none}
-#vista{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 16px 96px}
+#vista{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 16px 72px}
 button{font:inherit;color:inherit;border:0;background:var(--card);border-radius:var(--r-l);padding:11px 16px;cursor:pointer;box-shadow:var(--sh)}
 button:active{transform:scale(.97)}
 button.pri{background:var(--now);color:var(--on-now);font-weight:700}
@@ -110,23 +110,35 @@ details{margin-top:6px} summary{cursor:pointer;color:var(--mute);font-size:13px;
 /* La barra queda sobre la etiqueta "Powered by Netlify" (esquina inferior derecha), para que no tape Anotar ni el dictado */
 /* Anotar: un botón redondo abajo a la IZQUIERDA (la etiqueta de Netlify queda a la derecha y no estorba).
    🎤 dicta a texto · ➤ guarda cuando ya hay texto. La caja de texto aparece arriba solo cuando hace falta. No ocupa espacio de la pantalla. */
-#cap{position:fixed;left:0;right:0;bottom:0;max-width:680px;margin-inline:auto;padding:0 16px calc(14px + env(safe-area-inset-bottom));z-index:4;pointer-events:none}
-#cap>*{pointer-events:auto}
-.fabrow{display:flex;align-items:center;gap:10px}
-.cap-b{flex:none;width:50px;height:50px;border-radius:50%;padding:0;font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center;background:var(--now);color:var(--card);box-shadow:0 2px 8px rgba(23,96,63,.25)}
+/* 2026-11-27: la captura (dictar y anotar) ya no flota abajo: es UNA barra fija arriba, justo encima del contenido, siempre a la vista.
+   Celular: fila compacta con micrófono grande. Escritorio: barra ancha con atajo de teclado (/), botón Guardar con ↵ y Esc para borrar. */
+#cap{flex:none;margin:2px 16px 8px}
+.cap-row{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:var(--r-2xl);box-shadow:var(--sh);padding:4px 6px 4px 4px;border:1px solid var(--line)}
+.cap-row:focus-within{border-color:var(--now);box-shadow:0 0 0 1px var(--now)}
+.cap-b{flex:none;width:48px;height:48px;border-radius:50%;padding:0;font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center;background:var(--now);color:var(--on-now);box-shadow:none}
 .cap-b.rec{background:var(--rec);color:var(--on-rec);animation:pulso 1.2s ease-in-out infinite}
 @keyframes pulso{50%{transform:scale(1.1)}}
-.cap-t{background:transparent;border-radius:var(--r-pill);box-shadow:none;border:1px solid var(--line);padding:9px 14px;font-size:14px;color:var(--mute);max-width:calc(100vw - 32px - 66px - 190px)}
-@media (min-width:561px){.cap-t{max-width:none}}
-#cap.on .cap-t{display:none}
-.comp{display:none;background:var(--card);border-radius:var(--r-2xl);box-shadow:var(--sh-pop);padding:8px 8px 8px 14px;margin-bottom:10px}
-#cap.on .comp{display:block}
-.comp-r{display:flex;align-items:center;gap:6px}
-.comp input{flex:1;min-width:0;font:inherit;font-size:16px;border:0;background:transparent;color:var(--ink);padding:8px 0;outline:none}
-.cap-x{width:34px;height:34px;padding:0;border-radius:50%;font-size:14px;box-shadow:none;background:var(--bg);color:var(--mute)}
-.comp-h{font-size:12.5px;color:var(--mute);padding:2px 4px 2px 0}
+@media (prefers-reduced-motion:reduce){.cap-b.rec{animation:none}}
+#capIn{flex:1;min-width:0;font:inherit;font-size:16px;border:0;background:transparent;color:var(--ink);min-height:44px;padding:0 4px;outline:none}
+.cap-k,.cap-go{display:none}
+.cap-x{flex:none;width:44px;height:44px;padding:0;border-radius:50%;font-size:15px;box-shadow:none;background:transparent;color:var(--mute)}
+#cap:not(.tiene) .cap-x{display:none}
+.comp-h{font-size:12.5px;color:var(--mute);padding:4px 10px 0}
 .comp-h:empty{display:none}
-.cap-re{font-size:12.5px;padding:6px 12px;margin:4px 0 2px;box-shadow:none;background:var(--bg);border-radius:var(--r-s);font-weight:700}
+.cap-re{font-size:12.5px;min-height:44px;padding:0 12px;margin:4px 0 0;box-shadow:none;background:var(--bg);border-radius:var(--r-s);font-weight:700}
+@media (min-width:900px){
+ #cap{margin:2px 24px 10px}
+ .cap-row{padding:6px 8px 6px 6px}
+ .cap-b{width:44px;height:44px;font-size:20px}
+ .cap-b:hover{filter:brightness(1.1)}
+ #capIn{font-size:17px}
+ #cap:not(.tiene) .cap-k{display:inline-flex}
+ .cap-k,.cap-go kbd{align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;font:600 12px/1 system-ui,sans-serif;color:var(--mute);border:1px solid var(--line);border-radius:6px;background:transparent}
+ #cap.tiene .cap-go{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;background:var(--now);color:var(--on-now);font-weight:700;box-shadow:none}
+ #cap.tiene .cap-go kbd{color:inherit;border-color:currentColor;opacity:.75}
+ .cap-x:hover{background:var(--bg)}
+ .comp-h{padding:6px 12px 0;font-size:13px}
+}
 /* Hoy · Mañana · Semana: tres opciones en orden de tiempo */
 .seg{flex:none;display:flex;gap:18px;margin:4px 16px 8px;padding:0;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
@@ -377,11 +389,17 @@ button.imas{display:block;width:100%;background:transparent;border:1px dashed va
 <header><div class="hdr"><button id="sol" class="sol" data-a="sol" aria-label="Sol del día: toca para ver a qué hora sale y se pone"></button><div><div class="saludo" id="saludo">Hola</div><div class="fechaTxt" id="fecha"></div></div></div><button id="btnMenu" aria-label="Abrir menú">☰ Menú</button></header>
 <nav class="seg" id="seg" aria-label="Ver día"><button data-a="vista" data-v="ini">Inicio</button><button data-a="vista" data-v="hoy" class="on">Hoy</button><button data-a="vista" data-v="man">Mañana</button><button data-a="vista" data-v="sem">Semana</button><button data-a="vista" data-v="proy">Proyectos</button></nav>
 <div id="alerta" class="hide" role="alert" aria-live="assertive"></div>
+<section id="cap" aria-label="Anotar una nota">
+  <div class="cap-row">
+    <button id="capBtn" class="cap-b" aria-label="Dictar una nota">🎤</button>
+    <input type="text" id="capIn" placeholder="Anota o dicta algo…" enterkeyhint="send" autocomplete="off" aria-keyshortcuts="/">
+    <kbd class="cap-k" aria-hidden="true" title="Presiona / para escribir una nota">/</kbd>
+    <button id="capX" class="cap-x" aria-label="Borrar la nota">✕</button>
+    <button id="capGo" class="cap-go" type="button" aria-label="Guardar la nota">Guardar <kbd aria-hidden="true">↵</kbd></button>
+  </div>
+  <div class="comp-h" id="compH"></div><button id="capRe" class="cap-re hide" type="button">Reintentar el dictado</button>
+</section>
 <main id="vista"></main>
-<div id="cap">
-  <div class="comp" id="comp"><div class="comp-r"><input type="text" id="capIn" placeholder="Escribe tu nota…" enterkeyhint="send" autocomplete="off"><button id="capX" class="cap-x" aria-label="Borrar la nota">✕</button></div><div class="comp-h" id="compH"></div><button id="capRe" class="cap-re hide" type="button">Reintentar el dictado</button></div>
-  <div class="fabrow"><button id="capBtn" class="cap-b" aria-label="Dictar una nota">🎤</button><button id="capTxt" class="cap-t">✏️ Anota…</button></div>
-</div>
 <div id="menu" class="hide"><div class="in" id="menuIn"></div></div>
 <div id="plan" class="hide"><div class="in" id="planIn"></div></div>
 <div id="toast" role="status"></div>
