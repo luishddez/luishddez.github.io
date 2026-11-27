@@ -20,7 +20,7 @@ const FRASES = [
   { t: 'El que lee mucho y anda mucho, ve mucho y sabe mucho.', a: 'Cervantes, Quijote II, 25' }
 ];
 // ---------- íconos y facilitadores (Hábitos Atómicos: hacer fácil lo que quieres, poner fricción a lo que no) ----------
-const EMO = { manana: '☕', salida: '🚶', comida: '🍽️', 'com-desayuno': '🥤', 'com-previa': '🥤', 'com-cena': '🍳', gym: '💪', cierre: '🌙', cal: '📅', tarea: '🎯', esencial: '⭐', pregunta: '💭', ropa: '🧺', libre: '🌿' };
+const EMO = { manana: '☕', salida: '🚶', comida: '🍽️', 'com-desayuno': '🥤', 'com-previa': '🥤', 'com-cena': '🍳', gym: '💪', cierre: '🌙', cal: '📅', tarea: '🎯', esencial: '⭐', pregunta: '💭', ropa: '🧺', super: '🛒', libre: '🌿' };
 const emoDe = i => i.tipo === 'cal' ? EMO.cal : (EMO[i.id] || (i.tipo === 'tarea' ? (i.esencial ? EMO.esencial : EMO.tarea) : '🔹'));
 // Tipo de actividad → color (azul Calendar, dorado esencial, verde tarea, naranja comida, rosa gym, morado rutina, gris lo demás)
 function cat(i) {
@@ -225,6 +225,8 @@ function construirDia(m, fecha, esHoy, extras) {
     if (dow === 6) items.push({ ini: toMin('11:00'), fin: toMin('12:00'), titulo: 'Lavar ropa', tipo: 'base', id: 'ropa' });
     ocupados.push([toMin('14:00'), toMin('15:00')]);
     items.push({ ini: toMin('14:00'), fin: toMin('15:00'), titulo: 'Comida', tipo: 'base', id: 'comida', planFac: planFacDe(planDe('comida')) });
+    // Domingo: el súper es una actividad del día (Hoy = ejecutar); al tocarla sale la lista para marcar "Comprado". La ordenas en Inicio, en Personal y rutina.
+    if (dow === 0) items.push({ ini: toMin('11:00'), fin: toMin('12:30'), titulo: 'Súper de la semana', tipo: 'base', id: 'super' });
   } else if (modo === 'viaje') {
     items.push({ ini: toMin('18:30'), fin: toMin('20:00'), titulo: 'Gym del hotel', tipo: 'base', id: 'gym' });
   }
@@ -328,10 +330,8 @@ function vistaHoy() {
 
   // avisos
   (datos.avisos || []).forEach(a => h += `<div class="aviso">${esc(a)}</div>`);
-  // los domingos: la lista del súper de la semana, a la vista
-  if (new Date().getDay() === 0 && (datos.compras || []).length) h += `<div class="card" style="margin:0 0 8px"><b>🛒 Súper de hoy</b>${listaCompras()}</div>`;
-  // de Hungry: qué falta en la alacena y cuánto llevas comido
-  if ((datos.faltantes || []).length) h += `<div class="card" style="margin:0 0 8px"><b>🛒 Por comprar</b> <span class="nota">· de tu alacena en Hungry</span>${datos.faltantes.map(f => `<div class="it2"><label><input type="checkbox" data-a="compro" data-v="${esc(f.id)}"> ${esc(f.emoji)} ${esc(f.articulo)} <span class="nota">· ${esc(f.cantidad)}${f.donde ? ' · ' + esc(f.donde) : ''}</span></label></div>`).join('')}<div class="row" style="margin-top:6px"><a class="btn" href="../hungry/">Abrir Hungry</a></div></div>`;
+  // Las compras ya no ocupan Hoy ("en Inicio ordeno, en Hoy ejecuto"): se ordenan en Inicio (tarjeta Compras) y el domingo el Súper es una actividad que abre la lista (heroAhora)
+  // de Hungry: cuánto llevas comido
   if (datos.comido && datos.comido.k) h += `<div class="nota" style="margin:0 0 8px">🍽️ Hoy llevas <b>${datos.comido.k} kcal</b> y ${datos.comido.p} g de proteína registrados en Hungry. <a href="../hungry/">Abrir</a></div>`;
 
   // HERO: ahora
@@ -394,7 +394,7 @@ function heroAhora(a, futuros, m, esencialListo) {
     tiempo = `${fmt(a.ini)}–${fmt(a.fin)} · quedan ${dur(resta)}`;
   }
   const acc = a.tipo === 'cal' ? '' : `<div class="acc"><button class="pri" data-a="ok" data-v="${esc(a.id)}">✓ Listo</button></div>`;
-  return `<section class="hero ${cls}"><div class="cab"><div class="ico k-${cat(a)}">${emoDe(a)}</div><div><div class="etq">${etq}</div><h2>${esc(a.titulo)}</h2></div></div><div class="hora">${tiempo}</div>${barra}${chipsFac(facDe(a))}${acc}</section>`;
+  return `<section class="hero ${cls}"><div class="cab"><div class="ico k-${cat(a)}">${emoDe(a)}</div><div><div class="etq">${etq}</div><h2>${esc(a.titulo)}</h2></div></div><div class="hora">${tiempo}</div>${barra}${chipsFac(facDe(a))}${a.id === 'super' ? `<div class="card" style="margin:10px 0 0">${comprasHtml()}</div>` : ''}${acc}</section>`;
 }
 
 function heroFlujo(id, forzado) {
@@ -454,7 +454,16 @@ function vistaSemana() {
   return h;
 }
 
-const listaCompras = () => (datos.compras || []).map(c => `<div class="it2">${esc(c.articulo)} · <b>${esc(c.cantidad)}</b>${c.regla ? ` <span class="nota">· ${esc(c.regla)}</span>` : ''}</div>`).join('');
+// Todo lo que hay por comprar: los faltantes de la alacena de Hungry (con "Comprado") y la lista de la semana. Lo usan Inicio (tarjeta Compras) y el Súper de Hoy.
+const comprasTotal = () => (datos.faltantes || []).length + (datos.compras || []).length;
+function comprasHtml() {
+  const fal = datos.faltantes || [], sem = datos.compras || [];
+  if (!fal.length && !sem.length) return '<div class="nota">Nada por comprar. Lo que falte en tu alacena de Hungry aparece aquí.</div>';
+  return (fal.length ? `<div class="pk">Por comprar <span class="nota">· de tu alacena en Hungry</span></div>${fal.map(f => `<div class="it2"><label><input type="checkbox" data-a="compro" data-v="${esc(f.id)}"> ${esc(f.emoji)} ${esc(f.articulo)} <span class="nota">· ${esc(f.cantidad)}${f.donde ? ' · ' + esc(f.donde) : ''}</span></label></div>`).join('')}` : '')
+    + (sem.length ? `<div class="pk">Compras de la semana</div>${listaCompras()}` : '')
+    + `<div class="row" style="margin-top:6px"><a class="btn" href="../hungry/">Abrir Hungry</a></div>`;
+}
+const listaCompras = () =>(datos.compras || []).map(c => `<div class="it2">${esc(c.articulo)} · <b>${esc(c.cantidad)}</b>${c.regla ? ` <span class="nota">· ${esc(c.regla)}</span>` : ''}</div>`).join('');
 function vistaMenu() {
   const hs = horasSueno();
   let h = `<div class="top"><h1>Menú</h1><button data-a="cerrarMenu">Cerrar</button></div>`;
@@ -881,6 +890,9 @@ async function desdeSupabase() {
   const d = armar(tar, cal || [], plan, compras, cal ? null : (datos.calendario || []));
   d.proyectos = proyD || datos.proyectos || [];   // si falla la lectura, se conserva lo último guardado (nunca rompe tareas ni calendario)
   d.inicioOrden = (iniD && iniD.find(x => x && x.id === 'orden')) || datos.inicioOrden || null;   // orden de prioridad del Inicio (documento inicio/orden)
+  // Avance largo de cada proyecto: sus tareas ligadas (campo proyecto), hechas entre el total. Sin tareas ligadas = "sin medir".
+  d.tareasProy = {};
+  tarD.forEach(t => { if (t && t.proyecto) { const k = d.tareasProy[t.proyecto] = d.tareasProy[t.proyecto] || { hechas: 0, total: 0 }; k.total++; if (String(t.estado || '').toLowerCase() === 'hecho') k.hechas++; } });
   // De Hungry: lo que falta por comprar y lo que llevas comido hoy
   const pend = (est.comprasPend || []).map(f => f.id);
   d.faltantes = falD.filter(f => f && f.articulo && f.estado === 'falta' && !pend.includes(f.id)).sort((a, b) => (a.pasillo || '').localeCompare(b.pasillo || '') || a.articulo.localeCompare(b.articulo)).map(f => ({ id: f.id, articulo: f.articulo, emoji: f.emoji || '', cantidad: f.cantidad_texto || '', pasillo: f.pasillo || '', donde: f.donde || '', raw: f }));

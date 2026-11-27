@@ -202,7 +202,26 @@ button.icd{cursor:pointer}
 .ipri select{font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);max-width:100%}
 .ipanel{position:fixed;top:0;right:0;bottom:0;width:min(430px,100%);background:var(--bg);box-shadow:-10px 0 28px rgba(0,0,0,.2);padding:16px;overflow:auto;z-index:5}
 @media (max-width:899px){.ihero{grid-template-columns:84px 1fr}.iacts{grid-column:1/-1;flex-direction:row}.iacts button{flex:1}}
-@media (min-width:900px){.icols{grid-template-columns:repeat(3,minmax(0,1fr)) 170px}}
+@media (min-width:900px){.icols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* Columnas del Inicio: orden libre, anillo propio, "+ N más" desplegable, tarjeta Compras */
+.icol.arr{opacity:.5}
+.icol.sobre{outline:2px dashed var(--a);outline-offset:4px;border-radius:12px}
+.icol-h[draggable="true"]{cursor:grab}
+.icol-mv{display:inline-flex;gap:4px;margin-left:6px}
+.icol-mv button{min-width:34px;min-height:34px;padding:0;font-size:12px;line-height:1}
+.icol-mv .vt{display:none}
+@media (max-width:899px){.icol-mv .hz{display:none}.icol-mv .vt{display:inline}.icol-h[draggable="true"]{cursor:default}.icol-mv button{min-width:44px;min-height:44px}}
+.icol-r{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:12.5px;line-height:1.3}
+.icr{position:relative;width:46px;height:46px;flex:none}
+.icr svg{display:block;transform:rotate(-90deg)}
+.icr b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+button.imas{display:block;width:100%;background:transparent;border:1px dashed var(--line);box-shadow:none;color:var(--mute);min-height:40px;border-radius:10px;font-size:13px;cursor:pointer}
+.iidea{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ibadge{flex:none;font-size:11.5px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.icd.compras .icd-x{font-weight:700}
+.pcam{list-style:none;margin:4px 0 8px;padding:0}
+.pcam li{padding:3px 0;color:var(--mute)}
+.pcam li.ok{color:inherit}
 .pvacio{display:none}
 .pn:hover rect{stroke-opacity:1}
 /* COMPUTADORA PRIMERO: en pantalla ancha, Proyectos usa todo el ancho: mapa completo (sin arrastrar) a la izquierda y tarjeta a la derecha.

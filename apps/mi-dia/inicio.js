@@ -38,9 +38,51 @@ function iniAccion(a, v) {
     case 'iniSubir': { const p = proyPorId(v), l = p && iniLista(!!p.trabajo); if (l) iniMover(v, l.findIndex(x => x.id === v) - 1); return true; }
     case 'iniBajar': { const p = proyPorId(v), l = p && iniLista(!!p.trabajo); if (l) iniMover(v, l.findIndex(x => x.id === v) + 1); return true; }
     case 'iniDeshacer': iniDeshacer(); toast('Orden anterior restaurado'); return true;
+    case 'iniColIzq': case 'iniColDer': { const l = iniColOrden(); iniColMover(v, l.indexOf(v) + (a === 'iniColIzq' ? -1 : 1)); return true; }
+    case 'iniMas': iniAbierto[v] = !iniAbierto[v]; return true;
+    case 'iniCompras': iniCompAb = !iniCompAb; if (iniCompAb) proySel = null; return true;
   }
   return false;
 }
+
+// ---------- Orden de las columnas (lo mueve Luis; Trabajo va primero por defecto). Se guarda en inicio/orden, campo "columnas" ----------
+const INI_COLS = ['trabajo', 'proyectos', 'personal', 'ideas'];
+let iniAbierto = {};      // qué columnas tienen abierto el "+ N más" (no se guarda: al recargar vuelven a mostrar 3)
+let iniCompAb = false;    // el panel de Compras está abierto
+function iniColOrden() {
+  const d = proyOrdenDoc(), l = d && Array.isArray(d.columnas) ? d.columnas.filter(k => INI_COLS.includes(k)) : [];
+  return l.concat(INI_COLS.filter(k => !l.includes(k)));
+}
+function iniColMover(key, destino) {
+  const l = iniColOrden(), de = l.indexOf(key); if (de < 0) return;
+  destino = Math.max(0, Math.min(l.length - 1, destino));
+  if (destino === de) { toast(destino === 0 ? 'Ya es la primera' : 'Ya es la última'); return; }
+  l.splice(de, 1); l.splice(destino, 0, key);
+  const doc = { ...(proyOrdenDoc() || {}), id: 'orden' };
+  iniUndo = { col: 'columnas', antes: Array.isArray(doc.columnas) ? doc.columnas.slice() : null };
+  doc.columnas = l;
+  proyEncola('inicio/orden', 'inicio-orden', doc);
+}
+// Arrastrar el encabezado de una columna a otra (solo compu; en celular se usan los botones)
+document.addEventListener('dragstart', e => {
+  const h = e.target.closest && e.target.closest('.icol-h[data-colkey]'); if (!h) return;
+  iniArr = { id: h.dataset.colkey, col: '__cols' };
+  e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', h.dataset.colkey); } catch (_) { }
+  const c = h.closest('.icol'); if (c) c.classList.add('arr');
+});
+document.addEventListener('dragover', e => {
+  const c = e.target.closest && e.target.closest('.icol[data-key]'); if (!c || !iniArr || iniArr.col !== '__cols') return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.icol.sobre').forEach(n => { if (n !== c) n.classList.remove('sobre'); });
+  if (c.dataset.key !== iniArr.id) c.classList.add('sobre');
+});
+document.addEventListener('drop', e => {
+  const c = e.target.closest && e.target.closest('.icol[data-key]'); if (!c || !iniArr || iniArr.col !== '__cols') return;
+  e.preventDefault();
+  const a = iniArr; iniArr = null; iniLimpiaArr(); document.querySelectorAll('.icol.arr,.icol.sobre').forEach(n => n.classList.remove('arr', 'sobre'));
+  if (c.dataset.key === a.id) return;
+  iniColMover(a.id, iniColOrden().indexOf(c.dataset.key)); render();
+});
 document.addEventListener('change', e => { const t = e.target; if (t && t.dataset && t.dataset.ini === 'mover' && proySel) { iniMover(proySel, Number(t.value)); render(); } });
 // Fila de prioridad en el panel: posición, Subir, Bajar, Mover a… y Deshacer (sirve igual con mouse que con el dedo)
 function iniFilaPrioridad(p) {
@@ -58,7 +100,7 @@ function iniFilaPrioridad(p) {
 // pasar de Trabajo a Proyectos cambia la marca "trabajo" del proyecto y eso se hace con Editar, no arrastrando.
 // En celular no hay arrastre: se usan Subir, Bajar y Mover a… del panel.
 let iniArr = null;   // { id, col } de lo que se está arrastrando
-function iniLimpiaArr() { document.querySelectorAll('.idrag.arr,.idrag.sobre').forEach(n => n.classList.remove('arr', 'sobre')); }
+function iniLimpiaArr() { document.querySelectorAll('.idrag.arr,.idrag.sobre,.icol.arr,.icol.sobre').forEach(n => n.classList.remove('arr', 'sobre')); }
 document.addEventListener('dragstart', e => {
   const d = e.target.closest && e.target.closest('.idrag'); if (!d) return;
   iniArr = { id: d.dataset.id, col: d.dataset.col };
@@ -89,10 +131,22 @@ function iniTarjetaProyecto(p, i) {
   return `<div class="idrag" draggable="true" data-id="${esc(p.id)}" data-col="${col}"><button class="icd${i === 0 && paso ? ' top' : ''}${paso ? '' : ' vacio'}" data-a="proySel" data-v="${esc(p.id)}"><span class="icd-x">${paso ? esc(paso) : 'Escribe el siguiente paso'}</span><span class="icd-p">${esc(p.nombre)}</span></button></div>`;
 }
 
-function iniColumna(titulo, icono, color, tarjetas, vacio) {
-  const vis = tarjetas.slice(0, INI_MAX).join(''), mas = tarjetas.length - INI_MAX;
-  return `<section class="icol" style="--a:${color}"><div class="icol-h"><span aria-hidden="true">${icono}</span>${esc(titulo)}<small>${tarjetas.length}</small></div>${vis || `<div class="nota">${vacio}</div>`}${mas > 0 ? `<div class="imas">+ ${mas} más</div>` : ''}</section>`;
+// Anillo chico de una columna (cada columna avanza a su ritmo: Trabajo y Personal se reinician cada día; Proyectos es avance largo; Ideas no tiene anillo)
+function iniAnillo(D, N) {
+  const r = 17, C = 2 * Math.PI * r, off = N ? C * (1 - Math.min(1, D / N)) : C;
+  return `<div class="icr" role="img" aria-label="${N ? `${D} de ${N}` : 'sin medir'}"><svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--line)" stroke-width="5"/><circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--a)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg><b>${N ? D : '–'}</b></div>`;
 }
+const iniResumen = (anillo, texto) => `<div class="icol-r">${anillo}<span class="nota">${texto}</span></div>`;
+
+// key = trabajo | proyectos | personal | ideas. Con más de 3 tarjetas, "+ N más" se despliega (y vuelve a cerrarse con "Mostrar menos").
+function iniColumna(key, titulo, icono, color, tarjetas, vacio, resumen) {
+  const abierto = !!iniAbierto[key], mas = tarjetas.length - INI_MAX;
+  const vis = tarjetas.slice(0, abierto ? tarjetas.length : INI_MAX).join('');
+  const ord = iniColOrden(), pos = ord.indexOf(key), n = ord.length;
+  const flechas = `<span class="icol-mv"><button data-a="iniColIzq" data-v="${key}" aria-label="Mover la columna ${esc(titulo)} antes"${pos === 0 ? ' disabled' : ''}><span class="hz">◀</span><span class="vt">▲</span></button><button data-a="iniColDer" data-v="${key}" aria-label="Mover la columna ${esc(titulo)} después"${pos === n - 1 ? ' disabled' : ''}><span class="hz">▶</span><span class="vt">▼</span></button></span>`;
+  return `<section class="icol" data-key="${key}" style="--a:${color}"><div class="icol-h" draggable="true" data-colkey="${key}" title="Arrastra para cambiar el orden de las columnas"><span aria-hidden="true">${icono}</span>${esc(titulo)}<small>${tarjetas.length}</small>${flechas}</div>${resumen || ''}${vis || `<div class="nota">${vacio}</div>`}${mas > 0 ? `<button class="imas" data-a="iniMas" data-v="${key}" aria-expanded="${abierto}">${abierto ? 'Mostrar menos' : `+ ${mas} más`}</button>` : ''}</section>`;
+}
+const iniTarjetaIdea = p => `<button class="iidea" data-a="proySel" data-v="${esc(p.id)}"><span>${esc(p.nombre)}</span><span class="ibadge" title="Camino a proyecto">${proyIdeaN(p)}/3</span></button>`;
 
 function iniHero(real, m) {
   const c = proyCola(m), p = c.cola[0], { D, N } = proyAvance(real, m), C = 213.6, off = N ? Math.round(C * (1 - D / N)) : C;
@@ -108,21 +162,40 @@ function iniHero(real, m) {
 
 function vistaInicio() {
   const m = ahoraMin(), dia = construirDia(m), real = dia.items.filter(i => i.tipo !== 'ctx');
-  const todos = proyLista();
+  const todos = proyLista(), hechos = est.proyHechos || {};
   const trab = iniLista(true), proy = iniLista(false);
   const ideas = todos.filter(p => p.estado === 'idea semilla');
-  // Personal y rutina: lo de hoy que ya calcula Mi día (comida, gym, cena, cierre…) y las tareas, en orden de hora
-  const per = real.filter(i => (i.tipo === 'base' || i.tipo === 'tarea') && i.id !== 'pregunta' && !hecho(i) && i.fin > i.ini && i.fin > m).sort((a, b) => a.ini - b.ini)
+  // Personal y rutina: lo de hoy que ya calcula Mi día (comida, gym, cena, súper…) y las tareas, en orden de hora
+  const rut = real.filter(i => (i.tipo === 'base' || i.tipo === 'tarea') && i.id !== 'pregunta' && i.fin > i.ini);
+  const per = rut.filter(i => !hecho(i) && i.fin > m).sort((a, b) => a.ini - b.ini)
     .map(i => `<div class="icd per"><span class="icd-x">${esc(i.titulo)}</span><span class="icd-p">${fmt(i.ini)}–${fmt(i.fin)}</span></div>`);
+  // Compras: una sola tarjeta (no la lista); abre el panel con todo. Resaltada el día del súper (domingo).
+  const nC = comprasTotal(), toca = new Date().getDay() === 0;
+  per.unshift(`<button class="icd compras${toca ? ' top' : ''}" data-a="iniCompras"><span class="icd-x">🛒 Compras · ${nC ? `${nC} por comprar` : 'nada por comprar'}</span><span class="icd-p">${toca ? 'Hoy toca el súper' : 'Súper: domingo'}</span></button>`);
+  // Un anillo por columna, cada uno a su ritmo
+  const actT = todos.filter(p => p.estado === 'activo' && p.trabajo), dT = actT.filter(p => hechos[p.id]).length;
+  const rutD = rut.filter(i => hecho(i)).length;
+  const actP = todos.filter(p => p.estado === 'activo' && !p.trabajo);
+  let ph = 0, pt = 0; actP.forEach(p => { const a = proyAvanceLargo(p); if (a) { ph += a.h; pt += a.t; } });
+  const listas = ideas.filter(p => proyIdeaN(p) === 3).length;
+  const res = {
+    trabajo: iniResumen(iniAnillo(dT, actT.length), `${dT} de ${actT.length} pasos hoy · se reinicia cada día`),
+    proyectos: iniResumen(iniAnillo(ph, pt), pt ? `${Math.round(ph / pt * 100)}% · ${ph} de ${pt} tareas ligadas (avance largo)` : 'Sin medir · liga tareas a tus proyectos'),
+    personal: iniResumen(iniAnillo(rutD, rut.length), `${rutD} de ${rut.length} de hoy · se reinicia cada día`),
+    ideas: `<div class="icol-r"><span class="nota">${listas ? `${listas} lista${listas > 1 ? 's' : ''} para pasar a Proyectos` : 'Sube a Proyectos con 3 datos: por qué, primer paso y qué falta saber'}</span></div>`
+  };
+  const cols = {
+    trabajo: () => iniColumna('trabajo', 'Trabajo', '💼', 'var(--cal)', trab.map(iniTarjetaProyecto), 'Sin proyectos de trabajo activos.', res.trabajo),
+    proyectos: () => iniColumna('proyectos', 'Proyectos', '🚀', 'var(--k-rut)', proy.map(iniTarjetaProyecto), 'Sin proyectos activos.', res.proyectos),
+    personal: () => iniColumna('personal', 'Personal y rutina', '🌿', 'var(--now)', per, 'Nada más por hoy.', res.personal),
+    ideas: () => iniColumna('ideas', 'Ideas', '💡', 'var(--mute)', ideas.map(iniTarjetaIdea), 'Sin ideas por elegir.', res.ideas)
+  };
   const f = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
   let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b>${iniUndo ? ` <button class="ideshacer" data-a="iniDeshacer">↶ Deshacer el último movimiento</button>` : ''}</div>` + iniHero(real, m);
-  h += `<div class="icols">`
-    + iniColumna('Trabajo', '💼', 'var(--cal)', trab.map(iniTarjetaProyecto), 'Sin proyectos de trabajo activos.')
-    + iniColumna('Proyectos', '🚀', 'var(--k-rut)', proy.map(iniTarjetaProyecto), 'Sin proyectos activos.')
-    + iniColumna('Personal y rutina', '🌿', 'var(--now)', per, 'Nada más por hoy.')
-    + `<section class="icol" style="--a:var(--mute)"><div class="icol-h"><span aria-hidden="true">💡</span>Ideas<small>${ideas.length}</small></div>${ideas.map(p => `<button class="iidea" data-a="proySel" data-v="${esc(p.id)}">${esc(p.nombre)}</button>`).join('') || '<div class="nota">Sin ideas por elegir.</div>'}</section>`
-    + `</div>`;
+  h += `<div class="icols">${iniColOrden().map(k => cols[k]()).join('')}</div>`;
   const sel = proySel && proyPorId(proySel);
-  if (sel) h += `<aside class="ipanel" aria-label="Tarjeta del proyecto">${proyTarjeta(sel)}${iniFilaPrioridad(sel)}</aside>`;
+  if (sel) iniCompAb = false;
+  if (iniCompAb) h += `<aside class="ipanel" aria-label="Compras"><section class="pcard"><div class="ptop"><div><b class="pt">🛒 Compras</b><div class="nota">${toca ? 'Hoy toca el súper' : 'El súper es el domingo'}</div></div><button class="pcls2" data-a="iniCompras" aria-label="Cerrar">✕</button></div>${comprasHtml()}</section></aside>`;
+  else if (sel) h += `<aside class="ipanel" aria-label="Tarjeta del proyecto">${proyTarjeta(sel)}${iniFilaPrioridad(sel)}</aside>`;
   return h;
 }
