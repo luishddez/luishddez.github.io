@@ -53,9 +53,40 @@ function iniFilaPrioridad(p) {
   ${iniUndo ? `<button data-a="iniDeshacer">↶ Deshacer</button>` : ''}</div></section>`;
 }
 
+// ---------- Arrastrar y soltar con el mouse (i3, solo compu) ----------
+// Mover dentro de la misma columna guarda igual que Subir/Bajar (inicio/orden, con Deshacer). Entre columnas NO mueve:
+// pasar de Trabajo a Proyectos cambia la marca "trabajo" del proyecto y eso se hace con Editar, no arrastrando.
+// En celular no hay arrastre: se usan Subir, Bajar y Mover a… del panel.
+let iniArr = null;   // { id, col } de lo que se está arrastrando
+function iniLimpiaArr() { document.querySelectorAll('.idrag.arr,.idrag.sobre').forEach(n => n.classList.remove('arr', 'sobre')); }
+document.addEventListener('dragstart', e => {
+  const d = e.target.closest && e.target.closest('.idrag'); if (!d) return;
+  iniArr = { id: d.dataset.id, col: d.dataset.col };
+  e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', d.dataset.id); } catch (_) { }
+  d.classList.add('arr');
+});
+document.addEventListener('dragover', e => {
+  const d = e.target.closest && e.target.closest('.idrag'); if (!d || !iniArr) return;
+  if (d.dataset.col !== iniArr.col) return;   // otra columna: no se puede soltar aquí
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.idrag.sobre').forEach(n => { if (n !== d) n.classList.remove('sobre'); });
+  if (d.dataset.id !== iniArr.id) d.classList.add('sobre');
+});
+document.addEventListener('drop', e => {
+  const d = e.target.closest && e.target.closest('.idrag'); if (!d || !iniArr) return;
+  e.preventDefault();
+  const a = iniArr; iniArr = null; iniLimpiaArr();
+  if (d.dataset.col !== a.col || d.dataset.id === a.id) return;
+  const p = proyPorId(a.id); if (!p) return;
+  const dest = iniLista(!!p.trabajo).findIndex(x => x.id === d.dataset.id);
+  if (dest >= 0) { iniMover(a.id, dest); render(); }
+});
+document.addEventListener('dragend', () => { iniArr = null; iniLimpiaArr(); });   // soltar fuera de una tarjeta de su columna no mueve nada
+
 function iniTarjetaProyecto(p, i) {
   const paso = String(p.siguiente_paso || '').trim();
-  return `<button class="icd${i === 0 && paso ? ' top' : ''}${paso ? '' : ' vacio'}" data-a="proySel" data-v="${esc(p.id)}"><span class="icd-x">${paso ? esc(paso) : 'Escribe el siguiente paso'}</span><span class="icd-p">${esc(p.nombre)}</span></button>`;
+  const col = p.trabajo ? 'trabajo' : 'proyectos';
+  return `<div class="idrag" draggable="true" data-id="${esc(p.id)}" data-col="${col}"><button class="icd${i === 0 && paso ? ' top' : ''}${paso ? '' : ' vacio'}" data-a="proySel" data-v="${esc(p.id)}"><span class="icd-x">${paso ? esc(paso) : 'Escribe el siguiente paso'}</span><span class="icd-p">${esc(p.nombre)}</span></button></div>`;
 }
 
 function iniColumna(titulo, icono, color, tarjetas, vacio) {
@@ -84,7 +115,7 @@ function vistaInicio() {
   const per = real.filter(i => (i.tipo === 'base' || i.tipo === 'tarea') && i.id !== 'pregunta' && !hecho(i) && i.fin > i.ini && i.fin > m).sort((a, b) => a.ini - b.ini)
     .map(i => `<div class="icd per"><span class="icd-x">${esc(i.titulo)}</span><span class="icd-p">${fmt(i.ini)}–${fmt(i.fin)}</span></div>`);
   const f = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-  let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b></div>` + iniHero(real, m);
+  let h = `<div class="ihead"><b>${esc(f.charAt(0).toUpperCase() + f.slice(1))}</b>${iniUndo ? ` <button class="ideshacer" data-a="iniDeshacer">↶ Deshacer el último movimiento</button>` : ''}</div>` + iniHero(real, m);
   h += `<div class="icols">`
     + iniColumna('Trabajo', '💼', 'var(--cal)', trab.map(iniTarjetaProyecto), 'Sin proyectos de trabajo activos.')
     + iniColumna('Proyectos', '🚀', 'var(--k-rut)', proy.map(iniTarjetaProyecto), 'Sin proyectos activos.')
