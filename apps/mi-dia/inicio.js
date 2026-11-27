@@ -25,6 +25,7 @@ function iniMover(id, destino) {
   iniUndo = { col, antes: Array.isArray(doc[col]) ? doc[col].slice() : null };
   doc[col] = ids;
   proyEncola('inicio/orden', 'inicio-orden', doc);
+  toast(`Ahora es la ${destino + 1}.ª de ${ids.length} · ↶ Deshacer arriba`);
 }
 function iniDeshacer() {
   if (!iniUndo) return;
@@ -99,6 +100,8 @@ function iniFilaPrioridad(p) {
   ${iniUndo ? `<button data-a="iniDeshacer">↶ Deshacer</button>` : ''}</div></section>`;
 }
 
+// ¿Hay mouse? Solo entonces las tarjetas y encabezados se arrastran (en táctil el arrastre estorba al desplazarte; ahí se usan los botones)
+const iniFino = () => { try { return !!(window.matchMedia && matchMedia('(pointer:fine)').matches); } catch (_) { return true; } };
 // ---------- Arrastrar y soltar con el mouse (i3, solo compu) ----------
 // Mover dentro de la misma columna guarda igual que Subir/Bajar (inicio/orden, con Deshacer). Entre columnas NO mueve:
 // pasar de Trabajo a Proyectos cambia la marca "trabajo" del proyecto y eso se hace con Editar, no arrastrando.
@@ -132,7 +135,9 @@ document.addEventListener('dragend', () => { iniArr = null; iniLimpiaArr(); }); 
 function iniTarjetaProyecto(p, i) {
   const paso = String(p.siguiente_paso || '').trim();
   const col = p.trabajo ? 'trabajo' : 'proyectos';
-  return `<div class="idrag" draggable="true" data-id="${esc(p.id)}" data-col="${col}"><button class="icd${i === 0 && paso ? ' top' : ''}${paso ? '' : ' vacio'}" data-a="proySel" data-v="${esc(p.id)}"><span class="icd-x">${paso ? esc(paso) : 'Escribe el siguiente paso'}</span><span class="icd-p">${esc(p.nombre)}</span></button></div>`;
+  // Subir y Bajar van EN la tarjeta (se ven en celular y con teclado; en compu con mouse se arrastra). Arrastrar solo con mouse: en pantallas táctiles estorbaría al desplazarte.
+  const mv = `<span class="imv"><button data-a="iniSubir" data-v="${esc(p.id)}" aria-label="Subir ${esc(p.nombre)}">▲</button><button data-a="iniBajar" data-v="${esc(p.id)}" aria-label="Bajar ${esc(p.nombre)}">▼</button></span>`;
+  return `<div class="idrag" ${iniFino() ? 'draggable="true" ' : ''}data-id="${esc(p.id)}" data-col="${col}"><button class="icd${i === 0 && paso ? ' top' : ''}${paso ? '' : ' vacio'}" data-a="proySel" data-v="${esc(p.id)}"><span class="icd-x">${paso ? esc(paso) : 'Escribe el siguiente paso'}</span><span class="icd-p">${esc(p.nombre)}</span></button>${mv}</div>`;
 }
 
 // Anillo chico de una columna (cada columna avanza a su ritmo: Trabajo y Personal se reinician cada día; Proyectos es avance largo; Ideas no tiene anillo)
@@ -148,7 +153,7 @@ function iniColumna(key, titulo, icono, color, tarjetas, vacio, resumen) {
   const vis = tarjetas.slice(0, abierto ? tarjetas.length : INI_MAX).join('');
   const ord = iniColOrden(), pos = ord.indexOf(key), n = ord.length;
   const flechas = `<span class="icol-mv"><button data-a="iniColIzq" data-v="${key}" aria-label="Mover la columna ${esc(titulo)} antes"${pos === 0 ? ' disabled' : ''}><span class="hz">◀</span><span class="vt">▲</span></button><button data-a="iniColDer" data-v="${key}" aria-label="Mover la columna ${esc(titulo)} después"${pos === n - 1 ? ' disabled' : ''}><span class="hz">▶</span><span class="vt">▼</span></button></span>`;
-  return `<section class="icol" data-key="${key}" style="--a:${color}"><div class="icol-h" draggable="true" data-colkey="${key}" title="Arrastra para cambiar el orden de las columnas"><span aria-hidden="true">${icono}</span>${esc(titulo)}<small>${tarjetas.length}</small>${flechas}</div>${resumen || ''}${vis || `<div class="nota">${vacio}</div>`}${mas > 0 ? `<button class="imas" data-a="iniMas" data-v="${key}" aria-expanded="${abierto}">${abierto ? 'Mostrar menos' : `+ ${mas} más`}</button>` : ''}</section>`;
+  return `<section class="icol" data-key="${key}" style="--a:${color}"><div class="icol-h" ${iniFino() ? 'draggable="true" ' : ''}data-colkey="${key}" title="Arrastra para cambiar el orden de las columnas"><span aria-hidden="true">${icono}</span>${esc(titulo)}<small>${tarjetas.length}</small>${flechas}</div>${resumen || ''}${vis || `<div class="nota">${vacio}</div>`}${mas > 0 ? `<button class="imas" data-a="iniMas" data-v="${key}" aria-expanded="${abierto}">${abierto ? 'Mostrar menos' : `+ ${mas} más`}</button>` : ''}</section>`;
 }
 const iniTarjetaIdea = p => `<button class="iidea" data-a="proySel" data-v="${esc(p.id)}"><span>${esc(p.nombre)}</span><span class="ibadge" title="Camino a proyecto">${proyIdeaN(p)}/3</span></button>`;
 

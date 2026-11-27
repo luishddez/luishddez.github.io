@@ -146,6 +146,7 @@ input[type=time]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 .pbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 6px}
 .pfil{padding:7px 12px;font-size:13.5px;border-radius:999px;background:transparent;box-shadow:none;border:1px solid var(--line);color:var(--ink)}
 .pfil.on{background:var(--now);border-color:var(--now);color:#fff;font-weight:700}
+@media (max-width:899px){.pfil{min-height:44px;padding:0 16px}}
 :root[data-tema="oscuro"] .pfil.on{color:#0c1a12}
 .pmapa{overflow:auto;height:min(62vh,620px);border:1px solid var(--line);border-radius:16px;background:var(--card);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
 .pmapa svg{display:block}
@@ -187,7 +188,16 @@ button.icd{cursor:pointer}
 .icd.top{background:color-mix(in srgb,var(--a) 13%,var(--card));border-left-color:var(--a)}
 .icd.vacio{background:transparent;box-shadow:none;border:1px dashed var(--line);border-left:4px solid var(--line);color:var(--mute)}
 .icd.vacio .icd-x{font-weight:400}
-.idrag{cursor:grab;border-radius:12px}
+.idrag{display:flex;align-items:stretch;gap:6px;margin-bottom:8px;border-radius:12px}
+.idrag[draggable="true"]{cursor:grab}
+.idrag .icd{margin-bottom:0;flex:1;min-width:0}
+.imv{display:none;flex:none;gap:6px}
+.imv button{min-width:44px;min-height:44px;padding:0;font-size:15px}
+.idrag:focus-within .imv{display:inline-flex}
+@media (max-width:899px),(pointer:coarse){.imv{display:inline-flex}.pcls2{min-width:44px;min-height:44px}}
+/* arriba del Inicio siempre a la mano: Deshacer y Modo enfoque no se pierden al desplazarte */
+.ihead{position:sticky;top:0;z-index:3;background:var(--bg);padding:6px 0;margin:0 0 6px}
+@media (max-width:899px){.ihead>b{display:none}}   /* en celular la fecha ya sale en el saludo de arriba */
 .idrag.arr{opacity:.45}
 .idrag.sobre{outline:2px dashed var(--a);outline-offset:2px}
 .ihead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
