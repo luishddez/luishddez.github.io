@@ -422,7 +422,7 @@ function heroFlujo(id, forzado) {
 }
 
 // ---------- otros días: mañana y la semana ----------
-let vistaSel = innerWidth >= 900 ? 'ini' : 'hoy';   // 'ini' | 'hoy' | 'man' | 'sem' | 'proy' | 'd:AAAA-MM-DD'. En computadora se abre el Inicio tablero; en celular, Hoy (hasta terminar el diseño móvil)
+let vistaSel = document.documentElement.getAttribute('data-vista') === 'escritorio' ? 'ini' : 'hoy';   // 'ini' | 'hoy' | 'man' | 'sem' | 'proy' | 'd:AAAA-MM-DD'. En computadora se abre el Inicio tablero; en celular, Hoy (hasta terminar el diseño móvil)
 function carryHoy() {   // lo que hoy no cupo (o se quitó) pasa a mañana
   const d = construirDia(ahoraMin());
   return d.sinHora.concat(d.pospuestas).map(t => ({ ...t, deHoy: true }));
@@ -487,7 +487,7 @@ const listaCompras = () =>(datos.compras || []).map(c => `<div class="it2">${esc
 function vistaMenu() {
   const hs = horasSueno();
   let h = `<div class="top"><h1>Menú</h1><button class="mn-x" data-a="cerrarMenu">Cerrar</button></div><div class="mn-cols">`;
-  h += `<div class="card mn-aj"><div class="mn-fila"><div><b>Datos</b><div class="nota">${esc(estadoSync) || 'Se actualiza solo al abrir y al volver el internet.'}</div></div><button class="pri" data-a="actualizar">Actualizar</button></div><div class="mn-fila"><b id="mn-ap">Apariencia</b><div class="seg2" role="group" aria-labelledby="mn-ap"><button data-a="temaSet" data-v="oscuro" class="${tema === 'oscuro' ? 'on' : ''}" aria-pressed="${tema === 'oscuro'}">Oscuro</button><button data-a="temaSet" data-v="claro" class="${tema === 'claro' ? 'on' : ''}" aria-pressed="${tema === 'claro'}">Claro</button></div></div><div class="mn-fila"><div><b>Alerta de comida con sonido</b><div class="nota">Un pitido suave cuando sube el nivel del aviso.</div></div><button class="sw${sonidoComida ? ' on' : ''}" role="switch" aria-checked="${sonidoComida}" aria-label="Alerta de comida con sonido" data-a="sonido"></button></div></div>`;
+  h += `<div class="card mn-aj"><div class="mn-fila"><div><b>Datos</b><div class="nota">${esc(estadoSync) || 'Se actualiza solo al abrir y al volver el internet.'}</div></div><button class="pri" data-a="actualizar">Actualizar</button></div><div class="mn-fila"><b id="mn-ap">Apariencia</b><div class="seg2" role="group" aria-labelledby="mn-ap"><button data-a="temaSet" data-v="oscuro" class="${tema === 'oscuro' ? 'on' : ''}" aria-pressed="${tema === 'oscuro'}">Oscuro</button><button data-a="temaSet" data-v="claro" class="${tema === 'claro' ? 'on' : ''}" aria-pressed="${tema === 'claro'}">Claro</button></div></div><div class="mn-fila mn-vista"><div><b id="mn-vi">Vista</b><div class="nota">Ahora: ${window.__vista ? (window.__vista.modo() === 'app' ? 'App' : 'Escritorio') : ''}. Automática la elige según tu pantalla.</div></div><div class="seg2" role="group" aria-labelledby="mn-vi">${[['auto', 'Automática'], ['app', 'App'], ['escritorio', 'Escritorio']].map(([k, t]) => `<button data-a="vistaSet" data-v="${k}" class="${(window.__vista ? window.__vista.pref() : 'auto') === k ? 'on' : ''}" aria-pressed="${(window.__vista ? window.__vista.pref() : 'auto') === k}">${t}</button>`).join('')}</div></div><div class="mn-fila"><div><b>Alerta de comida con sonido</b><div class="nota">Un pitido suave cuando sube el nivel del aviso.</div></div><button class="sw${sonidoComida ? ' on' : ''}" role="switch" aria-checked="${sonidoComida}" aria-label="Alerta de comida con sonido" data-a="sonido"></button></div></div>`;
   h += `<div class="card"><a class="btn pri" href="../hungry/">🥗 Abrir Hungry</a><div class="nota" style="margin-top:6px">Tu alimentación: régimen, alacena, compras y registro. Se sincroniza con este tablero.</div></div>`;
   h += `<h3>Notas por acomodar (${est.inbox.length})</h3><div class="card">${est.inbox.map(n => `<div class="it2">${n.enviada ? '✓' : '⏳'} ${esc(n.t)} <span class="nota">${n.enviada ? '· enviada' : '· en cola'}</span></div>`).join('') || '<div class="nota">Nada pendiente.</div>'}${est.inbox.length ? '<div class="row" style="margin-top:8px"><button data-a="reenviar">Enviar ahora</button><button data-a="limpiaInbox">Limpiar lista</button></div><div class="nota" style="margin-top:6px">Las notas se mandan solas. Claude las organiza cuando abres una conversación con él.</div>' : ''}</div>`;
   if ((datos.plan || []).length) h += `<h3>Tu régimen <span class="nota">· de Hungry</span></h3><div class="card">${datos.plan.map(p => `<div class="it2"><b>${esc(fmt(toMin(p.hora || '00:00')))} · ${esc(p.comida)}</b> <span class="nota">· ${esc(p.kcal)} kcal · ${esc(p.proteina)} g de proteína${p.dias === 'gym' ? ' · días de gym' : ''}</span><div class="nota">${esc(p.que_lleva)}</div></div>`).join('')}</div>`;
@@ -707,6 +707,7 @@ function accion(a, v, el, ev) {
     case 'modo': est.modo = v; break;
     case 'llegue': est.totales.llegadas_9++; break;
     case 'tema': tema = tema === 'claro' ? 'oscuro' : 'claro'; safe.set('tablero-tema', tema); break;
+    case 'vistaSet': if (window.__vista) window.__vista.set(v === 'app' || v === 'escritorio' ? v : 'auto'); break;
     case 'temaSet': tema = v === 'claro' ? 'claro' : 'oscuro'; safe.set('tablero-tema', tema); break;
     case 'limpiaInbox': est.inbox = []; break;
     case 'copiaInbox': copiarNotas(); return;
@@ -753,7 +754,7 @@ const CAP_ICO = {
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   stop: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>'
 };
-const capAncho = () => { try { return matchMedia('(min-width:900px)').matches; } catch (e) { return false; } };
+const capAncho = () => document.documentElement.getAttribute('data-vista') === 'escritorio';   // modo escritorio (ver el motor del modo en index.html)
 function actualizaBoton() {
   const b = $('#capBtn'), inp = $('#capIn'), hayTexto = inp.value.trim().length > 0, activo = escuchando || quiere, guardaAqui = hayTexto && !capAncho();
   b.classList.toggle('rec', activo);
@@ -828,7 +829,8 @@ $('#capIn').addEventListener('focus', actualizaBoton);
 $('#capIn').addEventListener('blur', () => setTimeout(actualizaBoton, 150));
 $('#capX').addEventListener('click', () => { $('#capIn').value = ''; $('#compH').textContent = ''; detenerDictado(''); actualizaBoton(); });
 $('#capGo').addEventListener('click', anotar);
-window.addEventListener('resize', actualizaBoton);   // al pasar de celular a escritorio (o al girar) el botón redondo cambia de papel
+window.addEventListener('resize', actualizaBoton);
+window.addEventListener('cambio-vista', () => { actualizaBoton(); render(); });   // al cambiar de modo (ancho en automático, o el selector del Menú) se vuelve a pintar   // al pasar de celular a escritorio (o al girar) el botón redondo cambia de papel
 // Atajos de teclado (escritorio): "/" lleva el cursor a la barra de notas desde cualquier parte; Esc borra la nota, y si ya está vacía, sale de la barra
 document.addEventListener('keydown', e => {
   const t = e.target, escribiendo = !!t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
